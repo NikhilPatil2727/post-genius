@@ -117,12 +117,12 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
         </div>
 
         <Tabs defaultValue="linkedin" className="w-full">
-          <TabsList className="w-full flex h-auto p-1 bg-muted/50 rounded-xl mb-4 overflow-x-auto justify-start">
+          <TabsList className="w-full flex h-auto p-1 bg-muted/50 rounded-xl mb-4 overflow-x-auto justify-start ">
             {platforms.map((p) => (
               <TabsTrigger 
                 key={p.id} 
                 value={p.id}
-                className="flex-1 min-w-[100px] py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-sm transition-all"
+                className="cursor-pointer flex-1 min-w-[100px] py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-sm transition-all"
               >
                 <div className="flex items-center gap-2">
                   <span className={p.color}>{p.icon}</span>
@@ -148,7 +148,7 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
                       variant="default"
                       size="sm"
                       onClick={() => copyToClipboard(platform.content, platform.name)}
-                      className="gap-2"
+                      className="gap-2 cursor-pointer"
                     >
                       {copied === platform.name ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                       {copied === platform.name ? 'Copied' : 'Copy'}
