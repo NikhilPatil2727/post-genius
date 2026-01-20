@@ -74,7 +74,7 @@ export default function Home() {
           </span>
 
           <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-sm font-medium">
-            <SiPeerlist className="text-purple-600" />
+            <SiPeerlist className="text-green-700" />
             Peerlist
           </span>
         </div>

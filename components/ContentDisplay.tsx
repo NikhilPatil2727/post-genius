@@ -3,10 +3,15 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Copy, Check, Linkedin, Twitter, Instagram, Users, FileText } from 'lucide-react';
+// Removed brand icons from lucide-react, kept utility icons
+import { Copy, Check, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { FormattedText } from './FormattedText'; // Make sure to create this file
+import { FormattedText } from './FormattedText'; 
 import type { ContentResponse, Platform } from '@/types';
+
+// New Real Brand Icons
+import { FaLinkedin, FaXTwitter, FaInstagram } from "react-icons/fa6";
+import { SiPeerlist } from "react-icons/si";
 
 interface ContentDisplayProps {
   content: ContentResponse;
@@ -36,7 +41,7 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
       id: 'linkedin', 
       name: 'LinkedIn', 
       content: content.linkedin, 
-      icon: <Linkedin className="h-4 w-4" />,
+      icon: <FaLinkedin className="h-4 w-4" />,
       color: "text-blue-600",
       bg: "bg-blue-50 dark:bg-blue-900/20",
       characterLimit: 3000
@@ -45,16 +50,16 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
       id: 'twitter', 
       name: 'X (Twitter)', 
       content: content.twitterShort, 
-      icon: <Twitter className="h-4 w-4" />,
-      color: "text-sky-500",
-      bg: "bg-sky-50 dark:bg-sky-900/20",
+      icon: <FaXTwitter className="h-4 w-4" />,
+      color: "text-black dark:text-white", // Updated color for X branding
+      bg: "bg-gray-50 dark:bg-gray-900/20",
       characterLimit: 280
     },
     { 
       id: 'instagram', 
       name: 'Instagram', 
       content: content.instagram, 
-      icon: <Instagram className="h-4 w-4" />,
+      icon: <FaInstagram className="h-4 w-4" />,
       color: "text-pink-600",
       bg: "bg-pink-50 dark:bg-pink-900/20",
       characterLimit: 2200
@@ -63,7 +68,7 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
       id: 'peerlist', 
       name: 'Peerlist', 
       content: content.peerlist, 
-      icon: <Users className="h-4 w-4" />,
+      icon: <SiPeerlist className="h-4 w-4" />,
       color: "text-green-600",
       bg: "bg-green-50 dark:bg-green-900/20",
     },
@@ -182,9 +187,9 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
 
                   {/* Platform Specific Hints */}
                   {platform.id === 'instagram' && (
-                     <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
+                      <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
                         💡 Tip: Add the hashtags in the first comment for cleaner aesthetics.
-                     </p>
+                      </p>
                   )}
                 </CardContent>
               </Card>

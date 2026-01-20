@@ -48,10 +48,10 @@ export default function GeneratePage() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-gray-200 dark:border-gray-800">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 mask-linear-from-accent-foreground">
               Content Studio
             </h1>
-            <p className="text-muted-foreground text-sm md:text-base">
+            <p className="text-muted-foreground text-sm md:text-base font-sans">
               Create platform-optimized posts in seconds using AI.
             </p>
           </div>

@@ -43,7 +43,7 @@ export default function GeneratorForm({
   return (
     <Card className="shadow-lg border-border/60">
       <CardHeader className="pb-4">
-        <CardTitle className="text-xl">Configuration</CardTitle>
+        <CardTitle className="text-xl font-serif">Configuration</CardTitle>
         <CardDescription>Customize your content generation parameters.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -51,13 +51,13 @@ export default function GeneratorForm({
           <Tabs
             value={mode}
             onValueChange={(v) => setMode(v as "topic" | "rewrite")}
-            className="w-full"
+            className="w-full "
           >
-            <TabsList className="grid grid-cols-2 w-full mb-4">
-              <TabsTrigger value="topic" className="flex items-center gap-2">
+            <TabsList className="grid grid-cols-2 w-full mb-4 ">
+              <TabsTrigger value="topic" className="flex items-center gap-2 cursor-pointer">
                  <PenTool className="h-4 w-4" /> New Topic
               </TabsTrigger>
-              <TabsTrigger value="rewrite" className="flex items-center gap-2">
+              <TabsTrigger value="rewrite" className="flex items-center gap-2 cursor-pointer">
                  <RefreshCw className="h-4 w-4" /> Rewrite
               </TabsTrigger>
             </TabsList>
@@ -98,7 +98,7 @@ export default function GeneratorForm({
             <div className="space-y-2">
               <Label htmlFor="tone">Tone of Voice</Label>
               <Select value={tone} onValueChange={setTone} disabled={loading}>
-                <SelectTrigger className="bg-white dark:bg-gray-950">
+                <SelectTrigger className="bg-white dark:bg-gray-950 cursor-pointer">
                   <SelectValue placeholder="Select tone" />
                 </SelectTrigger>
                 <SelectContent>
@@ -114,7 +114,7 @@ export default function GeneratorForm({
             <div className="space-y-2">
               <Label htmlFor="audience">Target Audience</Label>
               <Select value={audience} onValueChange={setAudience} disabled={loading}>
-                <SelectTrigger className="bg-white dark:bg-gray-950">
+                <SelectTrigger className="bg-white dark:bg-gray-950 cursor-pointer">
                   <SelectValue placeholder="Select audience" />
                 </SelectTrigger>
                 <SelectContent>
@@ -128,7 +128,7 @@ export default function GeneratorForm({
             </div>
           </div>
 
-          <Button type="submit" className="w-full font-semibold shadow-md" size="lg" disabled={loading}>
+          <Button type="submit" className="w-full font-semibold shadow-md cursor-pointer" size="lg" disabled={loading}>
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -136,7 +136,7 @@ export default function GeneratorForm({
               </>
             ) : (
               <>
-                <Wand2 className="h-4 w-4 mr-2" />
+               
                 Generate Content
               </>
             )}
