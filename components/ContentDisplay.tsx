@@ -71,6 +71,7 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
       icon: <SiPeerlist className="h-4 w-4" />,
       color: "text-green-600",
       bg: "bg-green-50 dark:bg-green-900/20",
+      characterLimit: 2000
     },
   ];
 
