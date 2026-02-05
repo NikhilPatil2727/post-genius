@@ -8,7 +8,7 @@ import { Footer } from '@/components/Footer';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'SocialSync - AI Content Generator',
+  title: 'PostGenius',
   description: 'Generate platform-optimized social media content in seconds',
 };
 
@@ -26,13 +26,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-            <Header />
+          
+            <Header/>
             <main className="container mx-auto px-4 py-8">
               {children}
             </main>
             <Footer />
-          </div>
+      
         </ThemeProvider>
       </body>
     </html>

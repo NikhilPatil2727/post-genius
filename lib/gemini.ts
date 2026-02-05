@@ -5,15 +5,14 @@ const ai = new GoogleGenAI({
 });
 
 const SYSTEM_PROMPT = `You are a professional social media content strategist.
-
-Your job is to create high-quality, human-like content that feels natural,
-clear, and platform-native.
+Create natural, human-like content that fits each platform.
 
 Rules:
-- Do NOT sound robotic.
-- Avoid generic AI phrases.
-- Keep language simple and confident.
-- Optimize content based on platform limits and best practices.
+- Sound natural, not robotic.
+- No generic AI phrases.
+- Simple, confident language.
+- Platform-native formatting.
+- Output must be structured JSON only.
 - Output must be structured and easy to read.`;
 
 const MAIN_PROMPT = (mode: string, topic?: string, text?: string, tone?: string, audience?: string) => `
@@ -24,56 +23,43 @@ Topic: ${topic}
 Tone: ${tone}
 Audience: ${audience}
 
-First, write a high-quality master post (600–900 words)
-based on the topic, tone, and audience.
-The content should provide value, insights, and a clear takeaway.
+Write a master post (600–900 words) that gives value, insight, and a clear takeaway.
 ` : `
-Here is the user's content:
+User content:
 ${text}
 
-First, improve and clean this content without changing its meaning.
-Keep the user's natural voice.
+Improve clarity without changing meaning. Keep the user's voice.
 `}
 
----
+After the master content, generate:
 
-After creating the master content, generate platform-specific versions:
+1) LinkedIn Post  
+- 1200–2000 characters  
+- Professional tone  
+- Short paragraphs  
+- End with 3 relevant hashtags  
 
-1) LinkedIn Post
-- 1200–2000 characters
-- Professional tone
-- Short paragraphs
-- End with 3 relevant hashtags
+2) X (Twitter) Short Post  
+- Max 280 characters  
+- Strong hook  
+- Clear message  
 
-2) X (Twitter) Short Post
-- Maximum 280 characters
-- Strong hook
-- Clear message
+3) Instagram Caption  
+- Max 2200 characters  
+- First 125 characters = strong hook  
+- Friendly tone  
+- End with 5 hashtags   
 
-3) X (Twitter) Thread
-- 3–5 tweets
-- Each tweet under 280 characters
-- Informative and engaging
+4) Peerlist Post  
+- Max 2000 characters  
+- Professional and concise  
 
-4) Instagram Caption
-- First 125 characters must be a strong hook
-- Friendly and conversational
-- Add 5 relevant hashtags at the end
-
-5) Peerlist Post
-- Maximum 200 characters
-- Professional and concise
-
----
-
-Output format (IMPORTANT):
-Return the result in valid JSON like this:
+Return ONLY valid JSON:
 
 {
   "masterContent": "...",
   "linkedin": "...",
   "twitterShort": "...",
-  "twitterThread": ["...", "..."],
   "instagram": "...",
   "peerlist": "..."
 }
