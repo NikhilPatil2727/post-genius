@@ -98,12 +98,15 @@ export default function Home() {
               </button>
             </NoiseBackground>
           </Link>
-
-          <button
-            className="cursor-pointer px-6 py-2 text-sm rounded-full transition duration-200 backdrop-blur-sm bg-black/5 text-black border border-black/10 hover:bg-black/10 dark:bg-white/5 dark:text-white dark:border-white/10 dark:hover:bg-white/10"
-          >
-            Learn More
-          </button>
+          
+          <Link href="/learn-more" >
+            <button
+              className="cursor-pointer h-[55px] w-[150px] px-6 py-2 text-sm rounded-full transition duration-200 backdrop-blur-sm bg-black/5 text-black border border-black/10 hover:bg-black/10 dark:bg-white/5 dark:text-white dark:border-white/10 dark:hover:bg-white/10"
+            >
+              Learn More
+            </button>
+          </Link>
+          
         </div>
       </BackgroundLines>
 
