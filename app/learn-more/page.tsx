@@ -236,12 +236,9 @@ export default function LearnMorePage() {
               
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center px-2">
                 <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all w-full sm:w-auto text-sm sm:text-base">
-                  Start Free Trial - Save 20 Hours/Week
+                  Start Free  - Save 20 Hours/Week
                 </Button>
-                <Button size="lg" variant="outline" className="gap-2 w-full sm:w-auto text-sm sm:text-base">
-                  <Video className="h-4 w-4 shrink-0" />
-                  Watch 2-Min Demo
-                </Button>
+               
               </div>
             </div>
             
