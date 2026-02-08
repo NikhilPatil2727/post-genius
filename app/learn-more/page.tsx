@@ -598,9 +598,7 @@ export default function LearnMorePage() {
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-4 sm:mb-6 px-2">
                 Start Saving 20+ Hours Per Week
               </h2>
-              <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
-                Join 10,000+ creators and marketers who are already publishing consistently across all platforms with minimal effort.
-              </p>
+            
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-8 sm:mb-10">
                 <div className="text-center p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
@@ -622,15 +620,10 @@ export default function LearnMorePage() {
                   <Rocket className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                   Start Free Trial (Save 80+ Hours/Month)
                 </Button>
-                <Button size="lg" variant="outline" className="gap-2 text-sm sm:text-base md:text-lg py-5 sm:py-6 px-6 sm:px-8 w-full sm:w-auto">
-                  <Users className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                  Book Team Demo
-                </Button>
+
               </div>
               
-              <p className="text-xs sm:text-sm text-muted-foreground mt-6 sm:mt-8 px-2">
-                No credit card required • 10,000 free words monthly • Cancel anytime
-              </p>
+              
             </CardContent>
           </Card>
         </div>
