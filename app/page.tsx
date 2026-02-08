@@ -54,34 +54,32 @@ export default function Home() {
           Post<span className="text-blue-600">Genius</span>
         </h1>
 
-        <p className="max-w-2xl mt-6 text-base md:text-lg text-neutral-700 dark:text-neutral-400 relative z-20">
-          The easiest way to create platform-specific content for
+        <h2 className="max-w-2xl mt-6 text-xl md:text-2xl lg:text-3xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100 relative z-20">
+          Create Once, Publish Everywhere
+        </h2>
+
+        <p className="max-w-2xl mt-4 text-base md:text-lg text-neutral-600 dark:text-neutral-400 relative z-20 leading-relaxed">
+          Generate content for <span className="font-medium text-neutral-800 dark:text-neutral-200">Instagram, Twitter, LinkedIn, and Peerlist</span> in one click. Save 80% of your content creation time.
         </p>
 
-        <div className="mt-4 flex items-center justify-center gap-4 flex-wrap relative z-20">
-          <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-sm font-medium">
+        <div className="mt-6 flex items-center justify-center gap-3 sm:gap-4 flex-wrap relative z-20">
+          <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
             <FaLinkedin className="text-[#0A66C2]" />
             LinkedIn
           </span>
-
-          <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-sm font-medium">
+          <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
             <FaXTwitter className="text-black dark:text-white" />
+             (Twitter)
           </span>
-
-          <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-sm font-medium">
+          <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
             <FaInstagram className="text-pink-500" />
             Instagram
           </span>
-
-          <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-sm font-medium">
+          <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted text-sm font-medium">
             <SiPeerlist className="text-green-700" />
             Peerlist
           </span>
         </div>
-
-        <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">
-          — without rewriting again and again.
-        </p>
 
         <div className="mt-10 flex gap-4 justify-center flex-wrap relative z-20">
           <Link href="/generate">
@@ -124,8 +122,8 @@ export default function Home() {
         </p>
       </section>
 
-      {/* PREMIUM FEATURES SECTION */}
-      <section className="max-w-6xl mx-auto px-6">
+      {/* PREMIUM FEATURES SECTION — anchor for navbar #features */}
+      <section id="features" className="max-w-6xl mx-auto px-6 scroll-mt-24">
         <div className="text-center mb-16">
           <h3 className="text-blue-600 font-semibold text-sm tracking-widest uppercase mb-3">Capabilities</h3>
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight">Built for modern creators</h2>
