@@ -49,7 +49,7 @@ export function Header() {
               </div>
               <div className="flex flex-col">
                 <span className="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">
-                  Post<span className="text-blue-600">Genius</span>
+                  Post<span className="text-blue-600">Bloom</span>
                 </span>
                 <span className="text-[9px] uppercase tracking-[0.2em] text-neutral-500 font-bold leading-none">
                   Intelligence

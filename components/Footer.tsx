@@ -44,7 +44,7 @@ export function Footer() {
             <Link href="/" className="flex items-center gap-2 mb-6 group">
              
               <span className="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">
-                Post<span className="text-blue-600">Genius</span>
+                Post<span className="text-blue-600">Bloom</span>
               </span>
             </Link>
             <p className="text-neutral-500 dark:text-neutral-400 max-w-xs leading-relaxed text-sm mb-6">
@@ -82,7 +82,7 @@ export function Footer() {
         <div className="pt-8 border-t border-neutral-200 dark:border-neutral-800 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex flex-col items-center md:items-start gap-1">
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              © {currentYear} PostGenius Labs Inc. Built with passion for creators.
+              © {currentYear} PostBloom Labs Inc. Built with passion for creators.
             </p>
            
           </div>
