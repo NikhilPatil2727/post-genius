@@ -377,7 +377,7 @@ export default function LearnMorePage() {
               Optimized for each platform
             </h2>
             <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl mx-auto px-2">
-              See what PostGenius generates for each channel. One topic or draft → four ready-to-paste posts.
+              See what PostBloom generates for each channel. One topic or draft → four ready-to-paste posts.
             </p>
           </div>
 
@@ -469,7 +469,7 @@ export default function LearnMorePage() {
                   <div className="p-4 sm:p-6 md:p-8 bg-muted/20">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Sample output</p>
                     <div className="rounded-lg sm:rounded-xl border border-border bg-background p-3 sm:p-4 md:p-5 border-l-4 border-l-blue-500 font-mono text-xs sm:text-sm min-w-0">
-                      <p className="leading-relaxed">Just created a week's worth of content in 30 minutes. Using AI for multiple platforms is a game-changer: saves 20+ hrs/week, consistent messaging, higher engagement. #Productivity #AIContent</p>
+                      <p className="leading-relaxed">Just created a week  worth of content in 30 minutes. Using AI for multiple platforms is a game-changer: saves 20+ hrs/week, consistent messaging, higher engagement. #Productivity #AIContent</p>
                     </div>
                     <p className="text-xs text-muted-foreground mt-3">Max 280 characters · Optional thread · Copy from Generate page</p>
                   </div>
@@ -502,7 +502,7 @@ export default function LearnMorePage() {
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Sample output</p>
                     <div className="rounded-lg sm:rounded-xl border border-border bg-background p-3 sm:p-4 md:p-5 border-l-4 border-l-blue-600 min-w-0">
                       <p className="text-sm text-foreground/90 leading-relaxed">
-                        PostGenius turns your topic or draft into a polished LinkedIn post: 1,200–2,000 characters, short paragraphs, professional tone, 3 hashtags. Choose tone and audience on the Generate page, then copy and paste. One click to copy.
+                        PostBloom turns your topic or draft into a polished LinkedIn post: 1,200–2,000 characters, short paragraphs, professional tone, 3 hashtags. Choose tone and audience on the Generate page, then copy and paste. One click to copy.
                       </p>
                     </div>
                     <p className="text-xs text-muted-foreground mt-3">Optimized for engagement on LinkedIn</p>
