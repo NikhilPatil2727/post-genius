@@ -469,7 +469,7 @@ export default function LearnMorePage() {
                   <div className="p-4 sm:p-6 md:p-8 bg-muted/20">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Sample output</p>
                     <div className="rounded-lg sm:rounded-xl border border-border bg-background p-3 sm:p-4 md:p-5 border-l-4 border-l-blue-500 font-mono text-xs sm:text-sm min-w-0">
-                      <p className="leading-relaxed">Just created a week's worth of content in 30 minutes. Using AI for multiple platforms is a game-changer: saves 20+ hrs/week, consistent messaging, higher engagement. #Productivity #AIContent</p>
+                      <p className="leading-relaxed">Just created a week  worth of content in 30 minutes. Using AI for multiple platforms is a game-changer: saves 20+ hrs/week, consistent messaging, higher engagement. #Productivity #AIContent</p>
                     </div>
                     <p className="text-xs text-muted-foreground mt-3">Max 280 characters · Optional thread · Copy from Generate page</p>
                   </div>
