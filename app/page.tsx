@@ -51,7 +51,7 @@ export default function Home() {
       {/* HERO */}
       <BackgroundLines className="flex min-h-[42rem] items-center justify-center flex-col px-6 text-center">
         <h1 className="bg-clip-text text-transparent bg-gradient-to-b from-neutral-900 to-neutral-700 dark:from-neutral-300 dark:to-white text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight relative z-20">
-          Post<span className="text-blue-600">Bloom</span>
+          Post<span className="text-blue-600">Genius</span>
         </h1>
 
         <h2 className="max-w-2xl mt-6 text-xl md:text-2xl lg:text-3xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100 relative z-20">
@@ -117,7 +117,7 @@ export default function Home() {
           LinkedIn needs depth, X needs brevity, Instagram needs engagement, and Peerlist needs clarity.
           <br /><br />
           <span className="font-semibold text-neutral-900 dark:text-white not-italic text-xl block">
-            PostBloom automates the artistry of platform-specific writing.
+            PostGenius automates the artistry of platform-specific writing.
           </span>
         </p>
       </section>
