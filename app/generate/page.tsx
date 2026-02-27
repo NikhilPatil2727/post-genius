@@ -6,6 +6,7 @@ import { ContentDisplay } from '@/components/ContentDisplay';
 import { Loader2, LayoutTemplate } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ContentResponse, ContentRequest } from '@/types';
+import { generateAction } from '@/modules/api/actions';
 
 export default function GeneratePage() {
   const [loading, setLoading] = useState(false);
@@ -17,17 +18,7 @@ export default function GeneratePage() {
     setError(null);
     
     try {
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate content');
-      }
-
-      const result = await response.json();
+      const result = await generateAction(data);
       setContent(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
