@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Sparkles, Github, Twitter, Linkedin, Globe, Cpu } from 'lucide-react';
+import { Twitter, Linkedin, Github } from 'lucide-react';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -42,7 +42,6 @@ export function Footer() {
           {/* Brand Column */}
           <div className="col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-6 group">
-             
               <span className="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">
                 Post<span className="text-blue-600">Bloom</span>
               </span>
@@ -51,9 +50,6 @@ export function Footer() {
               The world&apos;s most advanced AI content repurposing engine. 
               Turn one idea into a week of optimized social presence.
             </p>
-            
-            {/* Status Indicator */}
-         
           </div>
 
           {/* Navigation Columns */}
@@ -84,10 +80,9 @@ export function Footer() {
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
               © {currentYear} PostBloom Labs Inc. Built with passion for creators.
             </p>
-           
           </div>
 
-          {/* Social Icons (Quick Access) */}
+          {/* Social Icons */}
           <div className="flex items-center gap-5">
             <a href="#" className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
               <Twitter className="h-5 w-5" />

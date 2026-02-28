@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { ContentResponse } from "@/types";
 
 const SYSTEM_PROMPT = `You are a professional social media content strategist.
 Create natural, human-like content that fits each platform.
@@ -79,7 +80,7 @@ export async function generateContent(
   text?: string,
   tone?: string,
   audience?: string
-) {
+): Promise<ContentResponse> {
   try {
     // Initialize Google AI with the provided API key using the original pattern
     const ai = new GoogleGenAI({
@@ -89,16 +90,28 @@ export async function generateContent(
     const prompt = SYSTEM_PROMPT + '\n\n' + MAIN_PROMPT(mode, topic, text, tone, audience);
     
     // Generate content using the models.generateContent API
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+    const apiResponse = await ai.models.generateContent({
+      model: "gemini-2.5-flash", // Using stable model for reliability
       contents: prompt,
     });
     
-    const content = response.text;
+    // Extract content safely from the API response
+    let content = "";
+    if (typeof apiResponse.text === 'string') {
+       content = apiResponse.text;
+    } else if (typeof (apiResponse as any).text === 'function') {
+       content = (apiResponse as any).text();
+    } else {
+       // Fallback to manual extraction if neither property nor helper exists
+       content = (apiResponse as any).candidates?.[0]?.content?.parts?.[0]?.text || "";
+    }
     
     if (!content) {
-      throw new Error('No response from Gemini API');
+      console.error('Full Gemini API Response:', JSON.stringify(apiResponse, null, 2));
+      throw new Error('No response text retrieved from Gemini API');
     }
+
+    console.log('Gemini Raw Content:', content);
     
     // Clean and parse JSON response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -107,7 +120,7 @@ export async function generateContent(
     const parsed = JSON.parse(jsonMatch[0]);
 
     // Robust mapping for common variations in AI output keys
-    const result = {
+    const finalContent = {
       masterContent: parsed.masterContent || parsed.master || "",
       linkedin: parsed.linkedin || "",
       twitterShort: parsed.twitterShort || parsed.twitter || "",
@@ -115,7 +128,7 @@ export async function generateContent(
       peerlist: parsed.peerlist || ""
     };
 
-    return result;
+    return finalContent;
   } catch (error) {
     console.error('Gemini API error:', error);
     throw error;

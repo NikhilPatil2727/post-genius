@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { Button } from './ui/button';
-import { ModeToggle } from './ModeToggle';
-import { Sparkles, Menu, X, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ModeToggle } from '@/components/ModeToggle';
+import { Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { cn } from "@/lib/utils"; // Ensure you have this utility or replace with standard template literals
+import { cn } from "@/lib/utils";
+import { SignInButton, UserButton, SignedIn, SignedOut } from '@clerk/nextjs';
 
-export function Header() {
+export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -25,7 +26,6 @@ export function Header() {
     { name: 'Generator', href: '/generate' },
     { name: 'Features', href: '/#features' },
     { name: 'Learn More', href: '/learn-more' },
-   
   ];
 
   return (
@@ -43,10 +43,6 @@ export function Header() {
           {/* LOGO AREA */}
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2 group transition-transform active:scale-95">
-              <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
-                
-              </div>
               <div className="flex flex-col">
                 <span className="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">
                   Post<span className="text-blue-600">Bloom</span>
@@ -57,7 +53,7 @@ export function Header() {
               </div>
             </Link>
 
-            {/* Desktop Navigation - Left Aligned for SaaS feel */}
+            {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1">
               {navigation.map((item) => (
                 <Link
@@ -73,15 +69,29 @@ export function Header() {
 
           {/* RIGHT SIDE ACTIONS */}
           <div className="flex items-center gap-2 md:gap-4">
-            <div className="hidden sm:block ">
-               <ModeToggle />
-            </div>
-
-           
+            <ModeToggle />
+            
+            <SignedOut>
+              <SignInButton mode="modal">
+                <Button variant="default" className="rounded-full px-6">
+                  Sign In
+                </Button>
+              </SignInButton>
+            </SignedOut>
+            
+            <SignedIn>
+              <UserButton 
+                afterSignOutUrl="/" 
+                appearance={{
+                  elements: {
+                    userButtonAvatarBox: "h-9 w-9"
+                  }
+                }}
+              />
+            </SignedIn>
 
             {/* Mobile Actions */}
             <div className="flex md:hidden items-center gap-2">
-               <ModeToggle />
                <Button
                 variant="ghost"
                 size="icon"
@@ -109,7 +119,20 @@ export function Header() {
                 </Link>
               ))}
             </div>
-           
+            
+            <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800">
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <Button className="w-full rounded-xl py-6">Sign In</Button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <div className="flex items-center justify-between px-4">
+                  <span className="text-sm font-medium">Account</span>
+                  <UserButton afterSignOutUrl="/" />
+                </div>
+              </SignedIn>
+            </div>
           </div>
         )}
       </div>
