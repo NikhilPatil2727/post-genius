@@ -40,7 +40,7 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
     { 
       id: 'linkedin', 
       name: 'LinkedIn', 
-      content: content.linkedin, 
+      content: content.linkedin || "", 
       icon: <FaLinkedin className="h-4 w-4" />,
       color: "text-blue-600",
       bg: "bg-blue-50 dark:bg-blue-900/20",
@@ -49,16 +49,16 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
     { 
       id: 'twitter', 
       name: 'X (Twitter)', 
-      content: content.twitterShort, 
+      content: content.twitterShort || "", 
       icon: <FaXTwitter className="h-4 w-4" />,
-      color: "text-black dark:text-white", // Updated color for X branding
+      color: "text-black dark:text-white", 
       bg: "bg-gray-50 dark:bg-gray-900/20",
       characterLimit: 280
     },
     { 
       id: 'instagram', 
       name: 'Instagram', 
-      content: content.instagram, 
+      content: content.instagram || "", 
       icon: <FaInstagram className="h-4 w-4" />,
       color: "text-pink-600",
       bg: "bg-pink-50 dark:bg-pink-900/20",
@@ -67,7 +67,7 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
     { 
       id: 'peerlist', 
       name: 'Peerlist', 
-      content: content.peerlist, 
+      content: content.peerlist || "", 
       icon: <SiPeerlist className="h-4 w-4" />,
       color: "text-green-600",
       bg: "bg-green-50 dark:bg-green-900/20",
@@ -92,13 +92,13 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
         </CardHeader>
         <CardContent className="pt-6">
           <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
-             <FormattedText text={content.masterContent} />
+             <FormattedText text={content.masterContent || ""} />
           </div>
           <div className="flex justify-end mt-4 pt-4 border-t">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => copyToClipboard(content.masterContent, 'master')}
+              onClick={() => copyToClipboard(content.masterContent || "", 'master')}
               className="gap-2"
             >
               {copied === 'master' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -204,7 +204,7 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
             variant="ghost"
             onClick={async () => {
               const allContent = [
-                 `--- MASTER CONTENT ---\n${content.masterContent}\n`,
+                 `--- MASTER CONTENT ---\n${content.masterContent || ""}\n`,
                  ...platforms.map(p => `--- ${p.name.toUpperCase()} ---\n${p.content}\n`)
               ].join('\n');
               // Strip markdown for bulk copy
