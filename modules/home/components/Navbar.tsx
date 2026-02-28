@@ -6,7 +6,7 @@ import { ModeToggle } from '@/components/ModeToggle';
 import { Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
-import { SignInButton, UserButton, SignedIn, SignedOut } from '@clerk/nextjs';
+import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from '@clerk/nextjs';
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -71,14 +71,6 @@ export function Navbar() {
           <div className="flex items-center gap-2 md:gap-4">
             <ModeToggle />
             
-            <SignedOut>
-              <SignInButton mode="modal">
-                <Button variant="default" className="rounded-full px-6">
-                  Sign In
-                </Button>
-              </SignInButton>
-            </SignedOut>
-            
             <SignedIn>
               <UserButton 
                 afterSignOutUrl="/" 
@@ -89,6 +81,27 @@ export function Navbar() {
                 }}
               />
             </SignedIn>
+            <SignedOut>
+              <div className="flex items-center gap-2">
+                <SignInButton>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-sm font-medium hover:bg-white/20 dark:hover:bg-white/10"
+                  >
+                    Sign In
+                  </Button>
+                </SignInButton>
+                <SignUpButton>
+                  <Button
+                    size="sm"
+                    className="text-sm font-medium bg-[#41B313] hover:bg-[#369611] text-white"
+                  >
+                    Sign Up
+                  </Button>
+                </SignUpButton>
+              </div>
+            </SignedOut>
 
             {/* Mobile Actions */}
             <div className="flex md:hidden items-center gap-2">
@@ -120,11 +133,23 @@ export function Navbar() {
               ))}
             </div>
             
-            <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800">
+            <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800 space-y-4">
               <SignedOut>
-                <SignInButton mode="modal">
-                  <Button className="w-full rounded-xl py-6">Sign In</Button>
-                </SignInButton>
+                <div className="flex flex-col gap-3 px-2">
+                  <SignInButton>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-center text-sm font-medium hover:bg-neutral-100 dark:hover:bg-white/10"
+                    >
+                      Sign In
+                    </Button>
+                  </SignInButton>
+                  <SignUpButton>
+                    <Button className="w-full bg-[#41B313] hover:bg-[#369611] text-white py-5 rounded-xl text-sm font-bold shadow-md">
+                      Sign Up
+                    </Button>
+                  </SignUpButton>
+                </div>
               </SignedOut>
               <SignedIn>
                 <div className="flex items-center justify-between px-4">
