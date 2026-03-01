@@ -1,4 +1,5 @@
-import { Navbar, Footer } from "@/modules/home/components";
+import { Navbar } from "@/modules/home/components/Navbar";
+import { Footer } from "@/modules/home/components/Footer";
 
 export default function HomeLayout({
   children,

@@ -73,7 +73,7 @@ export function Navbar() {
             
             <SignedIn>
               <UserButton 
-                afterSignOutUrl="/" 
+
                 appearance={{
                   elements: {
                     userButtonAvatarBox: "h-9 w-9"
@@ -154,7 +154,7 @@ export function Navbar() {
               <SignedIn>
                 <div className="flex items-center justify-between px-4">
                   <span className="text-sm font-medium">Account</span>
-                  <UserButton afterSignOutUrl="/" />
+                  <UserButton />
                 </div>
               </SignedIn>
             </div>

@@ -9,8 +9,7 @@ Rules:
 - No generic AI phrases.
 - Simple, confident language.
 - Platform-native formatting.
-- Output must be structured JSON only.
-- Output must be structured and easy to read.`;
+- Output MUST be structured JSON.`;
 
 const MAIN_PROMPT = (mode: string, topic?: string, text?: string, tone?: string, audience?: string) => `
 MODE: ${mode}
@@ -51,8 +50,7 @@ After the master content, generate:
 - Max 2000 characters  
 - Professional and concise  
 
-Return ONLY valid JSON:
-
+Return JSON in this format:
 {
   "masterContent": "...",
   "linkedin": "...",
@@ -64,14 +62,7 @@ Return ONLY valid JSON:
 
 /**
  * Generates AI content using the Gemini model.
- * 
- * @param mode - 'topic' to write from scratch, 'rewrite' to improve existing text
- * @param apiKey - User's Google Gemini API key
- * @param topic - Topic for post (for 'topic' mode)
- * @param text - Existing text (for 'rewrite' mode)
- * @param tone - Preferred tone of voice
- * @param audience - Target audience
- * @returns Parsed JSON with master and platform posts
+ * Optimized for speed and reliability using JSON mode.
  */
 export async function generateContent(
   mode: 'topic' | 'rewrite',
@@ -82,55 +73,55 @@ export async function generateContent(
   audience?: string
 ): Promise<ContentResponse> {
   try {
-    // Initialize Google AI with the provided API key using the original pattern
-    const ai = new GoogleGenAI({
-      apiKey: apiKey
-    });
+    const ai = new GoogleGenAI({ apiKey });
 
+    // Use gemini-2.0-flash for maximum speed and optimization
+    const model = 'gemini-2.5-flash';
     const prompt = SYSTEM_PROMPT + '\n\n' + MAIN_PROMPT(mode, topic, text, tone, audience);
     
-    // Generate content using the models.generateContent API
+    // Generate content using the modern SDK pattern with JSON mode enabled
     const apiResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash", // Using stable model for reliability
-      contents: prompt,
+      model: model,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: "application/json",
+        temperature: 0.7, // Balanced for creativity and structure
+      }
     });
     
-    // Extract content safely from the API response
-    let content = "";
-    if (typeof apiResponse.text === 'string') {
-       content = apiResponse.text;
-    } else if (typeof (apiResponse as any).text === 'function') {
-       content = (apiResponse as any).text();
-    } else {
-       // Fallback to manual extraction if neither property nor helper exists
-       content = (apiResponse as any).candidates?.[0]?.content?.parts?.[0]?.text || "";
-    }
-    
-    if (!content) {
-      console.error('Full Gemini API Response:', JSON.stringify(apiResponse, null, 2));
-      throw new Error('No response text retrieved from Gemini API');
+    if (!apiResponse || !apiResponse.candidates || apiResponse.candidates.length === 0) {
+      throw new Error('No response from Gemini API');
     }
 
-    console.log('Gemini Raw Content:', content);
+    const candidate = apiResponse.candidates[0];
+    const contentText = candidate.content?.parts?.[0]?.text;
+
+    if (!contentText) {
+      if (candidate.finishReason === 'SAFETY') {
+        throw new Error('Content generation blocked by Gemini safety filters');
+      }
+      throw new Error(`Gemini API returned an empty response. Reason: ${candidate.finishReason || 'Unknown'}`);
+    }
+
+    console.log('Gemini Content Retrieved Successfully');
     
-    // Clean and parse JSON response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('Invalid response format');
-    
-    const parsed = JSON.parse(jsonMatch[0]);
+    // Parse the JSON response
+    const parsed = JSON.parse(contentText);
 
     // Robust mapping for common variations in AI output keys
-    const finalContent = {
+    return {
       masterContent: parsed.masterContent || parsed.master || "",
       linkedin: parsed.linkedin || "",
-      twitterShort: parsed.twitterShort || parsed.twitter || "",
-      instagram: parsed.instagram || "",
+      twitterShort: parsed.twitterShort || parsed.twitterShortPost || parsed.twitter || "",
+      instagram: parsed.instagram || parsed.instagramCaption || "",
       peerlist: parsed.peerlist || ""
     };
-
-    return finalContent;
   } catch (error) {
     console.error('Gemini API error:', error);
+    // Improve error message for production troubleshooting
+    if (error instanceof Error && error.message.includes('model not found')) {
+      throw new Error('The selected Gemini model is not available. Please try again later or check your API key permissions.');
+    }
     throw error;
   }
 }
