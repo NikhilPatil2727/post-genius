@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import GeneratorForm from '@/components/GeneratorForm';
-import { ContentDisplay } from '@/components/ContentDisplay';
+import GeneratorForm from '@/modules/generator/components/GeneratorForm';
+import { ContentDisplay } from '@/modules/generator/components/ContentDisplay';
 import { Loader2, LayoutTemplate, Key, AlertCircle, X } from 'lucide-react'; // Added icons for API key and alerts
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input'; // Import Shadcn UI Input
 import type { ContentResponse, ContentRequest } from '@/types';
-import { generateAction } from '@/modules/api/actions';
+import { generateAction } from '@/modules/generator/actions';
 
 export default function GeneratePage() {
   const [loading, setLoading] = useState(false);
