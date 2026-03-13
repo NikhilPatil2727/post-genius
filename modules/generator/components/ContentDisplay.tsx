@@ -71,10 +71,126 @@ const PLATFORM_CONFIG: Record<string, {
     },
 };
 
+function useTypingEffect(rawContent: string, isActive: boolean, isStreaming: boolean) {
+  const [displayedContent, setDisplayedContent] = useState('');
+  const bufferRef = useRef('');
+  const lastRawRef = useRef('');
+  const frameRef = useRef<number | null>(null);
+  const isActiveRef = useRef(isActive);
+  const hasStartedRef = useRef(false);
+
+  // Keep isActiveRef in sync without triggering re-runs
+  useEffect(() => {
+    isActiveRef.current = isActive;
+  }, [isActive]);
+
+  useEffect(() => {
+    // New content arrived — add only the new chars to buffer
+    if (rawContent.length > lastRawRef.current.length) {
+      const newChars = rawContent.slice(lastRawRef.current.length);
+      bufferRef.current += newChars;
+      lastRawRef.current = rawContent;
+    }
+
+    // If this platform was never active and streaming is done, show full content
+    if (!isActive && !isStreaming && !hasStartedRef.current) {
+      setDisplayedContent(rawContent);
+      return;
+    }
+
+    // Start the animation loop if not already running
+    if (!frameRef.current && bufferRef.current.length > 0) {
+      hasStartedRef.current = true;
+      const animate = () => {
+        if (bufferRef.current.length > 0) {
+          // Slow down when active (typewriter feel), fast when not active
+          const charsPerFrame = isActiveRef.current ? 4 : 32;
+          const chunk = bufferRef.current.slice(0, charsPerFrame);
+          bufferRef.current = bufferRef.current.slice(charsPerFrame);
+          setDisplayedContent(prev => prev + chunk);
+          frameRef.current = requestAnimationFrame(animate);
+        } else {
+          frameRef.current = null;
+        }
+      };
+      frameRef.current = requestAnimationFrame(animate);
+    }
+  }, [rawContent, isActive, isStreaming]);
+
+  // Only cancel RAF on unmount
+  useEffect(() => {
+    return () => {
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
+  }, []);
+
+  // Reset everything when isStreaming goes false→true (new generation)
+  const prevStreamingRef = useRef(isStreaming);
+  useEffect(() => {
+    if (isStreaming && !prevStreamingRef.current) {
+      setDisplayedContent('');
+      bufferRef.current = '';
+      lastRawRef.current = '';
+      hasStartedRef.current = false;
+      if (frameRef.current) {
+        cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
+    }
+    prevStreamingRef.current = isStreaming;
+  }, [isStreaming]);
+
+  return displayedContent;
+}
+
 export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
   const [copied, setCopied] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('linkedin');
   const lastUpdateRef = useRef<Record<string, number>>({});
+  const userOverrideRef = useRef(false);
+  const streamingPlatformRef = useRef<Platform | null>(null);
+  const hasAutoSwitchedRef = useRef(false);
+
+  const platformIds: Platform[] = ['linkedin', 'twitter', 'instagram', 'peerlist'];
+
+  // Detect streaming platform by checking which is the latest platform with content
+  const currentlyStreaming = isStreaming 
+    ? [...platformIds].reverse().find(id => (content[id]?.length ?? 0) > 0) ?? null
+    : null;
+    
+  // Only update forward — never go backwards (linkedin → twitter, not twitter → linkedin)
+  if (currentlyStreaming) {
+    const currentIdx = platformIds.indexOf(currentlyStreaming);
+    const prevIdx = platformIds.indexOf(streamingPlatformRef.current ?? 'linkedin');
+    if (currentIdx >= prevIdx) {
+      streamingPlatformRef.current = currentlyStreaming;
+    }
+  }
+  if (!isStreaming) streamingPlatformRef.current = null;
+
+  const streamingPlatform = isStreaming ? streamingPlatformRef.current : null;
+
+  const completedPlatforms = platformIds.filter(id => {
+    const hasContent = (content[id]?.length ?? 0) > 0;
+    if (!isStreaming) return hasContent;
+    
+    if (!streamingPlatform) return false;
+    
+    return hasContent && id !== streamingPlatform && platformIds.indexOf(id) < platformIds.indexOf(streamingPlatform);
+  });
+
+  // Fix 2: decouple useTypingEffect from activeTab
+  const linkedinContent = useTypingEffect(content.linkedin || "", streamingPlatform === 'linkedin', !!isStreaming);
+  const twitterContent = useTypingEffect(content.twitter || "", streamingPlatform === 'twitter', !!isStreaming);
+  const instagramContent = useTypingEffect(content.instagram || "", streamingPlatform === 'instagram', !!isStreaming);
+  const peerlistContent = useTypingEffect(content.peerlist || "", streamingPlatform === 'peerlist', !!isStreaming);
+
+  const displayedContents: Record<string, string> = {
+    linkedin: linkedinContent,
+    twitter: twitterContent,
+    instagram: instagramContent,
+    peerlist: peerlistContent
+  };
 
   const copyToClipboard = async (text: string, platform: string) => {
     const cleanText = text.replace(/\*\*/g, '');
@@ -90,21 +206,19 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
     { id: 'peerlist' as Platform, content: content.peerlist || "" },
   ];
 
-  // Automatically switch to the first platform that starts receiving content
   useEffect(() => {
-    if (isStreaming) {
-       for (const p of platforms) {
-          if (p.content.length > 0 && !lastUpdateRef.current[p.id]) {
-             setActiveTab(p.id);
-             lastUpdateRef.current[p.id] = Date.now();
-             break;
-          }
-       }
+    // Only auto-switch ONE time — when the very first platform starts streaming
+    if (isStreaming && streamingPlatform && !hasAutoSwitchedRef.current) {
+      setActiveTab(streamingPlatform);
+      hasAutoSwitchedRef.current = true; // lock — never auto-switch again this session
     }
+    // Reset when generation finishes so next generation can auto-switch once
     if (!isStreaming) {
-        lastUpdateRef.current = {};
+      hasAutoSwitchedRef.current = false;
+      lastUpdateRef.current = {};
+      userOverrideRef.current = false;
     }
-  }, [content, isStreaming]);
+  }, [streamingPlatform, isStreaming]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700">
@@ -143,50 +257,134 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
         )}
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="flex w-full h-auto p-1.5 bg-muted/40 rounded-2xl mb-8 gap-2 border border-border/50 overflow-x-auto no-scrollbar">
-          {Object.entries(PLATFORM_CONFIG).map(([id, config]) => (
-            <TabsTrigger 
-              key={id} 
-              value={id}
-              disabled={!isStreaming && (!content[id as keyof ContentResponse] || content[id as keyof ContentResponse]?.length === 0)}
-              className={cn(
-                "relative flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl transition-all duration-300 group min-w-[120px]",
-                "data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:shadow-lg",
-                id === 'instagram' && "data-[state=active]:ring-2 data-[state=active]:ring-transparent data-[state=active]:before:absolute data-[state=active]:before:inset-[-2px] data-[state=active]:before:rounded-[14px] data-[state=active]:before:bg-gradient-to-tr data-[state=active]:before:from-[#f09433] data-[state=active]:before:via-[#e6683c] data-[state=active]:before:to-[#bc1888] data-[state=active]:before:-z-10",
-                (isStreaming || content[id as keyof ContentResponse]) ? "opacity-100" : "opacity-40"
-              )}
-            >
-              <span className={cn(config.color, "transition-transform group-hover:scale-110 group-data-[state=active]:scale-110")}>{config.icon}</span>
-              <span className="text-sm font-semibold whitespace-nowrap">{config.name}</span>
-              
-              {activeTab === id && (
-                <motion.div 
-                   layoutId="active-pill-accent"
-                   className={cn("absolute bottom-1 left-4 right-4 h-0.5 rounded-full", config.accent)}
-                />
-              )}
-
-              <div className="absolute top-2 right-2">
-                {isStreaming && (content[id as keyof ContentResponse]?.length ?? 0) > 0 ? (
-                    <motion.div 
-                        animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
-                        transition={{ repeat: Infinity, duration: 1.5 }}
-                        className={cn("h-1.5 w-1.5 rounded-full", config.accent)} 
-                    />
-                ) : !isStreaming && (content[id as keyof ContentResponse]?.length ?? 0) > 0 && (
-                    <div className="bg-emerald-500 rounded-full p-0.5 shadow-sm">
-                        <Check className="h-2 w-2 text-white" />
+      {isStreaming && (
+        <div className="flex items-center justify-between w-full max-w-2xl mx-auto mb-10 px-4">
+            {platformIds.map((id, idx) => {
+                const config = PLATFORM_CONFIG[id];
+                const hasContent = (content[id]?.length ?? 0) > 0;
+                const isCurrent = streamingPlatform === id;
+                const platformIndex = platformIds.indexOf(id);
+                const currentStreamingIndex = platformIds.indexOf(streamingPlatform || 'linkedin');
+                const isCompleted = hasContent && !isCurrent;
+                
+                return (
+                    <div key={id} className="flex items-center flex-1 last:flex-none">
+                        <div className="flex flex-col items-center gap-2 relative">
+                            <motion.div 
+                                animate={isCurrent ? { scale: [1, 1.1, 1], boxShadow: ["0 0 0px rgba(0,0,0,0)", "0 0 10px rgba(59,130,246,0.5)", "0 0 0px rgba(0,0,0,0)"] } : {}}
+                                transition={{ repeat: Infinity, duration: 2 }}
+                                className={cn(
+                                    "h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all duration-500 z-10",
+                                    isCompleted ? `${config.bg} border-emerald-500` : 
+                                    isCurrent ? `bg-primary border-primary` : 
+                                    "border-zinc-300 dark:border-zinc-700 bg-transparent"
+                                )}
+                            >
+                                {isCompleted ? (
+                                    <Check className="h-2.5 w-2.5 text-emerald-500" />
+                                ) : isCurrent ? (
+                                    <div className="h-1.5 w-1.5 bg-white rounded-full" />
+                                ) : null}
+                            </motion.div>
+                            <span className={cn(
+                                "absolute top-7 whitespace-nowrap text-[9px] font-bold uppercase tracking-tighter transition-colors duration-300",
+                                isCurrent ? "text-primary" : isCompleted ? "text-emerald-500" : "text-muted-foreground/40"
+                            )}>
+                                {config.name}
+                            </span>
+                        </div>
+                        {idx < platformIds.length - 1 && (
+                            <div className="flex-1 mx-2 h-[2px] bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
+                                {platformIndex < currentStreamingIndex && (
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: "100%" }}
+                                        className={cn("h-full", isCompleted ? "bg-emerald-500" : "bg-primary")}
+                                    />
+                                )}
+                                {platformIndex >= currentStreamingIndex && (
+                                    <div className="absolute inset-0 border-t border-dashed border-zinc-300 dark:border-zinc-700 h-[1px]" />
+                                )}
+                            </div>
+                        )}
                     </div>
+                );
+            })}
+        </div>
+      )}
+
+      <Tabs value={activeTab} onValueChange={(val) => {
+        setActiveTab(val);
+        if (isStreaming) userOverrideRef.current = true;
+      }} className="w-full">
+        <TabsList className="flex w-full h-auto p-1.5 bg-muted/40 rounded-2xl mb-8 gap-2 border border-border/50 overflow-x-auto no-scrollbar">
+          {platformIds.map((id) => {
+            const config = PLATFORM_CONFIG[id];
+            const hasContent = (content[id]?.length ?? 0) > 0;
+            const isCurrent = isStreaming && streamingPlatform === id;
+            const isCompleted = completedPlatforms.includes(id);
+            const isWaiting = isStreaming && !hasContent && !isCurrent;
+            const isIdle = !isStreaming && !hasContent;
+
+            return (
+              <TabsTrigger 
+                key={id} 
+                value={id}
+                disabled={isIdle}
+                className={cn(
+                  "relative flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl transition-all duration-300 group min-w-[120px]",
+                  "data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:shadow-lg",
+                  isCurrent && "animate-[pulse_2s_infinite] shadow-[0_0_15px_-5px] shadow-primary/30",
+                  id === 'instagram' && "data-[state=active]:ring-2 data-[state=active]:ring-transparent data-[state=active]:before:absolute data-[state=active]:before:inset-[-2px] data-[state=active]:before:rounded-[14px] data-[state=active]:before:bg-gradient-to-tr data-[state=active]:before:from-[#f09433] data-[state=active]:before:via-[#e6683c] data-[state=active]:before:to-[#bc1888] data-[state=active]:before:-z-10",
+                  isWaiting ? "opacity-50" : isIdle ? "opacity-40" : "opacity-100"
                 )}
-              </div>
-            </TabsTrigger>
-          ))}
+              >
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    config.color, 
+                    "transition-transform group-hover:scale-110 group-data-[state=active]:scale-110",
+                    isWaiting && "grayscale"
+                  )}>
+                    {config.icon}
+                  </span>
+                  <span className={cn(
+                    "text-sm font-semibold whitespace-nowrap",
+                    isWaiting && "text-muted-foreground/60"
+                  )}>
+                    {config.name}
+                  </span>
+                </div>
+                
+                {activeTab === id && (
+                  <motion.div 
+                     layoutId="active-pill-accent"
+                     className={cn("absolute bottom-1 left-4 right-4 h-0.5 rounded-full", config.accent)}
+                  />
+                )}
+
+                <div className="absolute top-2 right-2">
+                  {isCurrent ? (
+                      <div className="flex items-center gap-0.5 h-3">
+                        <motion.div animate={{ height: [4, 10, 4] }} transition={{ repeat: Infinity, duration: 0.6 }} className={cn("w-0.5 rounded-full", config.accent)} />
+                        <motion.div animate={{ height: [6, 12, 6] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className={cn("w-0.5 rounded-full", config.accent)} />
+                        <motion.div animate={{ height: [4, 10, 4] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className={cn("w-0.5 rounded-full", config.accent)} />
+                      </div>
+                  ) : isCompleted ? (
+                      <div className="bg-emerald-500 rounded-full p-0.5 shadow-sm">
+                          <Check className="h-2 w-2 text-white" />
+                      </div>
+                  ) : null}
+                </div>
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
 
         <AnimatePresence mode="wait">
-          {Object.entries(PLATFORM_CONFIG).map(([id, config]) => (
-            <TabsContent key={id} value={id} className="mt-0 focus-visible:outline-none">
+          {platformIds.map((id) => {
+            const config = PLATFORM_CONFIG[id];
+            return (
+              <TabsContent key={id} value={id} className="mt-0 focus-visible:outline-none">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -201,7 +399,7 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                     id === 'instagram' && "before:bg-gradient-to-b before:from-[#f09433] before:via-[#e6683c] before:to-[#bc1888]",
                     id === 'peerlist' && "before:bg-[#00AA45]"
                 )}>
-                  {isStreaming && (content[id as keyof ContentResponse]?.length ?? 0) > 0 && (
+                  {isStreaming && streamingPlatform === id && (
                      <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
                         <div className="w-[200%] h-full absolute top-0 -left-full bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.03),transparent)] dark:bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.01),transparent)] animate-[shimmer_3s_infinite]" style={{ transform: 'skewX(-20deg)' }} />
                      </div>
@@ -221,8 +419,8 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => copyToClipboard(String(content[id as keyof ContentResponse] || ""), id)}
-                      disabled={!(content[id as keyof ContentResponse])}
+                      onClick={() => copyToClipboard(String(content[id] || ""), id)}
+                      disabled={!(content[id])}
                       className="gap-2 h-9 px-4 rounded-xl font-bold bg-white dark:bg-zinc-900 shadow-sm border border-border/50 hover:shadow-md transition-all active:scale-95 group"
                     >
                       <AnimatePresence mode="wait">
@@ -279,14 +477,14 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                             </div>
 
                             <FormattedText 
-                                text={String(content[id as keyof ContentResponse] || "")} 
+                                text={displayedContents[id] || ""} 
                                 className="text-lg md:text-xl leading-relaxed text-zinc-800 dark:text-zinc-200 font-sans tracking-tight"
                             />
-                            {isStreaming && (
+                            {isStreaming && streamingPlatform === id && (
                                 <motion.span
                                     animate={{ opacity: [0, 1, 0] }}
                                     transition={{ repeat: Infinity, duration: 0.8 }}
-                                    className={cn("inline-block w-1 h-6 ml-1 translate-y-1 rounded-full", config.accent)}
+                                    className={cn("inline-block w-1.5 h-6 ml-1 translate-y-1 rounded-full", config.accent)}
                                 />
                             )}
                         </div>
@@ -295,18 +493,21 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                             {isStreaming ? (
                                 <div className="relative flex flex-col items-center gap-4">
                                     <div className="relative">
-                                        <div className={cn("p-6 rounded-2xl bg-zinc-100 dark:bg-zinc-900 animate-pulse", config.color)}>
+                                        <div className={cn("p-6 rounded-2xl bg-zinc-100 dark:bg-zinc-900", config.color)}>
                                             {config.icon}
                                         </div>
-                                        <div className="absolute -inset-4 bg-gradient-to-tr from-transparent via-white/20 to-transparent animate-[shimmer_2s_infinite] pointer-events-none" />
                                     </div>
                                     <div className="space-y-2 text-center">
-                                        <p className="text-sm font-bold tracking-tight text-foreground animate-pulse">Crafting your {config.name} post...</p>
-                                        <div className="flex justify-center gap-1">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700 animate-bounce [animation-delay:-0.3s]" />
-                                            <div className="h-1.5 w-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700 animate-bounce [animation-delay:-0.15s]" />
-                                            <div className="h-1.5 w-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700 animate-bounce" />
-                                        </div>
+                                      <p className="text-sm font-bold tracking-tight text-foreground/70">
+                                          Crafting your {config.name} post...
+                                        </p>
+                                        {streamingPlatform === id && (
+                                          <div className="flex justify-center gap-1">
+                                              <div className="h-1.5 w-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700 animate-bounce [animation-delay:-0.3s]" />
+                                              <div className="h-1.5 w-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700 animate-bounce [animation-delay:-0.15s]" />
+                                              <div className="h-1.5 w-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700 animate-bounce" />
+                                          </div>
+                                        )}
                                     </div>
                                 </div>
                             ) : (
@@ -320,12 +521,12 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                     </div>
 
                     {/* Character Limits & Stats */}
-                    {config.characterLimit && (content[id as keyof ContentResponse]) && (
+                    {config.characterLimit && (content[id]) && (
                       <div className="px-8 py-6 bg-zinc-50/80 dark:bg-zinc-900/60 border-t border-border/40">
                           <div className="flex items-center justify-between mb-4">
                               <div className="flex items-center gap-2">
                                   <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Character Audit</span>
-                                  {String(content[id as keyof ContentResponse]).length <= config.characterLimit ? (
+                                  {String(content[id]).length <= config.characterLimit ? (
                                     <div className="flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full text-[9px] font-bold border border-emerald-500/20">
                                         <Check className="h-2.5 w-2.5" />
                                         <span>Within limit</span>
@@ -339,11 +540,11 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                               </div>
                               <span className={cn(
                                   "text-xs font-mono font-bold px-2 py-0.5 rounded-md",
-                                  String(content[id as keyof ContentResponse] || "").length > config.characterLimit 
+                                  String(content[id] || "").length > config.characterLimit 
                                     ? "text-red-500" 
                                     : "text-emerald-500"
                               )}>
-                                  {String(content[id as keyof ContentResponse] || "").length} <span className="text-muted-foreground/50 font-sans">/</span> {config.characterLimit}
+                                  {String(content[id] || "").length} <span className="text-muted-foreground/50 font-sans">/</span> {config.characterLimit}
                               </span>
                           </div>
                           
@@ -351,7 +552,7 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                           <div className="flex gap-1 h-1.5 w-full mb-6">
                               {[...Array(10)].map((_, i) => {
                                   const limit = config.characterLimit || 280;
-                                  const progress = (String(content[id as keyof ContentResponse]).length / limit) * 10;
+                                  const progress = (String(content[id]).length / limit) * 10;
                                   let bgColor = "bg-zinc-200 dark:bg-zinc-800";
                                   if (i < progress) {
                                       if (progress > 10) bgColor = "bg-red-500";
@@ -390,7 +591,8 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                 </Card>
               </motion.div>
             </TabsContent>
-          ))}
+            );
+          })}
         </AnimatePresence>
       </Tabs>
 
@@ -413,18 +615,24 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                     </div>
                     
                     <div className="hidden lg:flex items-center gap-2 ml-4">
-                        {Object.entries(PLATFORM_CONFIG).map(([id, config]) => (
-                            <div key={id} className={cn("h-8 w-8 rounded-lg flex items-center justify-center border border-border/40 bg-white dark:bg-zinc-800 shadow-sm", config.color)}>
-                                {config.icon}
-                            </div>
-                        ))}
+                        {platformIds.map((id) => {
+                            const config = PLATFORM_CONFIG[id];
+                            return (
+                                <div key={id} className={cn("h-8 w-8 rounded-lg flex items-center justify-center border border-border/40 bg-white dark:bg-zinc-900 shadow-sm", config.color)}>
+                                    {config.icon}
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
 
                 <Button
                     onClick={async () => {
-                      const allContent = Object.entries(PLATFORM_CONFIG)
-                        .map(([id, config]) => content[id as keyof ContentResponse] ? `--- ${config.name.toUpperCase()} ---\n${content[id as keyof ContentResponse]}\n` : "")
+                      const allContent = platformIds
+                        .map((id) => {
+                          const config = PLATFORM_CONFIG[id];
+                          return content[id] ? `--- ${config.name.toUpperCase()} ---\n${content[id]}\n` : "";
+                        })
                         .filter(Boolean)
                         .join('\n');
                       await navigator.clipboard.writeText(allContent.replace(/\*\*/g, ''));
