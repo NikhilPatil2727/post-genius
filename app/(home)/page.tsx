@@ -2,12 +2,15 @@ import { Hero } from "@/modules/home/components/Hero";
 import { Features } from "@/modules/home/components/Features";
 import { Zap } from "lucide-react";
 import { onboardUser } from "@/modules/auth/actions";
+import { CurrentUserName } from "@/modules/profile/actions";
 
 export default async function HomePage() {
-  await onboardUser();
+  const user=await onboardUser();
+  const profile=await CurrentUserName();
+ 
   return (
     <div className="space-y-32 pb-20">
-      <Hero />
+      <Hero user={user} profile={profile} />
 
       {/* Shortened "About" inline for simplicity */}
       <section className="max-w-4xl mx-auto px-6 text-center">

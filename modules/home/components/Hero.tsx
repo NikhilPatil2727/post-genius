@@ -6,7 +6,8 @@ import { NoiseBackground } from "@/components/ui/noise-background";
 import { FaLinkedin, FaXTwitter, FaInstagram } from "react-icons/fa6";
 import { SiPeerlist } from "react-icons/si";
 
-export const Hero = () => (
+
+export const Hero = ({user,profile}:any) => (
   <BackgroundLines className="flex min-h-[42rem] items-center justify-center flex-col px-6 text-center">
     <h1 className="bg-clip-text text-transparent bg-gradient-to-b from-neutral-900 to-neutral-700 dark:from-neutral-300 dark:to-white text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight relative z-20">
       Post<span className="text-blue-600">Bloom</span>
@@ -37,11 +38,13 @@ export const Hero = () => (
 
     <div className="mt-10 flex gap-4 justify-center flex-wrap relative z-20">
       <Link href="/generate">
-        <NoiseBackground containerClassName="w-fit p-2 rounded-full mx-auto" gradientColors={["rgb(255, 100, 150)", "rgb(100, 150, 255)", "rgb(255, 200, 100)"]}>
+        {user.success && profile.firstName &&(
+          <NoiseBackground containerClassName="w-fit p-2 rounded-full mx-auto" gradientColors={["rgb(255, 100, 150)", "rgb(100, 150, 255)", "rgb(255, 200, 100)"]}>
           <button className="h-full w-full cursor-pointer rounded-full bg-linear-to-r from-neutral-100 via-neutral-100 to-white px-6 py-2 text-black shadow-lg transition-all duration-100 active:scale-95 dark:from-black dark:via-black dark:to-neutral-900 dark:text-white">
             Generate Now
           </button>
         </NoiseBackground>
+        )}
       </Link>
       <Link href="/learn-more">
         <button className="cursor-pointer h-[55px] w-[150px] px-6 py-2 text-sm rounded-full transition duration-200 backdrop-blur-sm bg-black/5 text-black border border-black/10 hover:bg-black/10 dark:bg-white/5 dark:text-white dark:border-white/10 dark:hover:bg-white/10">
