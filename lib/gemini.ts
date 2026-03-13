@@ -79,7 +79,6 @@ export async function* streamGenerateContent(
   const MODEL_NAME = "gemini-2.5-flash"; 
 
   const mainPrompt = BUILD_MAIN_PROMPT(mode, topic, text, tone, audience);
-  const finalPrompt = `${SYSTEM_PROMPT}\n\n${mainPrompt}\n\n${MARKERS.LINKEDIN}\n(Content)...\n`;
 
   try {
     const response = await ai.models.generateContentStream({

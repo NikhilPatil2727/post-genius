@@ -123,7 +123,7 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
             <TabsTrigger 
               key={id} 
               value={id}
-              disabled={!isStreaming && !content[id as keyof ContentResponse]}
+              disabled={!isStreaming && (!content[id as keyof ContentResponse] || content[id as keyof ContentResponse]?.length === 0)}
               className={cn(
                 "relative flex items-center gap-2.5 py-3 px-4 rounded-xl transition-all duration-300",
                 "data-[state=active]:bg-white dark:data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:ring-1 data-[state=active]:ring-border/50",
@@ -134,7 +134,7 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
               <span className="text-sm font-semibold hidden sm:inline">{config.name}</span>
               <span className="text-xs font-semibold sm:hidden">{config.name.split(' ')[0]}</span>
               
-              {isStreaming && content[id as keyof ContentResponse]?.length > 0 && (
+              {isStreaming && (content[id as keyof ContentResponse]?.length ?? 0) > 0 && (
                   <motion.div 
                     layoutId="active-dot"
                     className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-primary" 
@@ -232,7 +232,7 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                           <div className="flex items-center justify-between mb-2">
                               <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                                   Character Audit
-                                  {id === 'linkedin' && (content.linkedin.length >= 1200 && content.linkedin.length <= 2000) && (
+                                  {id === 'linkedin' && (content.linkedin.length >= 400 && content.linkedin.length <= 700) && (
                                       <span className="text-[9px] bg-blue-500 text-white px-1.5 py-0.5 rounded-full">Optimal Range</span>
                                   )}
                               </span>
@@ -296,7 +296,7 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                 }}
                 className="text-muted-foreground hover:text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-900 px-8 py-8 rounded-[2rem] border border-dashed border-border group"
              >
-                {copied === 'all' ? <Check className="h-5 w-5 mr-3 text-green-500" /> : <Copy className="h-5 w-5 mr-3 group-hover:text-primary transition-transform group-hover:scale-110" />}
+                {copied === 'all' ? <Check className="h-4 w-4 mr-3 text-green-500" /> : <Copy className="h-4 w-4 mr-3 group-hover:text-primary transition-transform group-hover:scale-110" />}
                 <div className="text-left">
                     <p className="font-bold text-base">Bulk Export</p>
                     <p className="text-xs opacity-60">Copy all platform variations to clipboard</p>
