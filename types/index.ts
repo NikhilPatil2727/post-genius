@@ -8,7 +8,7 @@ export type ContentRequest = {
 };
 
 export type ContentResponse = {
-  masterContent: string;
+  // masterContent: string;
   linkedin: string;
   twitterShort: string;
   twitterThread?: string[];

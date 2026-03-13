@@ -79,7 +79,7 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
     <div className="space-y-6">
       
       {/* 1. Master Strategy / Blog Post Content */}
-      <Card className="border-l-4 border-l-primary shadow-sm overflow-hidden">
+      {/* <Card className="border-l-4 border-l-primary shadow-sm overflow-hidden">
         <CardHeader className="bg-muted/30 pb-4">
           <div className="flex items-center gap-2 text-primary mb-1">
             <FileText className="h-5 w-5" />
@@ -106,7 +106,7 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
             </Button>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* 2. Platform Specific Outputs */}
       <div className="space-y-4">
@@ -203,14 +203,14 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
          <Button
             variant="ghost"
             onClick={async () => {
-              const allContent = [
-                 `--- MASTER CONTENT ---\n${content.masterContent || ""}\n`,
-                 ...platforms.map(p => `--- ${p.name.toUpperCase()} ---\n${p.content}\n`)
-              ].join('\n');
-              // Strip markdown for bulk copy
-              await navigator.clipboard.writeText(allContent.replace(/\*\*/g, ''));
-              setCopied('all');
-              setTimeout(() => setCopied(null), 2000);
+              // const allContent = [
+              //    `--- MASTER CONTENT ---\n${content.masterContent || ""}\n`,
+              //    ...platforms.map(p => `--- ${p.name.toUpperCase()} ---\n${p.content}\n`)
+              // ].join('\n');
+              // // Strip markdown for bulk copy
+              // await navigator.clipboard.writeText(allContent.replace(/\*\*/g, ''));
+              // setCopied('all');
+              // setTimeout(() => setCopied(null), 2000);
             }}
             className="text-muted-foreground hover:text-foreground"
          >

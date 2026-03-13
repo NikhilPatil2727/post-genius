@@ -19,7 +19,7 @@ Topic: ${topic}
 Tone: ${tone}
 Audience: ${audience}
 
-Write a master post (600–900 words) that gives value, insight, and a clear takeaway.
+
 ` : `
 User content:
 ${text}
@@ -27,7 +27,7 @@ ${text}
 Improve clarity without changing meaning. Keep the user's voice.
 `}
 
-After the master content, generate:
+ generate:
 
 1) LinkedIn Post  
 - 1200–2000 characters  
@@ -47,13 +47,15 @@ After the master content, generate:
 - End with 5 hashtags   
 
 4) Peerlist Post  
-- Max 2000 characters  
+-Only 2000 characters  
 - Professional and concise  
+
+Make sure do not cross the Char limit ok 
 
 Return ONLY valid JSON:
 
 {
-  "masterContent": "...",
+ 
   "linkedin": "...",
   "twitterShort": "...",
   "instagram": "...",
@@ -108,7 +110,7 @@ export async function generateContent(
 
     // Robust mapping for common variations in AI output keys
     const result = {
-      masterContent: parsed.masterContent || parsed.master || "",
+      // masterContent: parsed.masterContent || parsed.master || "",
       linkedin: parsed.linkedin || "",
       twitterShort: parsed.twitterShort || parsed.twitter || "",
       instagram: parsed.instagram || "",
