@@ -28,7 +28,7 @@ export function Navbar() {
 
   const navigation = [
     { name: "Home", href: "/" },
-    { name: "Generator", href: "/generate" },
+    { name: "Generator", href: "/admin/generate" },
     { name: "Features", href: "/#features" },
     { name: "Learn More", href: "/learn-more" },
   ];

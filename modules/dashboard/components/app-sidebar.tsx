@@ -5,7 +5,8 @@ import {
   Settings,
   QrCode,
   TrendingUp,
-  Link2,
+  RefreshCw,
+  Wand2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -27,12 +28,12 @@ import { usePathname } from "next/navigation";
 
 // Main navigation items
 const mainNavItems = [
+
   {
-    title: "My Tree",
-    url: "/admin/post-bloom",
-    icon: Tree,
+    title: "Generate",
+    url: "/admin/generate",
+    icon: Wand2,
   },
-  
 ];
 
 // Tools section

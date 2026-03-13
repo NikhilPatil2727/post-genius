@@ -37,7 +37,7 @@ export const Hero = ({user,profile}:any) => (
     </div>
 
     <div className="mt-10 flex gap-4 justify-center flex-wrap relative z-20">
-      <Link href="/generate">
+      <Link href="/admin/generate">
         {user.success && profile.firstName &&(
           <NoiseBackground containerClassName="w-fit p-2 rounded-full mx-auto" gradientColors={["rgb(255, 100, 150)", "rgb(100, 150, 255)", "rgb(255, 200, 100)"]}>
           <button className="h-full w-full cursor-pointer rounded-full bg-linear-to-r from-neutral-100 via-neutral-100 to-white px-6 py-2 text-black shadow-lg transition-all duration-100 active:scale-95 dark:from-black dark:via-black dark:to-neutral-900 dark:text-white">
