@@ -10,7 +10,7 @@ export type ContentRequest = {
 export type ContentResponse = {
   // masterContent: string;
   linkedin: string;
-  twitterShort: string;
+  twitter: string;
   twitterThread?: string[];
   instagram: string;
   peerlist: string;
