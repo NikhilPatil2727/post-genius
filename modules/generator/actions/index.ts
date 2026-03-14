@@ -156,3 +156,26 @@ export async function deletePostAction(postId: string) {
     return { success: false, error: 'Failed to delete post' };
   }
 }
+
+/**
+ * Fetches a single post by its ID for the currently logged-in user.
+ */
+export async function getPostByIdAction(postId: string) {
+  const { userId: clerkId } = await auth();
+  if (!clerkId) return { success: false, error: 'Unauthorized' };
+  try {
+    const user = await prisma.user.findUnique({ where: { clerkId } });
+    if (!user) return { success: false, error: 'User not found' };
+    const post = await prisma.post.findFirst({
+      where: { id: postId, userId: user.id },
+      include: {
+        variants: true,
+      },
+    });
+    if (!post) return { success: false, error: 'Post not found' };
+    return { success: true, post };
+  } catch (error) {
+    console.error('Error fetching post:', error);
+    return { success: false, error: 'Failed to load post' };
+  }
+}

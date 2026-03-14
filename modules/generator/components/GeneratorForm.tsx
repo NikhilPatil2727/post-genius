@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 interface GeneratorFormProps {
   onSubmit: (data: ContentRequest) => void;
   loading: boolean;
+  initialData?: Partial<ContentRequest>;
 }
 
 const TONES = ["professional", "casual", "friendly", "authoritative", "enthusiastic", "conversational", "educational", "inspirational"];
@@ -29,12 +30,23 @@ const AUDIENCES = ["general", "business", "tech", "creatives", "entrepreneurs", 
 export default function GeneratorForm({
   onSubmit,
   loading,
+  initialData,
 }: GeneratorFormProps) {
   const [mode, setMode] = useState<"topic" | "rewrite">("topic");
   const [topic, setTopic] = useState("");
   const [text, setText] = useState("");
   const [tone, setTone] = useState("professional");
   const [audience, setAudience] = useState("general");
+
+  useEffect(() => {
+    if (initialData) {
+      if (initialData.mode) setMode(initialData.mode);
+      if (initialData.topic) setTopic(initialData.topic);
+      if (initialData.text) setText(initialData.text);
+      if (initialData.tone) setTone(initialData.tone);
+      if (initialData.audience) setAudience(initialData.audience);
+    }
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
