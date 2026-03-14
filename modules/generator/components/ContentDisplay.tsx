@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Copy, Check, Info, LayoutPanelLeft, Download } from 'lucide-react';
+import { Copy, Check, Info, LayoutPanelLeft, Download, Pencil, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FormattedText } from './FormattedText';
 import type { ContentResponse, Platform } from '@/types';
@@ -133,11 +133,17 @@ function useTypingEffect(rawContent: string, isActive: boolean, isStreaming: boo
   return displayedContent;
 }
 
+// Platforms that support inline editing
+const EDITABLE_PLATFORMS: Platform[] = ['linkedin', 'twitter', 'instagram', 'peerlist'];
+
 export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
   const [copied, setCopied] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('linkedin');
+  const [editingPlatform, setEditingPlatform] = useState<string | null>(null);
+  const [editedContent, setEditedContent] = useState<Record<string, string>>({});
   const streamingPlatformRef = useRef<Platform | null>(null);
   const hasAutoSwitchedRef = useRef(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const platformIds: Platform[] = ['linkedin', 'twitter', 'instagram', 'peerlist'];
 
@@ -199,6 +205,52 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
       hasAutoSwitchedRef.current = false;
     }
   }, [streamingPlatform, isStreaming]);
+
+  // Cancel editing when streaming starts or tab changes
+  useEffect(() => {
+    if (isStreaming) {
+      setEditingPlatform(null);
+      setEditedContent({});
+    }
+  }, [isStreaming]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (editingPlatform && textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+      textareaRef.current.focus();
+    }
+  }, [editingPlatform]);
+
+  const isEditable = EDITABLE_PLATFORMS.includes(activeTab as Platform);
+  const isEditing = editingPlatform === activeTab;
+
+  const startEditing = () => {
+    const currentContent = String(content[activeTab as keyof ContentResponse] || '');
+    setEditedContent(prev => ({ ...prev, [activeTab]: currentContent }));
+    setEditingPlatform(activeTab);
+  };
+
+  const saveEdit = () => {
+    // Save the edited content back (the editedContent stays in state for display)
+    setEditingPlatform(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingPlatform(null);
+    setEditedContent(prev => {
+      const next = { ...prev };
+      delete next[activeTab];
+      return next;
+    });
+  };
+
+  // Get the display text for the active tab (edited version if available)
+  const getActiveContent = () => {
+    if (editedContent[activeTab] !== undefined) return editedContent[activeTab];
+    return String(content[activeTab as keyof ContentResponse] || '');
+  };
 
   const activeConfig = PLATFORM_CONFIG[activeTab];
 
@@ -356,25 +408,71 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                     </div>
                   </div>
 
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(String(content[activeTab as keyof ContentResponse] || ""), activeTab)}
-                    disabled={!(content[activeTab as keyof ContentResponse])}
-                    className="h-7 px-3 rounded-md font-bold text-xs bg-white dark:bg-zinc-900 border border-border/50 shadow-sm transition-all"
-                  >
-                    {copied === activeTab ? (
-                      <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                        <Check className="h-3.5 w-3.5" />
-                        <span>Copied</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1.5">
-                        <Copy className="h-3.5 w-3.5" />
-                        <span>Copy</span>
-                      </div>
+                  <div className="flex items-center gap-1.5">
+                    {/* Edit button — only for Twitter, Instagram, Peerlist */}
+                    {isEditable && !isEditing && !isStreaming && content[activeTab as keyof ContentResponse] && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={startEditing}
+                        className="h-7 px-3 rounded-md font-bold text-xs bg-white dark:bg-zinc-900 border border-border/50 shadow-sm transition-all hover:border-primary/40 hover:text-primary"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <Pencil className="h-3.5 w-3.5" />
+                          <span>Edit</span>
+                        </div>
+                      </Button>
                     )}
-                  </Button>
+
+                    {/* Save / Cancel buttons when editing */}
+                    {isEditing && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={cancelEdit}
+                          className="h-7 px-3 rounded-md font-bold text-xs bg-white dark:bg-zinc-900 border border-border/50 shadow-sm transition-all hover:border-red-400 hover:text-red-500"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <X className="h-3.5 w-3.5" />
+                            <span>Cancel</span>
+                          </div>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={saveEdit}
+                          className="h-7 px-3 rounded-md font-bold text-xs bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-300 dark:border-emerald-700 shadow-sm transition-all text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <Save className="h-3.5 w-3.5" />
+                            <span>Save</span>
+                          </div>
+                        </Button>
+                      </>
+                    )}
+
+                    {/* Copy button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(getActiveContent(), activeTab)}
+                      disabled={!(content[activeTab as keyof ContentResponse])}
+                      className="h-7 px-3 rounded-md font-bold text-xs bg-white dark:bg-zinc-900 border border-border/50 shadow-sm transition-all"
+                    >
+                      {copied === activeTab ? (
+                        <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                          <Check className="h-3.5 w-3.5" />
+                          <span>Copied</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <Copy className="h-3.5 w-3.5" />
+                          <span>Copy</span>
+                        </div>
+                      )}
+                    </Button>
+                  </div>
                 </CardHeader>
 
                 <CardContent className="p-0">
@@ -402,16 +500,41 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                           </div>
                         </div>
 
-                        <FormattedText
-                          text={displayedContents[activeTab] || ""}
-                          className="text-sm md:text-base leading-relaxed text-zinc-800 dark:text-zinc-200 font-sans tracking-tight whitespace-pre-wrap"
-                        />
-                        {isStreaming && streamingPlatform === activeTab && (
-                          <motion.span
-                            animate={{ opacity: [0, 1, 0] }}
-                            transition={{ repeat: Infinity, duration: 0.8 }}
-                            className={cn("inline-block w-1 h-4 ml-1 translate-y-0.5 rounded-full", activeConfig.accent)}
-                          />
+                        {/* Editing mode: show textarea */}
+                        {isEditing ? (
+                          <div className="relative">
+                            <div className="absolute -inset-1 rounded-lg bg-primary/5 dark:bg-primary/10 pointer-events-none" />
+                            <textarea
+                              ref={textareaRef}
+                              value={editedContent[activeTab] || ''}
+                              onChange={(e) => {
+                                setEditedContent(prev => ({ ...prev, [activeTab]: e.target.value }));
+                                // Auto-resize
+                                e.target.style.height = 'auto';
+                                e.target.style.height = e.target.scrollHeight + 'px';
+                              }}
+                              className="relative w-full min-h-[120px] text-sm md:text-base leading-relaxed text-zinc-800 dark:text-zinc-200 font-sans tracking-tight bg-transparent border border-primary/30 dark:border-primary/40 rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all"
+                              style={{ overflow: 'hidden' }}
+                            />
+                            <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
+                              <Pencil className="h-3 w-3" />
+                              <span>Editing {activeConfig.name} content — changes will be reflected in copy</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <FormattedText
+                              text={editedContent[activeTab] !== undefined ? editedContent[activeTab] : (displayedContents[activeTab] || "")}
+                              className="text-sm md:text-base leading-relaxed text-zinc-800 dark:text-zinc-200 font-sans tracking-tight whitespace-pre-wrap"
+                            />
+                            {isStreaming && streamingPlatform === activeTab && (
+                              <motion.span
+                                animate={{ opacity: [0, 1, 0] }}
+                                transition={{ repeat: Infinity, duration: 0.8 }}
+                                className={cn("inline-block w-1 h-4 ml-1 translate-y-0.5 rounded-full", activeConfig.accent)}
+                              />
+                            )}
+                          </>
                         )}
                       </div>
                     ) : (
@@ -432,52 +555,56 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                   </div>
 
                   {/* Character Audit Bar - padding 8px 14px */}
-                  {activeConfig.characterLimit && (content[activeTab as keyof ContentResponse]) && (
-                    <div className="px-[14px] py-[8px] bg-zinc-50/80 dark:bg-zinc-900/60 border-t border-border/40 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-muted-foreground hidden sm:block">Length Audit</span>
-                        {String(content[activeTab as keyof ContentResponse]).length <= activeConfig.characterLimit ? (
-                          <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-[9px] font-bold">
-                            <Check className="h-2.5 w-2.5" />
-                            <span>Good</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1 text-red-600 dark:text-red-400 text-[9px] font-bold">
-                            <Info className="h-2.5 w-2.5" />
-                            <span>Over Limit</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        {/* Small Segmented Progress Bar */}
-                        <div className="flex gap-0.5 h-1 w-20 sm:w-24">
-                          {[...Array(10)].map((_, i) => {
-                            const limit = activeConfig.characterLimit || 280;
-                            const progress = (String(content[activeTab as keyof ContentResponse]).length / limit) * 10;
-                            let bgColor = "bg-zinc-200 dark:bg-zinc-800";
-                            if (i < progress) {
-                              if (progress > 10) bgColor = "bg-red-500";
-                              else if (progress > 8) bgColor = "bg-amber-500";
-                              else bgColor = i === 9 ? "bg-amber-500" : "bg-emerald-500";
-                            }
-                            return (
-                              <div key={i} className={cn("flex-1 rounded-full", bgColor)} />
-                            );
-                          })}
+                  {activeConfig.characterLimit && (content[activeTab as keyof ContentResponse]) && (() => {
+                    const auditText = getActiveContent();
+                    const charLen = auditText.length;
+                    const limit = activeConfig.characterLimit || 280;
+                    return (
+                      <div className="px-[14px] py-[8px] bg-zinc-50/80 dark:bg-zinc-900/60 border-t border-border/40 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-muted-foreground hidden sm:block">Length Audit</span>
+                          {charLen <= limit ? (
+                            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-[9px] font-bold">
+                              <Check className="h-2.5 w-2.5" />
+                              <span>Good</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 text-red-600 dark:text-red-400 text-[9px] font-bold">
+                              <Info className="h-2.5 w-2.5" />
+                              <span>Over Limit</span>
+                            </div>
+                          )}
                         </div>
 
-                        <span className={cn(
-                          "text-[10px] font-mono font-bold",
-                          String(content[activeTab as keyof ContentResponse] || "").length > activeConfig.characterLimit
-                            ? "text-red-500"
-                            : "text-zinc-600 dark:text-zinc-400"
-                        )}>
-                          {String(content[activeTab as keyof ContentResponse] || "").length} <span className="opacity-50">/</span> {activeConfig.characterLimit}
-                        </span>
+                        <div className="flex items-center gap-3">
+                          {/* Small Segmented Progress Bar */}
+                          <div className="flex gap-0.5 h-1 w-20 sm:w-24">
+                            {[...Array(10)].map((_, i) => {
+                              const progress = (charLen / limit) * 10;
+                              let bgColor = "bg-zinc-200 dark:bg-zinc-800";
+                              if (i < progress) {
+                                if (progress > 10) bgColor = "bg-red-500";
+                                else if (progress > 8) bgColor = "bg-amber-500";
+                                else bgColor = i === 9 ? "bg-amber-500" : "bg-emerald-500";
+                              }
+                              return (
+                                <div key={i} className={cn("flex-1 rounded-full", bgColor)} />
+                              );
+                            })}
+                          </div>
+
+                          <span className={cn(
+                            "text-[10px] font-mono font-bold",
+                            charLen > limit
+                              ? "text-red-500"
+                              : "text-zinc-600 dark:text-zinc-400"
+                          )}>
+                            {charLen} <span className="opacity-50">/</span> {limit}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </CardContent>
               </Card>
             </motion.div>
