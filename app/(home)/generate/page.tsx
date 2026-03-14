@@ -105,184 +105,146 @@ export default function GeneratePage() {
   };
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-10 border-b border-zinc-200 dark:border-zinc-800"
-      >
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-primary text-primary-foreground shadow-xl shadow-primary/20">
-                  <Wand2 className="h-7 w-7" />
-              </div>
-              <h1 className="text-5xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 font-serif">
-                Content Studio
-              </h1>
-          </div>
-          <p className="text-zinc-500 dark:text-zinc-400 text-xl max-w-xl font-medium leading-relaxed">
-            Craft viral, platform-native content with our elite AI engine.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-2 w-full lg:w-96">
-            <div className="flex items-center gap-2 mb-1">
-                <Key className="h-4 w-4 text-primary" />
-                <label className="text-xs font-bold uppercase tracking-widest text-zinc-400">Auth Configuration</label>
+    <>
+      <style dangerouslySetInnerHTML={{__html: `
+        .page-shell {
+          display: grid;
+          grid-template-rows: auto 1fr;
+          height: calc(100vh - 73px);
+          overflow: hidden;
+        }
+        .main-body {
+          display: grid;
+          grid-template-columns: 280px 1fr;
+          overflow: hidden;
+          height: 100%;
+        }
+        @media (max-width: 1024px) {
+          .main-body {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto 1fr;
+          }
+        }
+      `}} />
+      <div className="page-shell bg-background relative">
+        {/* Topbar */}
+        <div className="flex-shrink-0 flex items-center justify-between py-3 px-6 border-b border-border bg-white dark:bg-black/40 z-10 w-full shadow-sm">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-primary text-primary-foreground shadow-sm">
+              <Wand2 className="h-4 w-4" />
             </div>
-            <div className="flex gap-2">
+            <h1 className="text-xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">
+              Content Studio
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="relative w-72 hidden sm:block">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <Key className="h-3 w-3 text-zinc-400" />
+              </div>
               <Input
                 type="password"
-                placeholder="Paste Gemini API Key..."
+                placeholder="Gemini API Key..."
                 value={apiKey}
                 onChange={handleApiKeyChange}
-                className="h-12 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-2xl focus-visible:ring-primary shadow-sm"
+                className="pl-8 h-8 md:h-9 bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-md focus-visible:ring-primary text-xs shadow-inner"
               />
-              {hasGenerated && !loading && (
-                <Button variant="outline" onClick={handleReset} className="h-12 rounded-2xl font-bold px-6 border-zinc-200 dark:border-zinc-800">
-                  Reset
-                </Button>
-              )}
             </div>
-        </div>
-      </motion.div>
-
-      <AnimatePresence>
-        {showApiKeyError && (
-          <motion.div 
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/50 p-6 rounded-3xl flex items-start gap-4 mb-8">
-              <div className="p-3 bg-white dark:bg-zinc-900 rounded-2xl text-amber-600 shadow-sm border border-amber-100 dark:border-amber-900/50">
-                <AlertCircle className="h-6 w-6" />
-              </div>
-              <div className="flex-1">
-                <h4 className="text-lg font-bold text-amber-900 dark:text-amber-100 mb-1">
-                  API Key Required
-                </h4>
-                <p className="text-zinc-600 dark:text-amber-300 font-medium">
-                  To experience live streaming, please enter your free API key from <a href="https://aistudio.google.com/" target="_blank" rel="noreferrer" className="underline font-bold decoration-amber-400/50 hover:decoration-amber-400 decoration-2 underline-offset-4 transition-all">Google AI Studio</a>.
-                </p>
-              </div>
-              <Button variant="ghost" size="icon" onClick={() => setShowApiKeyError(false)} className="text-amber-500 rounded-xl">
-                <X className="h-6 w-6" />
+            {hasGenerated && !loading && (
+              <Button variant="outline" size="sm" onClick={handleReset} className="h-8 md:h-9 rounded-md font-bold px-3 text-xs">
+                Reset
               </Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            )}
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-        <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
-            className="lg:col-span-4 lg:sticky lg:top-12"
-        >
-          <GeneratorForm onSubmit={handleGenerate} loading={loading} />
-          
-          <AnimatePresence>
-              {error && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  className="mt-8 p-6 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-3xl shadow-sm"
-                >
-                  <div className="flex items-center gap-3 mb-3 text-red-600">
-                    <AlertCircle className="h-5 w-5" />
-                    <p className="font-bold">Generation Error</p>
-                  </div>
-                  <p className="text-sm text-red-500 font-mono bg-white/50 dark:bg-black/20 p-3 rounded-xl break-words mb-4">
-                    {error}
-                  </p>
-                  <Button variant="secondary" onClick={() => setError(null)} className="w-full rounded-xl font-bold h-10">Dismiss</Button>
-                </motion.div>
-              )}
-          </AnimatePresence>
-        </motion.div>
-
-        <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="lg:col-span-8 min-h-[600px]"
-        >
-          {hasGenerated ? (
-            <ContentDisplay content={content} isStreaming={loading} />
-          ) : (
-            <div className="h-full min-h-[600px] flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[3rem] bg-zinc-50/20 dark:bg-zinc-950/20 p-12 text-center group transition-colors hover:bg-zinc-50/40 dark:hover:bg-zinc-950/40">
-              <div className="relative mb-10">
-                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl group-hover:bg-primary/40 transition-all duration-1000 scale-150" />
-                  <div className="relative bg-white dark:bg-zinc-900 p-10 rounded-[2.5rem] shadow-2xl border border-zinc-100 dark:border-zinc-800 transform group-hover:scale-105 transition-transform duration-500">
-                    <LayoutTemplate className="h-16 w-16 text-primary" />
-                  </div>
-              </div>
-              
-              <div className="space-y-4 max-w-md">
-                  <h3 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50 flex items-center justify-center gap-3">
-                    Start Your Narrative <Sparkles className="h-6 w-6 text-yellow-500" />
-                  </h3>
-                  <p className="text-zinc-500 dark:text-zinc-400 text-lg font-medium leading-relaxed">
-                    Input your core concept on the left, and watch as your platform-optimized strategy materializes in real-time.
-                  </p>
-              </div>
-
-              <div className="mt-16 flex gap-8 items-center opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700">
-                  <div className="flex flex-col items-center gap-2">
-                       <span className="h-2 w-12 rounded-full bg-blue-500" />
-                       <span className="text-[10px] font-black tracking-widest uppercase">LinkedIn</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                       <span className="h-2 w-12 rounded-full bg-slate-900 dark:bg-white" />
-                       <span className="text-[10px] font-black tracking-widest uppercase">X / Twitter</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                       <span className="h-2 w-12 rounded-full bg-pink-500" />
-                       <span className="text-[10px] font-black tracking-widest uppercase">Instagram</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                       <span className="h-2 w-12 rounded-full bg-emerald-500" />
-                       <span className="text-[10px] font-black tracking-widest uppercase">Peerlist</span>
-                  </div>
-              </div>
-            </div>
-          )}
-        </motion.div>
-      </div>
-
-      <AnimatePresence>
-        {loading && (
+        {/* API Error Alert - Absolute */}
+        <AnimatePresence>
+          {showApiKeyError && (
             <motion.div 
-                initial={{ y: 100, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 100, opacity: 0 }}
-                className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[100] w-full max-w-md px-6"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute top-[60px] left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4"
             >
-                <div className="bg-zinc-900/90 dark:bg-white/90 backdrop-blur-xl text-white dark:text-zinc-900 p-5 rounded-[2rem] shadow-2xl flex items-center justify-between border border-white/10 dark:border-zinc-200">
-                    <div className="flex items-center gap-5">
-                        <div className="h-10 w-10 relative">
-                            <div className="absolute inset-0 rounded-full border-2 border-primary/30 animate-pulse" />
-                            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-base font-bold">Streaming Content...</span>
-                            <span className="text-xs opacity-60 font-mono tracking-tighter">GEMINI-2.5-FLASH ACTIVE</span>
-                        </div>
-                    </div>
-                    <motion.div 
-                        animate={{ scale: [1, 1.2, 1] }} 
-                        transition={{ repeat: Infinity, duration: 1.5 }}
-                    >
-                        <Sparkles className="h-6 w-6 text-yellow-400" />
-                    </motion.div>
-                </div>
+              <div className="bg-amber-50 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800/50 p-3 rounded-lg flex items-center gap-3 shadow-xl backdrop-blur-md">
+                <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                <p className="flex-1 text-xs font-medium text-amber-900 dark:text-amber-100">
+                  Please enter your API key from <a href="https://aistudio.google.com/" target="_blank" rel="noreferrer" className="underline font-bold decoration-amber-400/50 hover:decoration-amber-400">Google AI Studio</a>.
+                </p>
+                <Button variant="ghost" size="icon" onClick={() => setShowApiKeyError(false)} className="h-6 w-6 text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-md flex-shrink-0">
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
             </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+          )}
+        </AnimatePresence>
+
+        {/* Main Body Grid */}
+        <div className="main-body bg-zinc-50/50 dark:bg-zinc-950/20">
+          {/* Left panel */}
+          <div className="border-r border-border bg-white dark:bg-zinc-950/50 z-0 h-full overflow-hidden relative shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]">
+            <GeneratorForm onSubmit={handleGenerate} loading={loading} />
+            
+            <AnimatePresence>
+                {error && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    className="absolute bottom-[80px] left-4 right-4 p-3 bg-red-50 dark:bg-red-950/80 border border-red-200 dark:border-red-900/50 rounded-xl shadow-lg backdrop-blur-md z-50"
+                  >
+                    <div className="flex items-center gap-2 mb-1.5 text-red-600">
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      <p className="font-bold text-xs uppercase tracking-wider">Error</p>
+                    </div>
+                    <p className="text-[10px] text-red-500 font-mono bg-white/60 dark:bg-black/40 p-2 rounded break-words max-h-24 overflow-y-auto">
+                      {error}
+                    </p>
+                    <div className="mt-2 flex justify-end">
+                      <Button variant="secondary" size="sm" onClick={() => setError(null)} className="h-6 rounded text-[10px] px-2 font-bold">Dismiss</Button>
+                    </div>
+                  </motion.div>
+                )}
+            </AnimatePresence>
+          </div>
+
+          {/* Right panel */}
+          <div className="h-full overflow-hidden w-full relative">
+            {hasGenerated ? (
+              <ContentDisplay content={content} isStreaming={loading} />
+            ) : (
+              <div className="h-full w-full flex flex-col items-center justify-center p-8 text-center opacity-80">
+                <div className="relative mb-6">
+                    <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl scale-[1.2]" />
+                    <div className="relative bg-white dark:bg-zinc-900 p-6 rounded-[2rem] shadow-xl border border-zinc-100 dark:border-zinc-800">
+                      <LayoutTemplate className="h-10 w-10 text-primary" />
+                    </div>
+                </div>
+                
+                <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mb-2 flex items-center justify-center gap-2">
+                  Ready to Generate <Sparkles className="h-4 w-4 text-yellow-500" />
+                </h3>
+                <p className="text-zinc-500 dark:text-zinc-400 text-xs max-w-xs leading-relaxed font-medium">
+                  Configure your post on the left. The optimized content will appear here in real-time.
+                </p>
+
+                <div className="mt-12 flex gap-6 items-center opacity-30 grayscale pointer-events-none">
+                    <div className="flex flex-col items-center gap-1.5">
+                         <span className="h-1.5 w-10 rounded-full bg-blue-500" />
+                         <span className="text-[9px] font-black tracking-widest uppercase">LinkedIn</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-1.5">
+                         <span className="h-1.5 w-10 rounded-full bg-slate-900 dark:bg-white" />
+                         <span className="text-[9px] font-black tracking-widest uppercase">Twitter</span>
+                    </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
