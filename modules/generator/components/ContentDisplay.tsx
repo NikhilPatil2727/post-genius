@@ -40,7 +40,7 @@ const PLATFORM_CONFIG: Record<string, {
       recommendedRange: [1200, 8000]
     },
     twitter: { 
-      name: 'X (Twitter)', 
+      name: '(Twitter)', 
       icon: <FaXTwitter className="h-4 w-4" />,
       color: "text-slate-900 dark:text-slate-100", 
       brand: "#000000",
@@ -104,7 +104,7 @@ function useTypingEffect(rawContent: string, isActive: boolean, isStreaming: boo
       const animate = () => {
         if (bufferRef.current.length > 0) {
           // Slow down when active (typewriter feel), fast when not active
-          const charsPerFrame = isActiveRef.current ? 4 : 32;
+          const charsPerFrame = isActiveRef.current ? 2 : 32;
           const chunk = bufferRef.current.slice(0, charsPerFrame);
           bufferRef.current = bufferRef.current.slice(charsPerFrame);
           setDisplayedContent(prev => prev + chunk);
@@ -141,6 +141,58 @@ function useTypingEffect(rawContent: string, isActive: boolean, isStreaming: boo
   }, [isStreaming]);
 
   return displayedContent;
+}
+
+function ThinkingPhase({ platformName, isCurrent }: { platformName: string, isCurrent: boolean }) {
+  const [visibleThoughts, setVisibleThoughts] = useState<number>(0);
+
+  const thoughts = [
+      "Analyzing your input...",
+      `Crafting tone for ${platformName}...`,
+      "Optimizing hooks and structure...",
+      "Tailoring content per platform..."
+  ];
+
+  useEffect(() => {
+    // Reveal thoughts sequentially
+    const intervals = thoughts.map((_, idx) => 
+      setTimeout(() => setVisibleThoughts(idx + 1), idx * 800)
+    );
+    return () => intervals.forEach(clearTimeout);
+  }, [platformName]);
+
+  return (
+    <div className="flex flex-col items-start space-y-4 font-mono text-sm md:text-base">
+      {thoughts.map((thought, index) => {
+        if (visibleThoughts <= index) return null;
+        
+        const isLatest = visibleThoughts === index + 1 && index !== thoughts.length - 1;
+        
+        return (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-4"
+          >
+            <div className="flex items-center justify-center w-5 flex-shrink-0">
+                {isLatest && isCurrent ? (
+                  <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                ) : (
+                  <span className="text-muted-foreground/40 text-xs">▸</span>
+                )}
+            </div>
+            <span className={cn(
+              "transition-colors duration-500",
+              isLatest && isCurrent ? "text-foreground font-semibold" : "text-muted-foreground/60"
+            )}>
+              {thought}
+            </span>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
 }
 
 export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
@@ -491,24 +543,11 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 gap-6">
                             {isStreaming ? (
-                                <div className="relative flex flex-col items-center gap-4">
-                                    <div className="relative">
-                                        <div className={cn("p-6 rounded-2xl bg-zinc-100 dark:bg-zinc-900", config.color)}>
-                                            {config.icon}
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2 text-center">
-                                      <p className="text-sm font-bold tracking-tight text-foreground/70">
-                                          Crafting your {config.name} post...
-                                        </p>
-                                        {streamingPlatform === id && (
-                                          <div className="flex justify-center gap-1">
-                                              <div className="h-1.5 w-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700 animate-bounce [animation-delay:-0.3s]" />
-                                              <div className="h-1.5 w-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700 animate-bounce [animation-delay:-0.15s]" />
-                                              <div className="h-1.5 w-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700 animate-bounce" />
-                                          </div>
-                                        )}
-                                    </div>
+                                <div className="w-full max-w-sm px-6">
+                                    <ThinkingPhase 
+                                      platformName={config.name} 
+                                      isCurrent={streamingPlatform === id || activeTab === id} 
+                                    />
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center gap-2 opacity-40">
