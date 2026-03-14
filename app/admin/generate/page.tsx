@@ -118,48 +118,43 @@ export default function GeneratePage() {
       
       {/* Premium Header Container */}
       <motion.div 
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative group rounded-3xl p-8 overflow-hidden bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm"
+        className="relative"
       >
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-primary/10 transition-colors duration-700" />
-        
-        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-                    <Wand2 className="h-6 w-6" />
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-zinc-200 dark:border-zinc-800/50">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-3 mb-1">
+                <div className="p-1.5 rounded-lg bg-primary/10 text-primary shadow-sm border border-primary/20">
+                    <Wand2 className="h-5 w-5" />
                 </div>
-                <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 font-serif">
+                <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-zinc-900 to-zinc-500 dark:from-white dark:to-zinc-500 font-serif">
                   Content Studio
                 </h1>
             </div>
-            <p className="text-zinc-500 dark:text-zinc-400 text-lg max-w-xl font-medium">
+            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400 max-w-xl leading-relaxed">
               Transform your ideas into high-performance social media posts using advanced AI models.
             </p>
           </div>
 
-          <div className="bg-zinc-50 dark:bg-zinc-950 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full lg:w-auto min-w-[320px]">
-            <div className="flex items-center gap-2 mb-3">
-                <Key className="h-4 w-4 text-primary" />
-                <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">API Configuration</span>
-            </div>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Input
-                  type="password"
-                  placeholder="Paste Gemini API Key..."
-                  value={apiKey}
-                  onChange={handleApiKeyChange}
-                  className="pl-4 h-11 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl focus-visible:ring-primary shadow-inner"
-                />
+          <div className="flex items-center gap-3 w-full lg:w-auto">
+            <div className="relative w-full lg:w-72 group">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none transition-colors group-focus-within:text-primary">
+                <Key className="h-4 w-4 text-zinc-400" />
               </div>
-              {hasGenerated && !loading && (
-                <Button variant="outline" onClick={handleReset} className="h-11 rounded-xl font-bold px-6 shadow-sm">
-                  New Draft
-                </Button>
-              )}
+              <Input
+                type="password"
+                placeholder="Gemini API Key..."
+                value={apiKey}
+                onChange={handleApiKeyChange}
+                className="pl-9 h-10 bg-white dark:bg-zinc-950/50 border-zinc-200 dark:border-zinc-800 rounded-xl focus-visible:ring-primary shadow-sm text-sm transition-all focus-visible:shadow-md"
+              />
             </div>
+            {hasGenerated && !loading && (
+              <Button variant="outline" size="sm" onClick={handleReset} className="h-10 rounded-xl font-bold px-5 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_15px_-3px_rgba(0,0,0,0.1)] transition-all bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+                New Draft
+              </Button>
+            )}
           </div>
         </div>
       </motion.div>
