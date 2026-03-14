@@ -62,9 +62,9 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader>
         <Link href={"/"} className="flex gap-2 items-center justify-start p-4 ">
-          <Image src={"/logo.svg"} alt="TreeBio Logo" width={32} height={32} />
+          {/* <Image src={"/logo.svg"} alt="TreeBio Logo" width={32} height={32} /> */}
           <h1 className="text-lg font-bold text-zinc-700 dark:text-zinc-100">
-            PostBloom Admin
+            PostBloom
           </h1>
         </Link>
         <SidebarSeparator />
