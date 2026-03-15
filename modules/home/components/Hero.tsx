@@ -7,7 +7,7 @@ import { FaLinkedin, FaXTwitter, FaInstagram } from "react-icons/fa6";
 import { SiPeerlist } from "react-icons/si";
 import { Users, Clock, Zap } from "lucide-react";
 
-export const Hero = ({ user, profile }: any) => (
+export const Hero = ({ user }: any) => (
   <BackgroundLines className="flex min-h-[48rem] h-auto py-28 md:py-36 items-center justify-center flex-col px-6 text-center bg-transparent">
 
     {/* ── NEW: social proof pill ── */}
@@ -55,7 +55,7 @@ export const Hero = ({ user, profile }: any) => (
     {/* ── ORIGINAL: CTA buttons — zero changes ── */}
     <div className="mt-12 flex gap-4 justify-center flex-wrap relative z-20">
       <Link href="/admin/generate">
-        {user.success && profile.firstName && (
+        {user && user.firstName && (
           <NoiseBackground
             containerClassName="w-fit p-2 rounded-full mx-auto"
             gradientColors={["rgb(255, 100, 150)", "rgb(100, 150, 255)", "rgb(255, 200, 100)"]}

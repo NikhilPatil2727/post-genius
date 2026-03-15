@@ -192,15 +192,18 @@ function GeneratePageContent() {
       ].filter(v => v.content.length > 0);
 
       if (variants.length > 0) {
-        await savePostAction({
+        const result = await savePostAction({
           topic: data.topic,
           sourceText: data.text,
           tone: data.tone,
           audience: data.audience,
           variants
         });
-        // Dispatch event for sidebar to refresh
-        window.dispatchEvent(new Event('post-saved'));
+        
+        if (result.success && result.post) {
+          // Dispatch event with the new post data for the sidebar to refresh optimistically
+          window.dispatchEvent(new CustomEvent('post-saved', { detail: result.post }));
+        }
       }
 
     } catch (err) {

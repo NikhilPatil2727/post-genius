@@ -7,14 +7,14 @@ import { onboardUser } from "@/modules/auth/actions";
 import { CurrentUserName } from "@/modules/profile/actions";
 
 export default async function HomePage() {
-  const user = await onboardUser();
-  const profile = await CurrentUserName();
+  const onboardResult = await onboardUser();
+  const user = onboardResult.success ? onboardResult.user : null;
 
   return (
     <div className="space-y-32 pb-20">
 
       {/* 1. Hero */}
-      <Hero user={user} profile={profile} />
+      <Hero user={user} />
 
       {/* 2. How it works — new */}
       <HowItWorks />

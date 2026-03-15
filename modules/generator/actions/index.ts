@@ -62,17 +62,10 @@ export async function savePostAction(data: {
     return { success: false, error: 'Unauthorized' };
   }
   try {
-    // 1. Find the user in our DB by their Clerk ID
-    const user = await prisma.user.findUnique({
-      where: { clerkId },
-    });
-    if (!user) {
-      return { success: false, error: 'User profile not found. Please sign in again.' };
-    }
     // 2. Create the post and its variants in a single transaction
     const post = await prisma.post.create({
       data: {
-        userId: user.id,
+        user: { connect: { clerkId } },
         topic: data.topic,
         sourceText: data.sourceText,
         tone: data.tone,
@@ -107,16 +100,19 @@ export async function getUserPostsAction() {
     return { success: false, error: 'Unauthorized' };
   }
   try {
-    const user = await prisma.user.findUnique({
-      where: { clerkId },
-    });
-    if (!user) {
-      return { success: false, error: 'User not found' };
-    }
     const posts = await prisma.post.findMany({
-      where: { userId: user.id },
-      include: {
+      where: { 
+        user: { clerkId } 
+      },
+      select: {
+        id: true,
+        topic: true,
+        sourceText: true,
+        createdAt: true,
         variants: {
+          select: {
+            platform: true,
+          },
           orderBy: {
             platform: 'asc'
           }
@@ -125,6 +121,7 @@ export async function getUserPostsAction() {
       orderBy: {
         createdAt: 'desc', // Show newest first
       },
+      take: 25, // Optimization: only fetch most recent posts for history
     });
     return { success: true, posts };
   } catch (error) {
@@ -139,16 +136,18 @@ export async function deletePostAction(postId: string) {
   const { userId: clerkId } = await auth();
   if (!clerkId) return { success: false, error: 'Unauthorized' };
   try {
-    const user = await prisma.user.findUnique({ where: { clerkId } });
-    if (!user) return { success: false, error: 'User not found' };
-    // Verify ownership before deleting
-    const post = await prisma.post.findFirst({
-      where: { id: postId, userId: user.id },
+    // Verify ownership and delete in one go
+    const deleteResult = await prisma.post.deleteMany({
+      where: { 
+        id: postId, 
+        user: { clerkId } 
+      },
     });
-    if (!post) return { success: false, error: 'Post not found or access denied' };
-    await prisma.post.delete({
-      where: { id: postId },
-    });
+
+    if (deleteResult.count === 0) {
+      return { success: false, error: 'Post not found or access denied' };
+    }
+
     revalidatePath('/dashboard');
     return { success: true };
   } catch (error) {
@@ -164,10 +163,11 @@ export async function getPostByIdAction(postId: string) {
   const { userId: clerkId } = await auth();
   if (!clerkId) return { success: false, error: 'Unauthorized' };
   try {
-    const user = await prisma.user.findUnique({ where: { clerkId } });
-    if (!user) return { success: false, error: 'User not found' };
     const post = await prisma.post.findFirst({
-      where: { id: postId, userId: user.id },
+      where: { 
+        id: postId, 
+        user: { clerkId } 
+      },
       include: {
         variants: true,
       },
