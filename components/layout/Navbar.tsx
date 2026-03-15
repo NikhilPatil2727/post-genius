@@ -36,13 +36,14 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-300 border-b",
-        scrolled
-          ? "bg-white/70 dark:bg-black/70 backdrop-blur-xl border-neutral-200/50 dark:border-neutral-800/50 py-3"
-          : "bg-transparent border-transparent py-5"
+        "fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl transition-all duration-300",
+        "rounded-full border shadow-xl px-1",
+        "bg-white/60 dark:bg-[rgba(20,20,20,0.6)] backdrop-blur-[12px]",
+        "border-white/30 dark:border-white/10",
+        scrolled ? "py-2" : "py-3"
       )}
     >
-      <div className="container mx-auto px-4 md:px-8">
+      <div className="mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link
@@ -53,21 +54,21 @@ export function Navbar() {
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">
+                <span className="text-xl font-bold tracking-tight text-neutral-900 dark:text-white leading-tight">
                   Post<span className="text-blue-600">Bloom</span>
                 </span>
-                <span className="text-[9px] uppercase tracking-[0.2em] text-neutral-500 font-bold leading-none">
+                <span className="text-[8px] uppercase tracking-[0.2em] text-neutral-500 font-bold leading-none">
                   Intelligence
                 </span>
               </div>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden lg:flex items-center gap-1">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-400 transition-colors hover:text-blue-600 dark:hover:text-white rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800/50"
+                  className="px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-400 transition-colors hover:text-blue-600 dark:hover:text-white rounded-full hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50"
                 >
                   {item.name}
                 </Link>
@@ -76,7 +77,19 @@ export function Navbar() {
           </div>
 
           {/* Authentication Buttons */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
+            <nav className="hidden md:flex lg:hidden items-center gap-1">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="px-3 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-400 transition-colors hover:text-blue-600 dark:hover:text-white rounded-full hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </nav>
+
             <ModeToggle />
 
             {/* Show when user is signed in */}
@@ -87,26 +100,26 @@ export function Navbar() {
             {/* Show when user is signed out */}
             <SignedOut>
               <SignInButton>
-                <Button variant="outline">Sign In</Button>
+                <Button variant="outline" size="sm" className="hidden sm:flex rounded-full">Sign In</Button>
               </SignInButton>
             </SignedOut>
-          </div>
 
-          {/* Mobile menu toggle */}
-          <div className="flex md:hidden items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+            {/* Mobile menu toggle */}
+            <div className="flex md:hidden items-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+            </div>
           </div>
         </div>
 
         {mobileMenuOpen && (
-          <div className="absolute top-full left-0 w-full bg-white dark:bg-black border-b border-neutral-200 dark:border-neutral-800 p-6 flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300 md:hidden shadow-2xl">
+          <div className="absolute top-[calc(100%+12px)] left-0 w-full bg-white/90 dark:bg-black/90 backdrop-blur-xl border border-neutral-200/50 dark:border-neutral-800/50 p-6 rounded-3xl flex flex-col gap-4 animate-in fade-in slide-in-from-top-4 duration-300 md:hidden shadow-2xl">
             {navigation.map((item) => (
               <Link
                 key={item.name}

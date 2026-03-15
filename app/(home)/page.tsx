@@ -5,18 +5,25 @@ import { onboardUser } from "@/modules/auth/actions";
 import { CurrentUserName } from "@/modules/profile/actions";
 
 export default async function HomePage() {
-  const user=await onboardUser();
-  const profile=await CurrentUserName();
- 
+  const user = await onboardUser();
+  const profile = await CurrentUserName();
+
   return (
     <div className="space-y-32 pb-20">
       <Hero user={user} profile={profile} />
 
       {/* Shortened "About" inline for simplicity */}
-      <section className="max-w-4xl mx-auto px-6 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-8 tracking-tight">Stop wasting hours on formatting.</h2>
-        <p className="text-neutral-600 dark:text-neutral-400 text-lg italic">
-          PostBloom automates the artistry of platform-specific writing.
+      <section className="max-w-4xl mx-auto px-10 py-16 text-center rounded-[2.5rem] border border-white/40 dark:border-white/10 shadow-2xl relative overflow-hidden bg-transparent">
+        {/* Glass effect layer */}
+        <div className="absolute inset-0 bg-white/30 dark:bg-black/20 backdrop-blur-xl -z-10" />
+        {/* Radial gradient layer matching the page background */}
+        <div className="absolute inset-0 bg-[var(--page-background)] opacity-50 -z-20" />
+        
+        <h2 className="text-3xl md:text-5xl font-bold mb-8 tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-neutral-900 via-neutral-800 to-neutral-600 dark:from-white dark:to-neutral-500">
+          Stop wasting hours on formatting.
+        </h2>
+        <p className="text-neutral-600 dark:text-neutral-400 text-xl md:text-2xl font-medium italic leading-relaxed">
+          "PostBloom automates the artistry of platform-specific writing."
         </p>
       </section>
 
