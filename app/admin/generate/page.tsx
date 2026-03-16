@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import GeneratorForm from '@/modules/generator/components/GeneratorForm';
 import { ContentDisplay } from '@/modules/generator/components/ContentDisplay';
-import { LayoutTemplate, Key, AlertCircle, X, Sparkles, Wand2 } from 'lucide-react';
+import { Key, AlertCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { ContentResponse, ContentRequest } from '@/types';
@@ -231,9 +231,7 @@ function GeneratePageContent() {
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-zinc-200 dark:border-zinc-800/50">
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-3 mb-1">
-              <div className="p-1.5 rounded-lg bg-primary/10 text-primary shadow-sm border border-primary/20">
-                <Wand2 className="h-5 w-5" />
-              </div>
+            
               <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-zinc-900 to-zinc-500 dark:from-white dark:to-zinc-500 font-serif">
                 Content Studio
               </h1>
@@ -351,41 +349,37 @@ function GeneratePageContent() {
                     <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
                     <div className="h-16 w-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
                   </div>
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">Retrieving Post</h3>
-                    <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium font-mono tracking-wider uppercase opacity-70">Syncing with history...</p>
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 font-serif">Retrieving Post</h3>
+                    <p className="text-zinc-500 dark:text-zinc-400 text-[10px] font-black tracking-[0.3em] uppercase opacity-70">Syncing with history...</p>
                   </div>
                 </div>
               ) : (
                 <>
-                  <div className="relative mb-8">
-                    <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl group-hover:bg-primary/30 transition-all duration-1000" />
-                    <div className="relative bg-white dark:bg-zinc-900 p-8 rounded-[2rem] shadow-2xl border border-zinc-100 dark:border-zinc-800 transition-transform duration-500 group-hover:scale-110">
-                      <LayoutTemplate className="h-12 w-12 text-primary" />
+                  <div className="space-y-8 max-w-md mx-auto text-center">
+                    <div className="space-y-4">
+                      <h3 className="text-4xl md:text-6xl font-extrabold tracking-tighter text-zinc-900 dark:text-zinc-50 font-serif">
+                        Ready to Create
+                      </h3>
+                      <div className="h-1 w-16 bg-zinc-900 dark:bg-zinc-50 mx-auto rounded-full" />
                     </div>
-                  </div>
-
-                  <div className="space-y-2 max-w-sm">
-                    <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 flex items-center justify-center gap-2">
-                      Empty Canvas <Sparkles className="h-5 w-5 text-yellow-500" />
-                    </h3>
-                    <p className="text-zinc-500 dark:text-zinc-400 text-lg leading-relaxed">
-                      Your platform-ready content will materialize here in real-time. Start by providing a topic or a draft on the left.
+                    <p className="text-zinc-500 dark:text-zinc-400 text-lg leading-relaxed font-medium">
+                      Your platform-optimized narratives will appear here. Start by defining your topic or pasting a draft on the left.
                     </p>
                   </div>
 
-                  <div className="mt-12 flex gap-4">
-                    <div className="flex flex-col items-center gap-1.5 opacity-50">
-                      <div className="h-1.5 w-8 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">LinkedIn</span>
+                  <div className="mt-12 flex gap-8">
+                    <div className="flex flex-col items-center gap-2 group/platform cursor-default">
+                      <div className="h-1 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 group-hover/platform:bg-blue-500 transition-all duration-300" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 group-hover/platform:text-zinc-900 dark:group-hover/platform:text-zinc-100 transition-colors">LinkedIn</span>
                     </div>
-                    <div className="flex flex-col items-center gap-1.5 opacity-50">
-                      <div className="h-1.5 w-8 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">X / Twitter</span>
+                    <div className="flex flex-col items-center gap-2 group/platform cursor-default">
+                      <div className="h-1 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 group-hover/platform:bg-zinc-900 dark:group-hover/platform:bg-white transition-all duration-300" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 group-hover/platform:text-zinc-900 dark:group-hover/platform:text-zinc-100 transition-colors">X / Twitter</span>
                     </div>
-                    <div className="flex flex-col items-center gap-1.5 opacity-50">
-                      <div className="h-1.5 w-8 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Instagram</span>
+                    <div className="flex flex-col items-center gap-2 group/platform cursor-default">
+                      <div className="h-1 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 group-hover/platform:bg-pink-500 transition-all duration-300" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 group-hover/platform:text-zinc-900 dark:group-hover/platform:text-zinc-100 transition-colors">Instagram</span>
                     </div>
                   </div>
                 </>

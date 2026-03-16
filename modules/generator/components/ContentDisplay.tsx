@@ -313,7 +313,7 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
             <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
               <LayoutPanelLeft className="h-4 w-4" />
             </div>
-            <h3 className="text-sm font-bold tracking-tight">AI Content Variants</h3>
+            <h3 className="text-sm font-bold tracking-tight text-zinc-800 dark:text-zinc-200">Editorial Variants</h3>
 
             {isStreaming && (
               <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-primary/10 border border-primary/20 ml-2">
@@ -490,7 +490,7 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-1">
-                              <span className="font-bold text-xs">PostBloom AI</span>
+                              <span className="font-bold text-xs">PostBloom Editorial</span>
                               <div className="h-2.5 w-2.5 rounded-full bg-blue-500 flex items-center justify-center">
                                 <Check className="h-1.5 w-1.5 text-white" />
                               </div>
@@ -544,8 +544,7 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                       <div className="py-12 flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 gap-4">
                         {isStreaming ? (
                           <div className="flex flex-col items-center gap-3">
-                            <div className="h-5 w-5 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-                            <span className="text-xs font-medium font-mono">Generating {activeConfig.name} content...</span>
+                            <span className="text-xs font-medium font-mono animate-pulse">Generating {activeConfig.name} content...</span>
                           </div>
                         ) : (
                           <div className="flex flex-col items-center gap-2 opacity-50">

@@ -31,7 +31,6 @@ const mainNavItems = [
   {
     title: "Generate",
     url: "/admin/generate",
-    icon: Wand2,
   },
 ];
 
@@ -99,13 +98,13 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <Link href={"/"} className="flex gap-2 items-center justify-start p-4 hover:opacity-80 transition-opacity">
-          <div className="bg-primary/10 p-2 rounded-xl border border-primary/20">
-            <Wand2 className="size-5 text-primary" />
-          </div>
-          <h1 className="text-xl font-black tracking-tight text-zinc-900 dark:text-white font-serif">
-            PostBloom
+        <Link href={"/"} className="flex flex-col gap-0 items-start p-4 hover:opacity-80 transition-opacity">
+          <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white leading-none">
+            Post<span className="text-blue-600">Bloom</span>
           </h1>
+          <span className="text-[8px] uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 font-black mt-1.5">
+            Editorial
+          </span>
         </Link>
         <SidebarSeparator />
       </SidebarHeader>
@@ -124,12 +123,9 @@ export function AppSidebar() {
                     className={`rounded-xl transition-all ${pathname === item.url ? 'bg-primary/10 text-primary shadow-sm' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}
                   >
                     <Link href={item.url}>
-                      <>
-                        <item.icon className={`size-5 ${pathname === item.url ? 'text-primary' : 'text-zinc-500'}`} />
-                        <span className="font-bold text-[15px]">
-                          {item.title}
-                        </span>
-                      </>
+                      <span className="font-bold text-[15px]">
+                        {item.title}
+                      </span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
