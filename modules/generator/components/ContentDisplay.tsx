@@ -270,13 +270,13 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
           border-bottom: 0.5px solid rgba(161, 161, 170, 0.4);
         }
         .tab-item {
-          padding: 10px 0;
+          padding: 8px 12px;
           text-align: center;
           font-size: 11px;
-          font-weight: 600;
-          border-bottom: 2px solid transparent;
+          font-weight: 700;
+          border-radius: 8px;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -284,13 +284,16 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
           color: rgba(161, 161, 170, 0.8);
           letter-spacing: 0.05em;
           text-transform: uppercase;
+          margin: 4px;
         }
         .tab-item.active {
-          border-bottom: 2px solid currentColor;
+          background-color: white;
+          box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
           color: inherit;
         }
-        .tab-item.active .dark {
-           color: white;
+        .dark .tab-item.active {
+          background-color: rgba(255, 255, 255, 0.05);
+          box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.3);
         }
         .content-area-scroll::-webkit-scrollbar {
           width: 4px;
@@ -358,14 +361,14 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                   key={id}
                   onClick={() => setActiveTab(id)}
                   className={cn(
-                    "tab-item",
-                    isActive ? "active" : "hover:text-zinc-600 dark:hover:text-zinc-300"
+                    "tab-item flex-1",
+                    isActive && "active"
                   )}
-                  style={isActive ? { borderColor: config.brand, color: config.brand } : {}}
+                  style={isActive ? { color: config.brand } : {}}
                 >
-                  <span className={cn(isActive && config.color)}>{config.name}</span>
+                  <span className={cn("transition-colors", isActive && config.color)}>{config.name}</span>
                   {isCompleted && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-sm" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-sm ring-2 ring-white dark:ring-zinc-900" />
                   )}
                 </div>
               );
@@ -458,7 +461,7 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
                       size="sm"
                       onClick={() => copyToClipboard(getActiveContent(), activeTab)}
                       disabled={!(content[activeTab as keyof ContentResponse])}
-                      className="h-7 px-3 rounded-md font-bold text-xs bg-white dark:bg-zinc-900 border border-border/50 shadow-sm transition-all"
+                      className="h-8 px-3 rounded-lg font-bold text-xs bg-zinc-100/50 dark:bg-zinc-800/50 hover:bg-zinc-200 dark:hover:bg-zinc-700/50 transition-all border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600"
                     >
                       {copied === activeTab ? (
                         <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">

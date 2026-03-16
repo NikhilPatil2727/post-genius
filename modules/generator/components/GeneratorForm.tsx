@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+
 import { CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -168,22 +170,31 @@ export default function GeneratorForm({
             <Button 
                 type="submit" 
                 className={cn(
-                    "w-full h-11 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 transition-all active:scale-[0.98] group relative",
-                    loading ? "opacity-90" : "hover:shadow-xl hover:shadow-primary/30"
+                    "w-full h-11 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 transition-all active:scale-[0.98] group relative overflow-hidden",
+                    loading ? "opacity-90 cursor-not-allowed" : "hover:shadow-xl hover:shadow-primary/30"
                 )}
                 disabled={loading}
             >
-                {loading ? (
-                    <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Generating...</span>
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 group-hover:animate-pulse" />
-                        <span>Generate Content</span>
-                    </div>
+                {loading && (
+                    <motion.div 
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent w-[200%] z-0"
+                        animate={{ x: ['-100%', '100%'] }}
+                        transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
+                    />
                 )}
+                <div className="relative flex items-center justify-center gap-2 z-10">
+                    {loading ? (
+                        <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Crafting Content...</span>
+                        </>
+                    ) : (
+                        <>
+                            <Sparkles className="h-4 w-4 group-hover:animate-pulse" />
+                            <span>Generate Content</span>
+                        </>
+                    )}
+                </div>
             </Button>
         </div>
       </form>
