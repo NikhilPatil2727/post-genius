@@ -37,7 +37,7 @@ const PLATFORM_CONFIG: Record<string, {
     bg: "bg-[#0077B5]/10 dark:bg-[#0077B5]/20",
     border: "border-[#0077B5]/30 dark:border-[#0077B5]/40",
     accent: "bg-[#0077B5]",
-    characterLimit: 8000
+    characterLimit: 3000
   },
   twitter: {
     name: 'Twitter',
@@ -57,7 +57,7 @@ const PLATFORM_CONFIG: Record<string, {
     bg: "bg-pink-50/50 dark:bg-pink-900/10",
     border: "border-pink-200/50 dark:border-pink-800/50",
     accent: "bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888]",
-    characterLimit: 600
+    characterLimit: 2200
   },
   peerlist: {
     name: 'Peerlist',
