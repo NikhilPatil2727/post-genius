@@ -4,13 +4,14 @@ export type ContentRequest = {
   text?: string;
   tone?: string;
   audience?: string;
+  apiKey?: string;
 };
 
 export type ContentResponse = {
-  masterContent: string;
+  // masterContent: string;
   linkedin: string;
-  twitterShort: string;
-  twitterThread: string[];
+  twitter: string;
+  twitterThread?: string[];
   instagram: string;
   peerlist: string;
 };

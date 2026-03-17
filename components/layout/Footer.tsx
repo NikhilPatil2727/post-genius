@@ -8,7 +8,7 @@ export function Footer() {
     {
       title: "Product",
       links: [
-        { name: "Generator", href: "/generate" },
+        { name: "Generator", href: "/admin/generate" },
         { name: "Features", href: "/#features" },
         { name: "Pricing", href: "/pricing" },
         { name: "Changelog", href: "#" },

@@ -1,98 +1,113 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY
-});
+/**
+ * MARKERS for streaming protocol.
+ * These are used to separate content for different platforms in the stream.
+ */
+export const MARKERS = {
+  LINKEDIN: '[[LINKEDIN]]',
+  TWITTER: '[[TWITTER]]',
+  INSTAGRAM: '[[INSTAGRAM]]',
+  PEERLIST: '[[PEERLIST]]',
+};
 
-const SYSTEM_PROMPT = `You are a professional social media content strategist.
-Create natural, human-like content that fits each platform.
+const SYSTEM_PROMPT = `You are an elite Social Media Ghostwriter and Content Strategist. 
+Your goal is to transform raw ideas or topics into viral-ready, high-engagement content across 4 specific platforms.
+You write with a "Human-First" approach: avoid corporate jargon, robotic listicles, or cliché AI openings.`;
 
-Rules:
-- Sound natural, not robotic.
-- No generic AI phrases.
-- Simple, confident language.
-- Platform-native formatting.
-- Output must be structured JSON only.
-- Output must be structured and easy to read.`;
+/**
+ * Optimized dynamic prompt builder.
+ */
+const BUILD_MAIN_PROMPT = (mode: string, topic?: string, text?: string, tone?: string, audience?: string) => `
+CORE OBJECTIVE:
+Generate highly tailored content based on the following context:
+- MODE: ${mode === 'topic' ? 'Idea Generation' : 'Content Refinement/Rewrite'}
+- TARGET KEYWORDS/TOPIC: ${topic || 'Analyze the provided text'}
+- VOICE TONE: ${tone || 'Professional yet accessible'}
+- TARGET AUDIENCE: ${audience || 'General professionals and enthusiasts'}
 
-const MAIN_PROMPT = (mode: string, topic?: string, text?: string, tone?: string, audience?: string) => `
-MODE: ${mode}
+${mode === 'rewrite' ? `SOURCE MATERIAL TO TRANSFORM:
+"${text}"
+Analyze the core message above and expand/refine it for the platforms below.` : `GENERATE FROM TOPIC:
+Create a thought-leadership narrative around "${topic}".`}
 
-${mode === 'topic' ? `
-Topic: ${topic}
-Tone: ${tone}
-Audience: ${audience}
+PLATFORM SPECIFIC INSTRUCTIONS:
 
-Write a master post (600–900 words) that gives value, insight, and a clear takeaway.
-` : `
-User content:
-${text}
+1) LinkedIn (The Professional Narrative):
+   - LENGTH: Up to 700 characters (aim for comprehensive value).
+   - STRUCTURE: 
+     * Start with a "Scroll-Stopping" hook (a question, a controversial take, or a bold result).
+     * Use short, punchy paragraphs for readability.
+     * Incorporate bullet points for key takeaways.
+     * End with a "Call to Conversation" (meaningful question).
+   - TONE: Authoritative but conversational.
+   - CTA: Exactly 3 relevant hashtags at the very bottom.
 
-Improve clarity without changing meaning. Keep the user's voice.
-`}
+2) X / Twitter (The Viral Hook):
+   - LENGTH: Strictly Max 280 characters.
+   - STRUCTURE: 1-2 sentence hook + 1 core insight + 1 CTA/Follow-up.
+   - TONE: Sharp, witty, and high-energy.
 
-After the master content, generate:
+3) Instagram (The Aesthetic Story):
+   - LENGTH: Max 600 characters.
+   - STRUCTURE: Captivating first line (no emojis in line 1).
+   - TONE: Relatable, visual, and friendly.
+   - CTA: Exactly 5 hashtags.
 
-1) LinkedIn Post  
-- 1200–2000 characters  
-- Professional tone  
-- Short paragraphs  
-- End with 3 relevant hashtags  
+4) Peerlist (The Tech/Maker Shout):
+   - LENGTH: Max 700 characters.
+   - STRUCTURE: Focus on "What I built/learned" or "Project Update".
+   - TONE: Collaborative and transparent.
+   - CTA: Exactly 5 tags/hashtags.
 
-2) X (Twitter) Short Post  
-- Max 280 characters  
-- Strong hook  
-- Clear message  
-
-3) Instagram Caption  
-- Max 2200 characters  
-- First 125 characters = strong hook  
-- Friendly tone  
-- End with 5 hashtags   
-
-4) Peerlist Post  
-- Max 2000 characters  
-- Professional and concise  
-
-Return ONLY valid JSON:
-
-{
-  "masterContent": "...",
-  "linkedin": "...",
-  "twitterShort": "...",
-  "instagram": "...",
-  "peerlist": "..."
-}
+OUTPUT FORMAT:
+Do NOT include any preamble. Start immediately with the first marker.
 `;
 
-export async function generateContent(
+/**
+ * Streams AI content using the Gemini model.
+ */
+export async function* streamGenerateContent(
   mode: 'topic' | 'rewrite',
+  apiKey: string,
   topic?: string,
   text?: string,
   tone?: string,
   audience?: string
 ) {
+  const ai = new GoogleGenAI({ apiKey });
+  const MODEL_NAME = "gemini-2.5-flash"; 
+
+  const mainPrompt = BUILD_MAIN_PROMPT(mode, topic, text, tone, audience);
+
   try {
-    const prompt = SYSTEM_PROMPT + '\n\n' + MAIN_PROMPT(mode, topic, text, tone, audience);
-    
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash", // More stable production model
-      contents: prompt,
+    const response = await ai.models.generateContentStream({
+      model: MODEL_NAME,
+      contents: [{ 
+        role: 'user', 
+        parts: [{ text: `
+          Follow this structure exactly:
+          ${MARKERS.LINKEDIN}
+          [Content]
+          ${MARKERS.TWITTER}
+          [Content]
+          ${MARKERS.INSTAGRAM}
+          [Content]
+          ${MARKERS.PEERLIST}
+          [Content]
+
+          Context to use:
+          ${mainPrompt}
+        ` }] 
+      }],
     });
-    
-    const content = response.text;
-    
-    if (!content) {
-      throw new Error('No response from Gemini API');
+
+    for await (const chunk of response) {
+      const text = chunk.text;
+      if (text) yield text;
     }
-    
-    // Clean and parse JSON response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('Invalid response format');
-    
-    return JSON.parse(jsonMatch[0]);
   } catch (error) {
-    console.error('Gemini API error:', error);
+    console.error('Gemini Stream Error:', error);
     throw error;
   }
 }
