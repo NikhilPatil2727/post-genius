@@ -3,36 +3,39 @@ import { ModeToggle } from '@/components/ModeToggle'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
+import Link from "next/link";
 import React from 'react'
 
 import { usePathname } from 'next/navigation'
 
 const AppHeader = () => {
 
-    const pathname = usePathname();
+  const pathname = usePathname();
 
-    const splitedPathName = pathname.split("/admin/").pop()?.split("/") || [];
-    const currentPage = splitedPathName[splitedPathName.length - 1]
+  const splitedPathName = pathname.split("/admin/").pop()?.split("/") || [];
+  const currentPage = splitedPathName[splitedPathName.length - 1]
 
   return (
-     <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb className="flex flex-1 items-center justify-between">
-            <BreadcrumbList>
-              <BreadcrumbItem  className="hidden md:block">
-                <BreadcrumbLink href="/admin">Dashboard</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>
-                    {currentPage.charAt(0).toUpperCase() + currentPage.slice(1)}
-                </BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-            <ModeToggle />
-          </Breadcrumb>
-        </header>
+    <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+      <SidebarTrigger className="-ml-1" />
+      <Separator orientation="vertical" className="mr-2 h-4" />
+      <Breadcrumb className="flex flex-1 items-center justify-between">
+        <BreadcrumbList>
+          <BreadcrumbItem className="hidden md:block">
+            <Link href="/admin/generate">
+              <BreadcrumbLink>Dashboard</BreadcrumbLink>
+            </Link>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator className="hidden md:block" />
+          <BreadcrumbItem>
+            <BreadcrumbPage>
+              {currentPage.charAt(0).toUpperCase() + currentPage.slice(1)}
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+        <ModeToggle />
+      </Breadcrumb>
+    </header>
   )
 }
 
