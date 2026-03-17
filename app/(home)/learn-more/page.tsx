@@ -2,632 +2,518 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { 
-  Zap, 
-  Clock, 
-  PenTool,
-  RefreshCw,
-  Wand2,
+import {
+  Clock,
   Target,
-  Users,
   CheckCircle2,
-  ArrowRight,
-  Instagram,
-  Twitter,
-  Linkedin,
-  FileText,
-  BarChart,
-  MessageSquare,
-  BookOpen,
-  Video,
-  Download,
-  Share2,
-  Lock,
   Copy,
   Layout,
-  Calendar,
   TrendingUp,
   Bell,
   Users2,
-  Rocket
+  Video,
+  Rocket,
+  ArrowRight,
+  Zap,
 } from "lucide-react";
-import { SiPeerlist } from "react-icons/si";
 import { cn } from "@/lib/utils";
 
+/* ─── Real SVG Brand Logos ─── */
+
+const InstagramIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="ig-g" cx="30%" cy="107%" r="150%">
+        <stop offset="0%" stopColor="#fdf497" />
+        <stop offset="5%" stopColor="#fdf497" />
+        <stop offset="45%" stopColor="#fd5949" />
+        <stop offset="60%" stopColor="#d6249f" />
+        <stop offset="90%" stopColor="#285AEB" />
+      </radialGradient>
+    </defs>
+    <rect x="2" y="2" width="20" height="20" rx="5.5" fill="url(#ig-g)" />
+    <circle cx="12" cy="12" r="4.5" stroke="white" strokeWidth="1.8" fill="none" />
+    <circle cx="17.5" cy="6.5" r="1.25" fill="white" />
+  </svg>
+);
+
+const XIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="24" height="24" rx="5.5" fill="#0f0f0f" />
+    <path d="M17.751 4h2.985l-6.523 7.456L21.5 20h-6.005l-4.7-6.146L5.332 20H2.345l6.978-7.977L2.5 4h6.16l4.251 5.622L17.751 4zm-1.047 14.4h1.654L7.619 5.637H5.84L16.704 18.4z" fill="white" />
+  </svg>
+);
+
+const LinkedInIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <rect width="24" height="24" rx="4.5" fill="#0A66C2" />
+    <path d="M7.75 9.5H5.25v9.25h2.5V9.5zm-1.25-3.75a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM19.25 18.75h-2.5v-4.6c0-1.1-.02-2.5-1.52-2.5-1.53 0-1.77 1.2-1.77 2.42v4.68H11v-9.25h2.4v1.26h.03c.34-.64 1.16-1.32 2.38-1.32 2.55 0 3.02 1.68 3.02 3.86v5.45z" fill="white" />
+  </svg>
+);
+
+const PeerlistIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <rect width="24" height="24" rx="6" fill="#00AA45" />
+    <path d="M6 5.5h5.2c2.1 0 3.5 1.3 3.5 3.2 0 1.9-1.4 3.2-3.5 3.2H8.3v3.6H6V5.5zm2.3 4.6h2.7c.8 0 1.3-.5 1.3-1.4 0-.9-.5-1.4-1.3-1.4H8.3v2.8z" fill="white" />
+    <circle cx="17.5" cy="16" r="2.2" fill="white" opacity="0.9" />
+  </svg>
+);
+
+/* ─── Data ─── */
+
+const platforms = [
+  { id: "instagram", name: "Instagram", shortName: "Instagram", icon: <InstagramIcon className="h-5 w-5" />, color: "bg-gradient-to-br from-pink-500 to-purple-600" },
+  { id: "twitter",   name: "Twitter/X",  shortName: "X",         icon: <XIcon className="h-5 w-5" />,           color: "bg-gradient-to-br from-neutral-800 to-black" },
+  { id: "linkedin",  name: "LinkedIn",   shortName: "LinkedIn",  icon: <LinkedInIcon className="h-5 w-5" />,    color: "bg-gradient-to-br from-blue-600 to-blue-800" },
+  { id: "peerlist",  name: "Peerlist",   shortName: "Peerlist",  icon: <PeerlistIcon className="h-5 w-5" />,    color: "bg-gradient-to-br from-green-500 to-green-700" },
+];
+
+const stats = [
+  { icon: <Clock className="h-5 w-5" />,     value: "10×",  label: "Faster creation",    sub: "Minutes, not hours" },
+  { icon: <Copy className="h-5 w-5" />,      value: "80%",  label: "Time saved",         sub: "Per content piece" },
+  { icon: <TrendingUp className="h-5 w-5" />, value: "3×",  label: "More consistency",   sub: "Across all platforms" },
+  { icon: <Zap className="h-5 w-5" />,       value: "4",    label: "Platforms covered",  sub: "One input, four outputs" },
+];
+
+const workflowSteps = [
+  {
+    step: "01",
+    title: "One Input, Multiple Outputs",
+    description: "Start with a single topic, idea, or draft — PostBloom handles the rest. No rewriting, no copy-pasting, no reformatting by hand.",
+    features: [
+      "Generates tailored content for all platforms simultaneously",
+      "Automatically adapts format, tone, and length per platform",
+      "Keeps your messaging consistent across every channel",
+    ],
+    icon: <Layout className="h-6 w-6" />,
+  },
+  {
+    step: "02",
+    title: "AI Platform Optimisation",
+    description: "The AI intelligently rewrites content to match each platform's unique requirements — not just truncated, but genuinely restructured.",
+    features: [
+      "Respects character limits and native formatting rules",
+      "Generates platform-specific hashtag strategies",
+      "Matches optimal post structure and tone per audience",
+    ],
+    icon: <Target className="h-6 w-6" />,
+  },
+];
+
+const platformContent = {
+  instagram: {
+    subtitle: "Captions · Reels · Stories",
+    accentColor: "border-l-pink-500",
+    features: [
+      "Captions with a strong hook in the first 125 characters",
+      "Stories content with clear, action-driving CTAs",
+      "Reels scripts with descriptions ready to paste",
+      "Carousel post structures with engaging slide hooks",
+    ],
+    sample: {
+      text: "Transform your ideas into visual stories that stop the scroll. Strong hook in the first 125 characters, friendly tone, and 5 targeted hashtags — ready to paste under your Reel or post.",
+      tags: ["#ContentCreation", "#SocialMediaTips", "#AIContent"],
+      tagColor: "text-pink-600 dark:text-pink-400",
+      meta: "Up to 2,200 characters · Includes 5 hashtags",
+    },
+  },
+  twitter: {
+    subtitle: "Posts · Threads",
+    accentColor: "border-l-neutral-800",
+    features: [
+      "Punchy single tweets under 280 characters",
+      "Threads of up to 25 tweets for long-form ideas",
+      "Trending topic commentary that drives engagement",
+      "Questions and conversation starters for more replies",
+    ],
+    sample: {
+      text: "Just created a week's worth of content in 30 minutes. Using AI for multiple platforms is a game-changer — saves 20+ hrs/week, consistent messaging, higher engagement. #Productivity #AIContent",
+      tags: [],
+      tagColor: "",
+      meta: "Max 280 characters · Optional thread · Copy-ready",
+    },
+  },
+  linkedin: {
+    subtitle: "Posts · Thought Leadership",
+    accentColor: "border-l-blue-600",
+    features: [
+      "Professional posts between 1,200–2,000 characters",
+      "Thought leadership pieces and industry insights",
+      "Short paragraphs, natural flow, closes with 3 hashtags",
+      "Company updates and milestone announcements",
+    ],
+    sample: {
+      text: "PostBloom turns your topic or draft into a polished LinkedIn post — 1,200–2,000 characters, short punchy paragraphs, professional tone, closing with 3 relevant hashtags. Choose your tone and audience on the Generate page, then copy with one click.",
+      tags: [],
+      tagColor: "",
+      meta: "Optimised for feed engagement · One-click copy",
+    },
+  },
+  peerlist: {
+    subtitle: "Developer Community",
+    accentColor: "border-l-green-600",
+    features: [
+      "Concise, high-signal posts up to 2,000 characters",
+      "Developer and tech-community–friendly tone throughout",
+      "Profile and project highlights that stand out",
+      "Clean, scannable formatting for recruiters and peers",
+    ],
+    sample: {
+      text: "Professional, concise posts (up to 2,000 characters) for developers and tech professionals — clear, scannable, and ideal for profile updates and project highlights. Same input as other platforms; select Peerlist on results and copy.",
+      tags: [],
+      tagColor: "",
+      meta: "One input → four platforms · Copy only what you need",
+    },
+  },
+};
+
+const useCases = [
+  {
+    title: "Social Media Managers",
+    description: "Plan and schedule an entire month of content in a single afternoon.",
+    icon: <Users2 className="h-5 w-5" />,
+    features: ["30 days of posts in ~3 hours", "Consistent brand voice", "Trend suggestions built in"],
+  },
+  {
+    title: "Content Creators",
+    description: "Repurpose one piece of content into 20+ posts across every platform.",
+    icon: <Video className="h-5 w-5" />,
+    features: ["Video → Blog → Social in one flow", "Transcript-to-post built in", "Hashtag tuning per platform"],
+  },
+  {
+    title: "Marketing Teams",
+    description: "Launch unified campaigns across all channels from a single brief.",
+    icon: <Rocket className="h-5 w-5" />,
+    features: ["Cohesive campaign messaging", "Platform-specific adaptations", "Cross-channel consistency"],
+  },
+  {
+    title: "Small Businesses",
+    description: "Stay active on 5+ platforms without a dedicated content team.",
+    icon: <Bell className="h-5 w-5" />,
+    features: ["Daily posts, minimal time", "Audience-specific tone", "Engagement templates ready"],
+  },
+];
+
+/* ─── Component ─── */
+
 export default function LearnMorePage() {
-  const [activeTab, setActiveTab] = useState("multiplatform");
   const [activePlatform, setActivePlatform] = useState("instagram");
-
-  const platforms = [
-    { id: "instagram", name: "Instagram", icon: <Instagram className="h-5 w-5" />, color: "bg-gradient-to-r from-pink-500 to-purple-600" },
-    { id: "twitter", name: "Twitter/X", icon: <Twitter className="h-5 w-5" />, color: "bg-gradient-to-r from-blue-400 to-blue-600" },
-    { id: "linkedin", name: "LinkedIn", icon: <Linkedin className="h-5 w-5" />, color: "bg-gradient-to-r from-blue-600 to-blue-800" },
-    { id: "peerlist", name: "Peerlist", icon: <SiPeerlist className="h-5 w-5" />, color: "bg-gradient-to-r from-green-500 to-green-700" },
-  ];
-
-  const timeSavingStats = [
-    { 
-      icon: <Clock className="h-8 w-8" />, 
-      value: "10x", 
-      label: "Faster Content Creation",
-      description: "Generate content in minutes instead of hours"
-    },
-    { 
-      icon: <Copy className="h-8 w-8" />, 
-      value: "80%", 
-      label: "Time Saved",
-      description: "Cut content planning and writing time dramatically"
-    },
-   
-    { 
-      icon: <TrendingUp className="h-8 w-8" />, 
-      value: "3x", 
-      label: "More Consistency",
-      description: "Maintain regular posting across all platforms"
-    },
-  ];
-
-  const workflowSteps = [
-    {
-      step: "01",
-      title: "One Input, Multiple Outputs",
-      description: "Start with a single topic or piece of content",
-      features: [
-        "Generate content for all platforms at once",
-        "Automatically adapt format for each platform",
-        "Maintain consistent messaging across channels"
-      ],
-      icon: <Layout className="h-10 w-10" />
-    },
-    {
-      step: "02",
-      title: "Platform Optimization",
-      description: "AI optimizes content for each platform's requirements",
-      features: [
-        "Character limits and formatting",
-        "Platform-specific hashtags",
-        "Optimal posting times and formats"
-      ],
-      icon: <Target className="h-10 w-10" />
-    },
-    
-    
-  ];
-
-  const platformContentExamples = {
-    instagram: [
-      "Engaging captions with relevant hashtags",
-      "Stories content with CTAs",
-      "Reels scripts and descriptions",
-      "Carousel post ideas"
-    ],
-    twitter: [
-      "Tweet threads (up to 25 tweets)",
-      "Trending topic commentary",
-      "Engagement-driving questions",
-      "Thread unrolling for longer content"
-    ],
-    linkedin: [
-      "Professional articles and posts (1200–2000 characters)",
-      "Industry insights and thought leadership",
-      "Short paragraphs, end with 3 relevant hashtags",
-      "Company updates and announcements"
-    ],
-    peerlist: [
-      "Professional and concise posts (up to 2000 characters)",
-      "Developer and tech community–friendly tone",
-      "Profile and project highlights",
-      "Clear, scannable formatting for recruiters and peers"
-    ]
-  };
-
-  const useCases = [
-    {
-      title: "Social Media Managers",
-      description: "Create and schedule a month's worth of content in one afternoon",
-      icon: <Users2 className="h-6 w-6" />,
-      features: [
-        "30 days of content in 3 hours",
-        "Consistent brand voice across platforms",
-        "Trend-jacking content suggestions"
-      ]
-    },
-    {
-      title: "Content Creators",
-      description: "Repurpose one video into 20+ pieces of content across platforms",
-      icon: <Video className="h-6 w-6" />,
-      features: [
-        "YouTube video → Blog post → Social snippets",
-        "Transcript optimization for different formats",
-        "Hashtag and keyword optimization"
-      ]
-    },
-    {
-      title: "Marketing Teams",
-      description: "Launch coordinated campaigns across all channels simultaneously",
-      icon: <Rocket className="h-6 w-6" />,
-      features: [
-        "Unified campaign messaging",
-        "Platform-specific adaptations",
-        "Performance tracking across channels"
-      ]
-    },
-    {
-      title: "Small Businesses",
-      description: "Maintain active presence on 5+ platforms with minimal time investment",
-      icon: <Bell className="h-6 w-6" />,
-      features: [
-        "Daily posts across all platforms",
-        "Localized content for different audiences",
-        "Customer engagement templates"
-      ]
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: "Sarah Chen",
-      role: "Social Media Manager",
-      company: "TechStart Inc",
-      content: "I went from spending 20+ hours per week on content to just 3 hours. This platform is a game-changer for multi-platform management.",
-      avatar: "SC",
-      platforms: ["Instagram", "Twitter", "LinkedIn"]
-    },
-    {
-      name: "Marcus Johnson",
-      role: "Content Creator",
-      company: "Digital Nomad",
-      content: "Creating content for 6 platforms used to be overwhelming. Now I batch-create everything on Monday and schedule for the week.",
-      avatar: "MJ",
-      platforms: ["YouTube", "Instagram", "Twitter", "Blog"]
-    },
-    {
-      name: "Lisa Rodriguez",
-      role: "Marketing Director",
-      company: "GrowthLab",
-      content: "Our cross-platform engagement increased by 300% while cutting content creation time in half. ROI is incredible.",
-      avatar: "LR",
-      platforms: ["All Platforms"]
-    }
-  ];
+  const activeContent = platformContent[activePlatform as keyof typeof platformContent];
+  const activePlatformData = platforms.find((p) => p.id === activePlatform)!;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5 overflow-x-hidden">
-      {/* Hero Section - Focus on Time Saving */}
-      <section className="relative overflow-hidden py-12 sm:py-16 md:py-20 px-4 sm:px-6">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-purple-500/10" />
-        <div className="absolute top-10 right-10 w-48 h-48 sm:w-72 sm:h-72 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 left-10 w-64 h-64 sm:w-96 sm:h-96 bg-purple-500/5 rounded-full blur-3xl" />
-        
-        <div className="container mx-auto relative z-10 px-0 sm:px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-8 sm:mb-10">
-              <Badge className="mb-4 sm:mb-6 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gradient-to-r from-primary to-purple-600 text-white border-0 hover:opacity-90">
-                <Zap className="h-3 w-3 mr-1.5 sm:mr-2" />
-                TIME-SAVING PLATFORM
-              </Badge>
-              
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold tracking-tight mb-4 sm:mb-6 leading-tight px-1">
-                Create Once,{" "}
-                <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                  Publish Everywhere
-                </span>
-              </h1>
-              
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground mb-6 sm:mb-8 max-w-3xl mx-auto px-0 sm:px-2">
-                Generate content for <span className="font-semibold text-primary">Instagram, Twitter, LinkedIn, and Peerlist</span> in one click. 
-                Save 80% of your content creation time.
-              </p>
-              
-              <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8 sm:mb-10 px-1">
-                {platforms.map((platform) => (
-                  <Badge key={platform.id} variant="outline" className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm">
-                    {platform.icon}
-                    <span className="ml-1.5 sm:ml-2">{platform.name}</span>
-                  </Badge>
-                ))}
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center px-2">
-                <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all w-full sm:w-auto text-sm sm:text-base">
-                  Start Free  - Save 20 Hours/Week
-                </Button>
-               
-              </div>
-            </div>
-            
-            {/* Time Saving Stats - Responsive & Professional */}
-            <div className="mt-10 sm:mt-12 md:mt-16 px-2 sm:px-0">
-              <motion.div
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5 lg:gap-6"
-              >
-                {timeSavingStats.map((stat, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, delay: 0.05 * index }}
-                  >
-                    <Card className="h-full border border-border/80 bg-card/80 shadow-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300 rounded-xl overflow-hidden">
-                      <CardContent className="p-5 sm:p-6 lg:p-6 text-center flex flex-col items-center min-h-[200px] sm:min-h-[220px]">
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-primary/15 to-purple-500/15 flex items-center justify-center mx-auto mb-4 ring-1 ring-primary/10 shrink-0">
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white shadow-sm [&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-6 sm:[&>svg]:w-6">
-                            {stat.icon}
-                          </div>
-                        </div>
-                        <p className="text-2xl sm:text-3xl lg:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent mb-1">
-                          {stat.value}
-                        </p>
-                        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1.5 leading-tight">
-                          {stat.label}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-muted-foreground leading-snug max-w-[240px] mx-auto">
-                          {stat.description}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
+    <div className="min-h-screen bg-transparent overflow-x-hidden">
+
+      {/* ── Slim page header — NOT a hero ── */}
+      {/* <div className="border-b border-border/60 bg-background/60 backdrop-blur-sm sticky top-0 z-20">
+        <div className="container mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">PostBloom</span>
+            <span className="text-border">/</span>
+            <span>Learn more</span>
           </div>
+          <Button size="sm" className="rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 h-8 gap-1.5 shrink-0">
+            Get started <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
         </div>
-      </section>
+      </div> */}
 
-      {/* How It Works - Multi-Platform Workflow */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-10 sm:mb-14 md:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-4 sm:mb-6 px-2">
-              Your Complete Multi-Platform Workflow
+      {/* ── Page intro — compact, not a hero ── */}
+      <div className="container mx-auto max-w-6xl px-4 sm:px-6 pt-10 sm:pt-14 pb-6">
+        <div className="max-w-2xl">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-2" style={{ letterSpacing: "-0.025em" }}>
+            Everything PostBloom does
+          </h1>
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+            One input. Four platforms. A fraction of the time.
+          </p>
+        </div>
+      </div>
+
+      {/* ── Stats row ── */}
+      <div className="container mx-auto max-w-6xl px-4 sm:px-6 pb-10 sm:pb-14">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {stats.map((stat, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: i * 0.06 }}
+            >
+              <div className="rounded-xl border border-border/70 bg-card/70 p-4 sm:p-5 flex flex-col gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  {stat.icon}
+                </div>
+                <div>
+                  <p className="text-2xl sm:text-3xl font-black tracking-tight text-foreground" style={{ letterSpacing: "-0.03em" }}>
+                    {stat.value}
+                  </p>
+                  <p className="text-sm font-semibold text-foreground/80 mt-0.5">{stat.label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{stat.sub}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      <div className="border-t border-border/40" />
+
+      {/* ── How it works ── */}
+      <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-8">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">How it works</p>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ letterSpacing: "-0.02em" }}>
+              Your multi-platform workflow
             </h2>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto px-2">
-              From idea to published content across all platforms in minutes, not days
-            </p>
           </div>
+          <p className="text-sm text-muted-foreground max-w-xs">From idea to published content across all platforms in minutes.</p>
+        </div>
 
-          <div className="space-y-6 sm:space-y-8">
-            {workflowSteps.map((step, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="relative"
-              >
-                {index < workflowSteps.length - 1 && (
-                  <div className="hidden lg:block absolute top-1/2 left-full w-full h-0.5 bg-gradient-to-r from-primary/50 to-purple-500/50 z-0" />
-                )}
-                <Card className="relative z-10 border-border/60 shadow-lg hover:shadow-xl transition-shadow overflow-hidden">
-                  <CardContent className="p-4 sm:p-6 md:p-8">
-                    <div className="flex flex-col lg:flex-row items-start gap-6 sm:gap-8">
-                      <div className="flex flex-row lg:flex-col items-center gap-4 lg:gap-0 shrink-0 w-full lg:w-auto">
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white text-lg sm:text-xl lg:text-2xl font-bold shrink-0">
-                          {step.step}
-                        </div>
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center lg:mx-auto [&>svg]:h-6 [&>svg]:w-6 sm:[&>svg]:h-7 sm:[&>svg]:w-7 lg:[&>svg]:h-8 lg:[&>svg]:w-8">
-                          {step.icon}
-                        </div>
+        <div className="space-y-4">
+          {workflowSteps.map((step, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.08, duration: 0.35 }}
+            >
+              <Card className="border border-border/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                <CardContent className="p-5 sm:p-6 md:p-7">
+                  <div className="flex flex-col sm:flex-row gap-5 sm:gap-7 items-start">
+
+                    {/* Step badge + icon */}
+                    <div className="flex items-center gap-3 sm:flex-col sm:items-center sm:gap-2 shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white text-sm font-black shrink-0">
+                        {step.step}
                       </div>
-                      
-                      <div className="grow min-w-0 w-full">
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-3 sm:mb-4">
-                          <h3 className="text-xl sm:text-2xl font-bold">{step.title}</h3>
-                          <Badge variant="outline" className="text-xs sm:text-sm w-fit">
-                            <Clock className="h-3 w-3 mr-1 shrink-0" />
-                            Saves 5+ hours
-                          </Badge>
-                        </div>
-                        <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-4 sm:mb-6">{step.description}</p>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                          {step.features.map((feature, featureIndex) => (
-                            <div key={featureIndex} className="flex items-start gap-2">
-                              <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-0.5 shrink-0" />
-                              <span className="text-xs sm:text-sm">{feature}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      <div className="shrink-0 w-full lg:w-auto">
-                        <div className="bg-muted/50 rounded-lg p-3 sm:p-4 flex flex-row lg:flex-col items-center justify-center gap-3 lg:gap-4">
-                          <div className="flex -space-x-2">
-                            {platforms.slice(0, 4).map((platform) => (
-                              <div
-                                key={platform.id}
-                                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ${platform.color} flex items-center justify-center text-white border-2 border-background [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-4 sm:[&>svg]:w-4`}
-                              >
-                                {platform.icon}
-                              </div>
-                            ))}
-                          </div>
-                          <p className="text-xs sm:text-sm text-muted-foreground text-center">
-                            {index === 0 && "4 platforms supported"}
-                            {index === 1 && "Platform-optimized"}
-                          </p>
-                        </div>
+                      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary sm:mx-auto shrink-0">
+                        {step.icon}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* Platform Content — Product-grade tab section */}
-      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 bg-muted/30">
-        <div className="max-w-5xl mx-auto w-full overflow-x-hidden">
-          <div className="text-center mb-8 sm:mb-10 md:mb-12 px-1">
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3">
-              One input, four outputs
-            </p>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-foreground mb-2 sm:mb-3 px-2">
-              Optimized for each platform
-            </h2>
-            <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl mx-auto px-2">
-              See what PostBloom generates for each channel. One topic or draft → four ready-to-paste posts.
-            </p>
-          </div>
-
-          <div className="rounded-xl sm:rounded-2xl border border-border bg-card shadow-sm overflow-hidden min-w-0">
-            <Tabs value={activePlatform} onValueChange={setActivePlatform} className="w-full">
-              {/* Product-style segmented control */}
-              <TabsList className="w-full h-auto p-1 sm:p-1.5 md:p-2 bg-muted/50 border-b border-border rounded-none grid grid-cols-4 gap-0.5 sm:gap-1 min-w-0">
-                {platforms.map((platform) => (
-                  <TabsTrigger
-                    key={platform.id}
-                    value={platform.id}
-                    className={cn(
-                      "flex items-center justify-center gap-2 sm:gap-3 rounded-lg py-3 sm:py-3.5 px-3 sm:px-4 text-sm font-medium transition-all duration-200 cursor-pointer",
-                      "text-muted-foreground hover:text-foreground hover:bg-background/80",
-                      "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border",
-                      "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
-                    )}
-                  >
-                    <span className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg ${platform.color} flex items-center justify-center text-white shrink-0`}>
-                      {platform.icon}
-                    </span>
-                    <span className="hidden sm:inline truncate">{platform.name}</span>
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-
-              {/* Content — consistent two-column layout */}
-              <TabsContent value="instagram" className="mt-0 outline-none data-[state=inactive]:hidden">
-                <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border min-w-0">
-                  <div className="p-4 sm:p-6 md:p-8">
-                    <div className="flex items-center gap-3 mb-6">
-                      <span className="w-10 h-10 rounded-lg bg-linear-to-r from-pink-500 to-purple-600 flex items-center justify-center text-white shrink-0">
-                        <Instagram className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground">Instagram</h3>
-                        <p className="text-sm text-muted-foreground">Captions & Reels</p>
+                    {/* Content */}
+                    <div className="grow min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <h3 className="text-base sm:text-lg font-bold tracking-tight">{step.title}</h3>
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full">
+                          <Clock className="h-2.5 w-2.5" /> Saves 5+ hrs
+                        </span>
                       </div>
-                    </div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">What we optimize</p>
-                    <ul className="space-y-3">
-                      {platformContentExamples.instagram.map((item, index) => (
-                        <li key={index} className="flex items-start gap-3 text-sm text-muted-foreground">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="p-4 sm:p-6 md:p-8 bg-muted/20">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Sample output</p>
-                    <div className="rounded-lg sm:rounded-xl border border-border bg-background p-3 sm:p-4 md:p-5 border-l-4 border-l-pink-500 min-w-0">
-                      <p className="text-sm text-foreground/90 leading-relaxed mb-3">
-                        Transform your ideas into visual stories that captivate your audience. Strong hook in the first 125 characters, friendly tone, and 5 relevant hashtags—ready to paste under your Reel or post.
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {["#ContentCreation", "#SocialMediaTips", "#AIContent"].map(tag => (
-                          <span key={tag} className="text-xs font-medium text-pink-600 dark:text-pink-400">#{tag}</span>
+                      <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{step.description}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {step.features.map((f, fi) => (
+                          <div key={fi} className="flex items-start gap-2">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                            <span className="text-xs text-foreground/75 leading-snug">{f}</span>
+                          </div>
                         ))}
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-3">Up to 2,200 characters · Copy from Generate page</p>
-                  </div>
-                </div>
-              </TabsContent>
 
-              <TabsContent value="twitter" className="mt-0 outline-none data-[state=inactive]:hidden">
-                <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border min-w-0">
-                  <div className="p-4 sm:p-6 md:p-8">
-                    <div className="flex items-center gap-3 mb-6">
-                      <span className="w-10 h-10 rounded-lg bg-linear-to-r from-sky-400 to-blue-600 flex items-center justify-center text-white shrink-0">
-                        <Twitter className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground">X (Twitter)</h3>
-                        <p className="text-sm text-muted-foreground">Posts & threads</p>
+                    {/* Platform avatars */}
+                    <div className="shrink-0 hidden md:flex flex-col items-center gap-2 rounded-xl bg-muted/50 border border-border/50 px-4 py-3">
+                      <div className="flex -space-x-1.5">
+                        {platforms.map((p) => (
+                          <div key={p.id} className={`w-7 h-7 rounded-full ${p.color} flex items-center justify-center border-2 border-background [&>svg]:h-3.5 [&>svg]:w-3.5`}>
+                            {p.icon}
+                          </div>
+                        ))}
                       </div>
+                      <p className="text-[11px] text-muted-foreground font-medium">4 platforms</p>
                     </div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">What we optimize</p>
-                    <ul className="space-y-3">
-                      {platformContentExamples.twitter.map((item, index) => (
-                        <li key={index} className="flex items-start gap-3 text-sm text-muted-foreground">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
                   </div>
-                  <div className="p-4 sm:p-6 md:p-8 bg-muted/20">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Sample output</p>
-                    <div className="rounded-lg sm:rounded-xl border border-border bg-background p-3 sm:p-4 md:p-5 border-l-4 border-l-blue-500 font-mono text-xs sm:text-sm min-w-0">
-                      <p className="leading-relaxed">Just created a week  worth of content in 30 minutes. Using AI for multiple platforms is a game-changer: saves 20+ hrs/week, consistent messaging, higher engagement. #Productivity #AIContent</p>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-3">Max 280 characters · Optional thread · Copy from Generate page</p>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="linkedin" className="mt-0 outline-none data-[state=inactive]:hidden">
-                <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border min-w-0">
-                  <div className="p-4 sm:p-6 md:p-8">
-                    <div className="flex items-center gap-3 mb-6">
-                      <span className="w-10 h-10 rounded-lg bg-linear-to-r from-blue-600 to-blue-800 flex items-center justify-center text-white shrink-0">
-                        <Linkedin className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground">LinkedIn</h3>
-                        <p className="text-sm text-muted-foreground">Posts & articles</p>
-                      </div>
-                    </div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">What we optimize</p>
-                    <ul className="space-y-3">
-                      {platformContentExamples.linkedin.map((item, index) => (
-                        <li key={index} className="flex items-start gap-3 text-sm text-muted-foreground">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="p-4 sm:p-6 md:p-8 bg-muted/20">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Sample output</p>
-                    <div className="rounded-lg sm:rounded-xl border border-border bg-background p-3 sm:p-4 md:p-5 border-l-4 border-l-blue-600 min-w-0">
-                      <p className="text-sm text-foreground/90 leading-relaxed">
-                        PostBloom turns your topic or draft into a polished LinkedIn post: 1,200–2,000 characters, short paragraphs, professional tone, 3 hashtags. Choose tone and audience on the Generate page, then copy and paste. One click to copy.
-                      </p>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-3">Optimized for engagement on LinkedIn</p>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="peerlist" className="mt-0 outline-none data-[state=inactive]:hidden">
-                <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border min-w-0">
-                  <div className="p-4 sm:p-6 md:p-8">
-                    <div className="flex items-center gap-3 mb-6">
-                      <span className="w-10 h-10 rounded-lg bg-linear-to-r from-emerald-500 to-green-700 flex items-center justify-center text-white shrink-0">
-                        <SiPeerlist className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground">Peerlist</h3>
-                        <p className="text-sm text-muted-foreground">Developer community</p>
-                      </div>
-                    </div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">What we optimize</p>
-                    <ul className="space-y-3">
-                      {platformContentExamples.peerlist.map((item, index) => (
-                        <li key={index} className="flex items-start gap-3 text-sm text-muted-foreground">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="p-4 sm:p-6 md:p-8 bg-muted/20">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Sample output</p>
-                    <div className="rounded-lg sm:rounded-xl border border-border bg-background p-3 sm:p-4 md:p-5 border-l-4 border-l-emerald-600 min-w-0">
-                      <p className="text-sm text-foreground/90 leading-relaxed">
-                        Professional, concise posts (up to 2,000 characters) for developers and tech professionals—clear, scannable, great for profile updates and project highlights. Same input as other platforms; pick Peerlist on results and copy.
-                      </p>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-3">One input → four platforms. Copy the one you need.</p>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
         </div>
-      </section>
+      </div>
 
-      {/* Use Cases */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-10 sm:mb-14 md:mb-16 px-2">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold mb-3 sm:mb-4">
-              Who Benefits Most?
+      <div className="border-t border-border/40" />
+
+      {/* ── Platform content tabs ── */}
+      <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-8">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Output formats</p>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ letterSpacing: "-0.02em" }}>
+              Optimized for each platform
             </h2>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-              Professionals who manage multiple platforms see the biggest time savings
-            </p>
           </div>
+          <p className="text-sm text-muted-foreground max-w-xs">One topic or draft → four copy-ready posts.</p>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {useCases.map((useCase, index) => (
-              <Card key={index} className="border-border/60 hover:shadow-lg transition-shadow overflow-hidden">
-                <CardContent className="p-4 sm:p-5 md:p-6">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center mb-3 sm:mb-4 [&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-6 sm:[&>svg]:w-6">
-                    {useCase.icon}
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+          <Tabs value={activePlatform} onValueChange={setActivePlatform}>
+
+            {/* Tab bar */}
+            <TabsList className="w-full h-auto p-1.5 bg-muted/40 border-b border-border rounded-none grid grid-cols-4 gap-1">
+              {platforms.map((p) => (
+                <TabsTrigger
+                  key={p.id}
+                  value={p.id}
+                  className={cn(
+                    "flex items-center justify-center gap-2 rounded-lg py-2.5 px-2 sm:px-3 text-sm font-medium transition-all duration-150 cursor-pointer",
+                    "text-muted-foreground hover:text-foreground hover:bg-background/70",
+                    "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/80"
+                  )}
+                >
+                  <span className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg ${p.color} flex items-center justify-center text-white shrink-0 [&>svg]:h-3.5 [&>svg]:w-3.5 sm:[&>svg]:h-4 sm:[&>svg]:w-4`}>
+                    {p.icon}
+                  </span>
+                  <span className="hidden sm:inline font-semibold text-xs sm:text-sm">{p.shortName}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            {/* Content panels */}
+            {platforms.map((p) => {
+              const content = platformContent[p.id as keyof typeof platformContent];
+              return (
+                <TabsContent key={p.id} value={p.id} className="mt-0 outline-none data-[state=inactive]:hidden">
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border"
+                  >
+                    {/* Left — what we optimise */}
+                    <div className="p-5 sm:p-6 md:p-7">
+                      <div className="flex items-center gap-3 mb-5">
+                        <div className={`w-9 h-9 rounded-xl ${p.color} flex items-center justify-center text-white shrink-0 [&>svg]:h-4 [&>svg]:w-4`}>
+                          {p.icon}
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-foreground leading-tight">{p.name}</h3>
+                          <p className="text-xs text-muted-foreground">{content.subtitle}</p>
+                        </div>
+                      </div>
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">What we optimise</p>
+                      <ul className="space-y-2.5">
+                        {content.features.map((item, idx) => (
+                          <li key={idx} className="flex items-start gap-2.5 text-sm text-muted-foreground">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Right — sample */}
+                    <div className="p-5 sm:p-6 md:p-7 bg-muted/20">
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Sample output</p>
+                      <div className={`rounded-xl border border-border bg-background p-4 sm:p-5 border-l-4 ${content.accentColor} mb-2.5`}>
+                        <p className="text-sm text-foreground/90 leading-relaxed mb-2.5">
+                          {content.sample.text}
+                        </p>
+                        {content.sample.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {content.sample.tags.map((tag) => (
+                              <span key={tag} className={`text-xs font-semibold ${content.sample.tagColor}`}>{tag}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{content.sample.meta}</p>
+                    </div>
+                  </motion.div>
+                </TabsContent>
+              );
+            })}
+          </Tabs>
+        </div>
+      </div>
+
+      <div className="border-t border-border/40" />
+
+      {/* ── Use cases ── */}
+      <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-8">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Who it's for</p>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ letterSpacing: "-0.02em" }}>
+              Who benefits most
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground max-w-xs">Professionals managing multiple platforms see the biggest gains.</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {useCases.map((uc, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.07, duration: 0.3 }}
+            >
+              <Card className="h-full border border-border/60 bg-card/70 hover:shadow-md hover:border-primary/20 transition-all duration-300 group">
+                <CardContent className="p-5">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:bg-primary/15 transition-colors [&>svg]:h-4 [&>svg]:w-4">
+                    {uc.icon}
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold mb-1.5 sm:mb-2">{useCase.title}</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4">{useCase.description}</p>
-                  <ul className="space-y-1.5 sm:space-y-2">
-                    {useCase.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center gap-2 text-xs sm:text-sm">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                        {feature}
+                  <h3 className="text-sm font-bold mb-1 tracking-tight text-foreground">{uc.title}</h3>
+                  <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{uc.description}</p>
+                  <ul className="space-y-1.5">
+                    {uc.features.map((f, fi) => (
+                      <li key={fi} className="flex items-start gap-1.5">
+                        <div className="w-1 h-1 rounded-full bg-primary mt-1.5 shrink-0" />
+                        <span className="text-xs text-foreground/70 leading-snug">{f}</span>
                       </li>
                     ))}
                   </ul>
                 </CardContent>
               </Card>
-            ))}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      <div className="border-t border-border/40" />
+
+      {/* ── CTA — compact, not a full section ── */}
+      <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14">
+        <div className="rounded-2xl border border-border/60 bg-card/60 p-6 sm:p-8 md:p-10 flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8">
+          <div className="grow min-w-0">
+            <div className="flex flex-wrap gap-3 mb-3">
+              {[
+                { value: "20+", label: "hrs saved / week" },
+                { value: "4",   label: "platforms" },
+                { value: "80%", label: "less writing time" },
+              ].map((s, i) => (
+                <div key={i} className="flex items-baseline gap-1">
+                  <span className="text-xl font-black text-foreground tracking-tight" style={{ letterSpacing: "-0.02em" }}>{s.value}</span>
+                  <span className="text-xs text-muted-foreground font-medium">{s.label}</span>
+                </div>
+              ))}
+            </div>
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight mb-1" style={{ letterSpacing: "-0.02em" }}>
+              Ready to reclaim your time?
+            </h2>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
+              Start generating content for all four platforms today. No credit card required.
+            </p>
+          </div>
+          <div className="shrink-0 flex flex-col sm:items-end gap-2">
+            <Button
+              size="lg"
+              className="rounded-full bg-blue-600 hover:bg-blue-700 text-white gap-2 font-bold px-7 h-11 shadow-md hover:shadow-lg hover:shadow-blue-500/20 transition-all whitespace-nowrap"
+            >
+              <Rocket className="h-4 w-4" />
+              Start free trial
+            </Button>
+            <p className="text-xs text-muted-foreground text-center sm:text-right">Cancel anytime</p>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Testimonials */}
-     
-
-      {/* CTA Section */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6">
-        <div className="container mx-auto max-w-4xl">
-          <Card className="border-0 shadow-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-purple-500/10 overflow-hidden">
-            <CardContent className="p-6 sm:p-8 md:p-10 lg:p-12 text-center">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-r from-primary to-purple-600 flex items-center justify-center mx-auto mb-6 sm:mb-8 [&>svg]:h-8 [&>svg]:w-8 sm:[&>svg]:h-10 sm:[&>svg]:w-10 md:[&>svg]:h-12 md:[&>svg]:w-12 text-white">
-                <Clock className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-white" />
-              </div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-4 sm:mb-6 px-2">
-                Start Saving 20+ Hours Per Week
-              </h2>
-            
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-8 sm:mb-10">
-                <div className="text-center p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
-                  <div className="text-xl sm:text-2xl font-bold text-primary">20+</div>
-                  <div className="text-xs sm:text-sm">Hours saved weekly</div>
-                </div>
-                <div className="text-center p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
-                  <div className="text-xl sm:text-2xl font-bold text-primary">4</div>
-                  <div className="text-xs sm:text-sm">Platforms supported</div>
-                </div>
-                <div className="text-center p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-lg shadow col-span-2 md:col-span-1">
-                  <div className="text-xl sm:text-2xl font-bold text-primary">300%</div>
-                  <div className="text-xs sm:text-sm">Avg. engagement increase</div>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center px-2">
-                <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl text-sm sm:text-base md:text-lg py-5 sm:py-6 px-6 sm:px-8 w-full sm:w-auto">
-                  <Rocket className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                  Start Free Trial (Save 80+ Hours/Month)
-                </Button>
-
-              </div>
-              
-              
-            </CardContent>
-          </Card>
-        </div>
-      </section>
     </div>
   );
 }
