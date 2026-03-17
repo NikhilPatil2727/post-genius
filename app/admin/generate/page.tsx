@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import GeneratorForm from '@/modules/generator/components/GeneratorForm';
 import { ContentDisplay } from '@/modules/generator/components/ContentDisplay';
-import { LayoutTemplate, Key, AlertCircle, X, Sparkles, Wand2 } from 'lucide-react';
+import { Key, AlertCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { ContentResponse, ContentRequest } from '@/types';
@@ -192,15 +192,18 @@ function GeneratePageContent() {
       ].filter(v => v.content.length > 0);
 
       if (variants.length > 0) {
-        await savePostAction({
+        const result = await savePostAction({
           topic: data.topic,
           sourceText: data.text,
           tone: data.tone,
           audience: data.audience,
           variants
         });
-        // Dispatch event for sidebar to refresh
-        window.dispatchEvent(new Event('post-saved'));
+        
+        if (result.success && result.post) {
+          // Dispatch event with the new post data for the sidebar to refresh optimistically
+          window.dispatchEvent(new CustomEvent('post-saved', { detail: result.post }));
+        }
       }
 
     } catch (err) {
@@ -228,9 +231,7 @@ function GeneratePageContent() {
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-zinc-200 dark:border-zinc-800/50">
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-3 mb-1">
-              <div className="p-1.5 rounded-lg bg-primary/10 text-primary shadow-sm border border-primary/20">
-                <Wand2 className="h-5 w-5" />
-              </div>
+            
               <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-zinc-900 to-zinc-500 dark:from-white dark:to-zinc-500 font-serif">
                 Content Studio
               </h1>
@@ -254,7 +255,12 @@ function GeneratePageContent() {
               />
             </div>
             {hasGenerated && !loading && (
-              <Button variant="outline" size="sm" onClick={handleReset} className="h-10 rounded-xl font-bold px-5 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_15px_-3px_rgba(0,0,0,0.1)] transition-all bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleReset} 
+                className="h-10 rounded-xl font-bold px-6 bg-zinc-100/50 dark:bg-zinc-800/50 hover:bg-zinc-200 dark:hover:bg-zinc-700/50 transition-all border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 shadow-sm"
+              >
                 New Draft
               </Button>
             )}
@@ -336,65 +342,53 @@ function GeneratePageContent() {
           {hasGenerated ? (
             <ContentDisplay content={content} isStreaming={loading} />
           ) : (
-            <div className="h-full min-h-[500px] flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] bg-zinc-50/30 dark:bg-zinc-950/20 p-12 text-center group">
-              <div className="relative mb-8">
-                <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl group-hover:bg-primary/30 transition-all duration-1000" />
-                <div className="relative bg-white dark:bg-zinc-900 p-8 rounded-[2rem] shadow-2xl border border-zinc-100 dark:border-zinc-800 transition-transform duration-500 group-hover:scale-110">
-                  <LayoutTemplate className="h-12 w-12 text-primary" />
+            <div className="h-full min-h-[500px] flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] bg-zinc-50/30 dark:bg-zinc-950/20 p-12 text-center group relative overflow-hidden">
+              {loading ? (
+                <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
+                    <div className="h-16 w-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 font-serif">Retrieving Post</h3>
+                    <p className="text-zinc-500 dark:text-zinc-400 text-[10px] font-black tracking-[0.3em] uppercase opacity-70">Syncing with history...</p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="space-y-8 max-w-md mx-auto text-center">
+                    <div className="space-y-4">
+                      <h3 className="text-4xl md:text-6xl font-extrabold tracking-tighter text-zinc-900 dark:text-zinc-50 font-serif">
+                        Ready to Create
+                      </h3>
+                      <div className="h-1 w-16 bg-zinc-900 dark:bg-zinc-50 mx-auto rounded-full" />
+                    </div>
+                    <p className="text-zinc-500 dark:text-zinc-400 text-lg leading-relaxed font-medium">
+                      Your platform-optimized narratives will appear here. Start by defining your topic or pasting a draft on the left.
+                    </p>
+                  </div>
 
-              <div className="space-y-2 max-w-sm">
-                <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 flex items-center justify-center gap-2">
-                  Empty Canvas <Sparkles className="h-5 w-5 text-yellow-500" />
-                </h3>
-                <p className="text-zinc-500 dark:text-zinc-400 text-lg leading-relaxed">
-                  Your platform-ready content will materialize here in real-time. Start by providing a topic or a draft on the left.
-                </p>
-              </div>
-
-              <div className="mt-12 flex gap-4">
-                <div className="flex flex-col items-center gap-1.5 opacity-50">
-                  <div className="h-1.5 w-8 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">LinkedIn</span>
-                </div>
-                <div className="flex flex-col items-center gap-1.5 opacity-50">
-                  <div className="h-1.5 w-8 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">X / Twitter</span>
-                </div>
-                <div className="flex flex-col items-center gap-1.5 opacity-50">
-                  <div className="h-1.5 w-8 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Instagram</span>
-                </div>
-              </div>
+                  <div className="mt-12 flex gap-8">
+                    <div className="flex flex-col items-center gap-2 group/platform cursor-default">
+                      <div className="h-1 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 group-hover/platform:bg-blue-500 transition-all duration-300" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 group-hover/platform:text-zinc-900 dark:group-hover/platform:text-zinc-100 transition-colors">LinkedIn</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 group/platform cursor-default">
+                      <div className="h-1 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 group-hover/platform:bg-zinc-900 dark:group-hover/platform:bg-white transition-all duration-300" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 group-hover/platform:text-zinc-900 dark:group-hover/platform:text-zinc-100 transition-colors">X / Twitter</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 group/platform cursor-default">
+                      <div className="h-1 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 group-hover/platform:bg-pink-500 transition-all duration-300" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 group-hover/platform:text-zinc-900 dark:group-hover/platform:text-zinc-100 transition-colors">Instagram</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </motion.div>
       </div>
 
-      <AnimatePresence>
-        {loading && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-full max-w-md px-4"
-          >
-            <div className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 p-4 rounded-2xl shadow-2xl flex items-center justify-between border border-white/10 dark:border-zinc-200">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <div className="h-8 w-8 rounded-full border-2 border-white/20 dark:border-zinc-900/20 border-t-white dark:border-t-zinc-900 animate-spin" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold">{postId ? 'Loading Post' : 'Crafting Content'}</span>
-                  <span className="text-[10px] opacity-70 font-medium font-mono uppercase tracking-tighter">{postId ? 'Retrieving from history...' : 'AI-Streaming in progress...'}</span>
-                </div>
-              </div>
-              <Sparkles className="h-5 w-5 text-yellow-400 animate-pulse" />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

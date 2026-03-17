@@ -31,7 +31,6 @@ const mainNavItems = [
   {
     title: "Generate",
     url: "/admin/generate",
-    icon: Wand2,
   },
 ];
 
@@ -56,23 +55,33 @@ export function AppSidebar() {
 
   useEffect(() => {
     fetchPosts();
-    
+
     // Listen for custom event when a new post is saved
-    const handlePostSaved = () => fetchPosts();
-    window.addEventListener('post-saved', handlePostSaved);
-    
-    // Fallback polling
-    const interval = setInterval(fetchPosts, 60000); 
-    
+    const handlePostSaved = (event: any) => {
+      const newPost = event.detail;
+      if (newPost) {
+        // Optimistically add the new post to the top of history
+        setPosts(prev => {
+          const exists = prev.some(p => p.id === newPost.id);
+          if (exists) return prev;
+          return [newPost, ...prev];
+        });
+      } else {
+        // Fallback if no detail provided
+        fetchPosts();
+      }
+    };
+
+    window.addEventListener('post-saved', handlePostSaved as any);
+
     return () => {
-      window.removeEventListener('post-saved', handlePostSaved);
-      clearInterval(interval);
+      window.removeEventListener('post-saved', handlePostSaved as any);
     };
   }, [fetchPosts]);
 
   const handleDeletePost = async (postId: string) => {
     if (!confirm("Are you sure you want to delete this post?")) return;
-    
+
     try {
       const result = await deletePostAction(postId);
       if (result.success) {
@@ -89,13 +98,13 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <Link href={"/"} className="flex gap-2 items-center justify-start p-4 hover:opacity-80 transition-opacity">
-          <div className="bg-primary/10 p-2 rounded-xl border border-primary/20">
-            <Wand2 className="size-5 text-primary" />
-          </div>
-          <h1 className="text-xl font-black tracking-tight text-zinc-900 dark:text-white font-serif">
-            PostBloom
+        <Link href={"/"} className="flex flex-col gap-0 items-start p-4 hover:opacity-80 transition-opacity">
+          <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white leading-none">
+            Post<span className="text-blue-600">Bloom</span>
           </h1>
+          <span className="text-[8px] uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 font-black mt-1.5">
+            Editorial
+          </span>
         </Link>
         <SidebarSeparator />
       </SidebarHeader>
@@ -114,12 +123,9 @@ export function AppSidebar() {
                     className={`rounded-xl transition-all ${pathname === item.url ? 'bg-primary/10 text-primary shadow-sm' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}
                   >
                     <Link href={item.url}>
-                      <>
-                        <item.icon className={`size-5 ${pathname === item.url ? 'text-primary' : 'text-zinc-500'}`} />
-                        <span className="font-bold text-[15px]">
-                          {item.title}
-                        </span>
-                      </>
+                      <span className="font-bold text-[15px]">
+                        {item.title}
+                      </span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -133,8 +139,8 @@ export function AppSidebar() {
         <SidebarGroup className="flex-1 flex flex-col">
           <SidebarGroupLabel className="px-4 flex justify-between items-center text-xs font-bold uppercase tracking-widest text-zinc-400 mb-3">
             <span>Recent Creations</span>
-            <button 
-              onClick={fetchPosts} 
+            <button
+              onClick={fetchPosts}
               className="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors group"
               title="Refresh History"
             >
@@ -152,15 +158,15 @@ export function AppSidebar() {
                 <div className="px-6 py-12 text-center rounded-2xl border-2 border-dashed border-zinc-100 dark:border-zinc-800/50">
                   <FileText className="size-8 text-zinc-200 dark:text-zinc-800 mx-auto mb-3" />
                   <p className="text-[11px] font-bold text-zinc-400 leading-tight">
-                    No posts yet.<br/>Your history will appear here.
+                    No posts yet.<br />Your history will appear here.
                   </p>
                 </div>
               ) : (
                 <div className="space-y-1 max-h-[calc(100vh-320px)] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-200 dark:scroll-thumb-zinc-800">
                   {posts.map((post) => (
                     <SidebarMenuItem key={post.id} className="group relative list-none">
-                      <SidebarMenuButton 
-                        asChild 
+                      <SidebarMenuButton
+                        asChild
                         className="pr-10 h-auto py-3 rounded-xl border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 hover:bg-white dark:hover:bg-zinc-900 transition-all shadow-none hover:shadow-sm"
                       >
                         <Link href={`/admin/generate?id=${post.id}`}>
@@ -182,7 +188,7 @@ export function AppSidebar() {
                           </div>
                         </Link>
                       </SidebarMenuButton>
-                      <button 
+                      <button
                         onClick={() => handleDeletePost(post.id)}
                         className="absolute right-2 top-1/2 -translate-y-1/2 p-2 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30"
                       >
