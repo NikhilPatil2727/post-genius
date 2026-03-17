@@ -8,11 +8,11 @@ const isPublicRoute = createRouteMatcher([
   '/([^/]+)' // This matches any single segment path like /username
 ])
 
-export default clerkMiddleware(async (auth, req) => {
+export const proxy = clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
-    await auth.protect()
+    await auth.protect();
   }
-})
+});
 
 export const config = {
   matcher: [
