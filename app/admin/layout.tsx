@@ -1,6 +1,6 @@
 import type React from "react"
 
-import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarInset } from "@/components/ui/sidebar"
 
 import { SidebarWrapper } from "@/modules/dashboard/components/sidebar-wrapper"
 import { AppSidebar } from "@/modules/dashboard/components/app-sidebar"
