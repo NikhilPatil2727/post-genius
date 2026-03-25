@@ -1,33 +1,33 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Clock,
-  Target,
-  CheckCircle2,
-  Copy,
-  Layout,
-  TrendingUp,
-  Bell,
-  Users2,
-  Video,
-  Rocket,
   ArrowRight,
+  BarChart3,
+  CheckCircle2,
+  Clock3,
+  LayoutTemplate,
+  Layers3,
+  MessageSquareText,
+  Rocket,
+  Sparkles,
+  Target,
+  Users2,
+  WandSparkles,
   Zap,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-
-/* ─── Real SVG Brand Logos ─── */
 
 const InstagramIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <radialGradient id="ig-g" cx="30%" cy="107%" r="150%">
+      <radialGradient id="learn-ig-g" cx="30%" cy="107%" r="150%">
         <stop offset="0%" stopColor="#fdf497" />
         <stop offset="5%" stopColor="#fdf497" />
         <stop offset="45%" stopColor="#fd5949" />
@@ -35,7 +35,7 @@ const InstagramIcon = ({ className }: { className?: string }) => (
         <stop offset="90%" stopColor="#285AEB" />
       </radialGradient>
     </defs>
-    <rect x="2" y="2" width="20" height="20" rx="5.5" fill="url(#ig-g)" />
+    <rect x="2" y="2" width="20" height="20" rx="5.5" fill="url(#learn-ig-g)" />
     <circle cx="12" cy="12" r="4.5" stroke="white" strokeWidth="1.8" fill="none" />
     <circle cx="17.5" cy="6.5" r="1.25" fill="white" />
   </svg>
@@ -44,476 +44,571 @@ const InstagramIcon = ({ className }: { className?: string }) => (
 const XIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="24" height="24" rx="5.5" fill="#0f0f0f" />
-    <path d="M17.751 4h2.985l-6.523 7.456L21.5 20h-6.005l-4.7-6.146L5.332 20H2.345l6.978-7.977L2.5 4h6.16l4.251 5.622L17.751 4zm-1.047 14.4h1.654L7.619 5.637H5.84L16.704 18.4z" fill="white" />
+    <path
+      d="M17.751 4h2.985l-6.523 7.456L21.5 20h-6.005l-4.7-6.146L5.332 20H2.345l6.978-7.977L2.5 4h6.16l4.251 5.622L17.751 4zm-1.047 14.4h1.654L7.619 5.637H5.84L16.704 18.4z"
+      fill="white"
+    />
   </svg>
 );
 
 const LinkedInIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <rect width="24" height="24" rx="4.5" fill="#0A66C2" />
-    <path d="M7.75 9.5H5.25v9.25h2.5V9.5zm-1.25-3.75a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM19.25 18.75h-2.5v-4.6c0-1.1-.02-2.5-1.52-2.5-1.53 0-1.77 1.2-1.77 2.42v4.68H11v-9.25h2.4v1.26h.03c.34-.64 1.16-1.32 2.38-1.32 2.55 0 3.02 1.68 3.02 3.86v5.45z" fill="white" />
+    <path
+      d="M7.75 9.5H5.25v9.25h2.5V9.5zm-1.25-3.75a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM19.25 18.75h-2.5v-4.6c0-1.1-.02-2.5-1.52-2.5-1.53 0-1.77 1.2-1.77 2.42v4.68H11v-9.25h2.4v1.26h.03c.34-.64 1.16-1.32 2.38-1.32 2.55 0 3.02 1.68 3.02 3.86v5.45z"
+      fill="white"
+    />
   </svg>
 );
 
 const PeerlistIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <rect width="24" height="24" rx="6" fill="#00AA45" />
-    <path d="M6 5.5h5.2c2.1 0 3.5 1.3 3.5 3.2 0 1.9-1.4 3.2-3.5 3.2H8.3v3.6H6V5.5zm2.3 4.6h2.7c.8 0 1.3-.5 1.3-1.4 0-.9-.5-1.4-1.3-1.4H8.3v2.8z" fill="white" />
+    <path
+      d="M6 5.5h5.2c2.1 0 3.5 1.3 3.5 3.2 0 1.9-1.4 3.2-3.5 3.2H8.3v3.6H6V5.5zm2.3 4.6h2.7c.8 0 1.3-.5 1.3-1.4 0-.9-.5-1.4-1.3-1.4H8.3v2.8z"
+      fill="white"
+    />
     <circle cx="17.5" cy="16" r="2.2" fill="white" opacity="0.9" />
   </svg>
 );
 
-/* ─── Data ─── */
-
-const platforms = [
-  { id: "instagram", name: "Instagram", shortName: "Instagram", icon: <InstagramIcon className="h-5 w-5" />, color: "bg-gradient-to-br from-pink-500 to-purple-600" },
-  { id: "twitter",   name: "Twitter/X",  shortName: "X",         icon: <XIcon className="h-5 w-5" />,           color: "bg-gradient-to-br from-neutral-800 to-black" },
-  { id: "linkedin",  name: "LinkedIn",   shortName: "LinkedIn",  icon: <LinkedInIcon className="h-5 w-5" />,    color: "bg-gradient-to-br from-blue-600 to-blue-800" },
-  { id: "peerlist",  name: "Peerlist",   shortName: "Peerlist",  icon: <PeerlistIcon className="h-5 w-5" />,    color: "bg-gradient-to-br from-green-500 to-green-700" },
-];
-
 const stats = [
-  { icon: <Clock className="h-5 w-5" />,     value: "10×",  label: "Faster creation",    sub: "Minutes, not hours" },
-  { icon: <Copy className="h-5 w-5" />,      value: "80%",  label: "Time saved",         sub: "Per content piece" },
-  { icon: <TrendingUp className="h-5 w-5" />, value: "3×",  label: "More consistency",   sub: "Across all platforms" },
-  { icon: <Zap className="h-5 w-5" />,       value: "4",    label: "Platforms covered",  sub: "One input, four outputs" },
+  { value: "4x", label: "platform-ready outputs", hint: "from one idea" },
+  { value: "80%", label: "less manual rewriting", hint: "for every campaign" },
+  { value: "10x", label: "faster publishing flow", hint: "without copy chaos" },
+  { value: "1", label: "clear brand voice", hint: "across every channel" },
 ];
 
-const workflowSteps = [
+const pillars = [
+  {
+    icon: WandSparkles,
+    title: "Content intelligence",
+    description:
+      "Post Genius reshapes one raw input into structured, platform-native drafts with tone, format, and CTA logic already aligned.",
+  },
+  {
+    icon: LayoutTemplate,
+    title: "Professional presentation",
+    description:
+      "Every output is built for readability first, so your posts look intentional, clean, and ready to ship instead of AI-generated.",
+  },
+  {
+    icon: BarChart3,
+    title: "Consistency at scale",
+    description:
+      "Founders, creators, and teams can publish more often without losing message clarity or spending hours rewriting the same point.",
+  },
+];
+
+const workflow = [
   {
     step: "01",
-    title: "One Input, Multiple Outputs",
-    description: "Start with a single topic, idea, or draft — PostBloom handles the rest. No rewriting, no copy-pasting, no reformatting by hand.",
-    features: [
-      "Generates tailored content for all platforms simultaneously",
-      "Automatically adapts format, tone, and length per platform",
-      "Keeps your messaging consistent across every channel",
-    ],
-    icon: <Layout className="h-6 w-6" />,
+    title: "Start with your real idea",
+    description:
+      "Paste a launch update, thought, lesson, story, or campaign brief. No prompt engineering needed.",
+    bullets: ["Works from rough notes or polished drafts", "Keeps the core message intact", "Built for speed when ideas strike"],
+    icon: Sparkles,
   },
   {
     step: "02",
-    title: "AI Platform Optimisation",
-    description: "The AI intelligently rewrites content to match each platform's unique requirements — not just truncated, but genuinely restructured.",
-    features: [
-      "Respects character limits and native formatting rules",
-      "Generates platform-specific hashtag strategies",
-      "Matches optimal post structure and tone per audience",
-    ],
-    icon: <Target className="h-6 w-6" />,
+    title: "Let the product adapt it",
+    description:
+      "Post Genius rewrites the same message for each destination so the output feels native, not duplicated.",
+    bullets: ["Adjusts structure by platform", "Matches tone to audience intent", "Balances hooks, clarity, and length"],
+    icon: Layers3,
+  },
+  {
+    step: "03",
+    title: "Review, copy, publish",
+    description:
+      "Move from concept to distribution in minutes with polished drafts your team can actually use.",
+    bullets: ["Copy-ready formatting", "High-signal, low-friction workflow", "Faster publishing without messy edits"],
+    icon: Rocket,
   },
 ];
 
-const platformContent = {
-  instagram: {
-    subtitle: "Captions · Reels · Stories",
-    accentColor: "border-l-pink-500",
+const platforms = [
+  {
+    id: "linkedin",
+    name: "LinkedIn",
+    shortName: "LinkedIn",
+    icon: <LinkedInIcon className="h-5 w-5" />,
+    gradient: "from-blue-500 via-sky-500 to-cyan-400",
+    panelTone: "from-blue-500/12 to-sky-500/5",
+    subtitle: "Thought leadership and professional authority",
     features: [
-      "Captions with a strong hook in the first 125 characters",
-      "Stories content with clear, action-driving CTAs",
-      "Reels scripts with descriptions ready to paste",
-      "Carousel post structures with engaging slide hooks",
+      "Strong opening that earns attention quickly",
+      "Short-paragraph structure for easy reading",
+      "Professional tone with clear positioning",
+      "CTA and hashtags that feel relevant, not forced",
     ],
-    sample: {
-      text: "Transform your ideas into visual stories that stop the scroll. Strong hook in the first 125 characters, friendly tone, and 5 targeted hashtags — ready to paste under your Reel or post.",
-      tags: ["#ContentCreation", "#SocialMediaTips", "#AIContent"],
-      tagColor: "text-pink-600 dark:text-pink-400",
-      meta: "Up to 2,200 characters · Includes 5 hashtags",
+    preview: {
+      label: "Professional narrative",
+      title: "Turn expertise into a post people actually finish",
+      text: "Your best ideas should not live in draft folders. Post Genius transforms a raw insight into a sharp LinkedIn post with stronger framing, better pacing, and a more credible professional voice.",
+      footer: "Built for founders, operators, and growth teams",
     },
   },
-  twitter: {
-    subtitle: "Posts · Threads",
-    accentColor: "border-l-neutral-800",
+  {
+    id: "twitter",
+    name: "X / Twitter",
+    shortName: "X",
+    icon: <XIcon className="h-5 w-5" />,
+    gradient: "from-slate-900 via-slate-700 to-slate-500",
+    panelTone: "from-slate-500/10 to-slate-700/5",
+    subtitle: "Fast-moving posts and thread-friendly storytelling",
     features: [
-      "Punchy single tweets under 280 characters",
-      "Threads of up to 25 tweets for long-form ideas",
-      "Trending topic commentary that drives engagement",
-      "Questions and conversation starters for more replies",
+      "Punchier hooks for short attention windows",
+      "Concise structure that keeps momentum high",
+      "Thread-ready sequencing for deeper ideas",
+      "Sharper opinion framing for stronger engagement",
     ],
-    sample: {
-      text: "Just created a week's worth of content in 30 minutes. Using AI for multiple platforms is a game-changer — saves 20+ hrs/week, consistent messaging, higher engagement. #Productivity #AIContent",
-      tags: [],
-      tagColor: "",
-      meta: "Max 280 characters · Optional thread · Copy-ready",
+    preview: {
+      label: "Speed and clarity",
+      title: "More signal, less fluff",
+      text: "One idea becomes a tighter X post with a stronger first line, better rhythm, and cleaner takeaway so you can join the conversation quickly without sounding rushed.",
+      footer: "Optimized for velocity, reactions, and clarity",
     },
   },
-  linkedin: {
-    subtitle: "Posts · Thought Leadership",
-    accentColor: "border-l-blue-600",
+  {
+    id: "instagram",
+    name: "Instagram",
+    shortName: "Instagram",
+    icon: <InstagramIcon className="h-5 w-5" />,
+    gradient: "from-fuchsia-500 via-pink-500 to-orange-400",
+    panelTone: "from-pink-500/12 to-orange-500/5",
+    subtitle: "Captions, hooks, and story-friendly storytelling",
     features: [
-      "Professional posts between 1,200–2,000 characters",
-      "Thought leadership pieces and industry insights",
-      "Short paragraphs, natural flow, closes with 3 hashtags",
-      "Company updates and milestone announcements",
+      "Hook-led captions designed to stop the scroll",
+      "Stronger emotional pacing and visual language",
+      "Cleaner CTA flow for saves, shares, and taps",
+      "Hashtag suggestions that support discoverability",
     ],
-    sample: {
-      text: "PostBloom turns your topic or draft into a polished LinkedIn post — 1,200–2,000 characters, short punchy paragraphs, professional tone, closing with 3 relevant hashtags. Choose your tone and audience on the Generate page, then copy with one click.",
-      tags: [],
-      tagColor: "",
-      meta: "Optimised for feed engagement · One-click copy",
+    preview: {
+      label: "Visual-first messaging",
+      title: "Write captions that feel intentional",
+      text: "Post Genius gives your idea a stronger emotional arc, a more compelling opening, and cleaner caption flow so the final post feels polished and creator-ready.",
+      footer: "Built for reels, carousels, stories, and static posts",
     },
   },
-  peerlist: {
-    subtitle: "Developer Community",
-    accentColor: "border-l-green-600",
+  {
+    id: "peerlist",
+    name: "Peerlist",
+    shortName: "Peerlist",
+    icon: <PeerlistIcon className="h-5 w-5" />,
+    gradient: "from-emerald-500 via-green-500 to-lime-400",
+    panelTone: "from-emerald-500/12 to-lime-500/5",
+    subtitle: "Builder-focused updates for the tech community",
     features: [
-      "Concise, high-signal posts up to 2,000 characters",
-      "Developer and tech-community–friendly tone throughout",
-      "Profile and project highlights that stand out",
-      "Clean, scannable formatting for recruiters and peers",
+      "Cleaner updates with maker-friendly tone",
+      "Project highlights with better signal density",
+      "Professional but human delivery for community reach",
+      "Structured formatting that stays easy to scan",
     ],
-    sample: {
-      text: "Professional, concise posts (up to 2,000 characters) for developers and tech professionals — clear, scannable, and ideal for profile updates and project highlights. Same input as other platforms; select Peerlist on results and copy.",
-      tags: [],
-      tagColor: "",
-      meta: "One input → four platforms · Copy only what you need",
+    preview: {
+      label: "Builder credibility",
+      title: "Share progress with confidence",
+      text: "From shipping notes to launch highlights, Post Genius reshapes your update into a more credible, concise, and community-ready Peerlist post.",
+      footer: "Ideal for launches, milestones, and product updates",
     },
   },
-};
+];
 
 const useCases = [
   {
-    title: "Social Media Managers",
-    description: "Plan and schedule an entire month of content in a single afternoon.",
-    icon: <Users2 className="h-5 w-5" />,
-    features: ["30 days of posts in ~3 hours", "Consistent brand voice", "Trend suggestions built in"],
+    title: "Founders",
+    description: "Build a visible online presence without writing from scratch every day.",
+    icon: Target,
   },
   {
-    title: "Content Creators",
-    description: "Repurpose one piece of content into 20+ posts across every platform.",
-    icon: <Video className="h-5 w-5" />,
-    features: ["Video → Blog → Social in one flow", "Transcript-to-post built in", "Hashtag tuning per platform"],
+    title: "Creators",
+    description: "Turn one insight into multi-platform distribution with less mental overhead.",
+    icon: MessageSquareText,
   },
   {
-    title: "Marketing Teams",
-    description: "Launch unified campaigns across all channels from a single brief.",
-    icon: <Rocket className="h-5 w-5" />,
-    features: ["Cohesive campaign messaging", "Platform-specific adaptations", "Cross-channel consistency"],
+    title: "Marketing teams",
+    description: "Keep campaigns aligned across channels while reducing bottlenecks.",
+    icon: Users2,
   },
   {
-    title: "Small Businesses",
-    description: "Stay active on 5+ platforms without a dedicated content team.",
-    icon: <Bell className="h-5 w-5" />,
-    features: ["Daily posts, minimal time", "Audience-specific tone", "Engagement templates ready"],
+    title: "Agencies",
+    description: "Scale content production for clients with faster iteration and cleaner outputs.",
+    icon: Zap,
   },
 ];
 
-/* ─── Component ─── */
-
 export default function LearnMorePage() {
-  const [activePlatform, setActivePlatform] = useState("instagram");
-  const activeContent = platformContent[activePlatform as keyof typeof platformContent];
-  const activePlatformData = platforms.find((p) => p.id === activePlatform)!;
+  const [activePlatform, setActivePlatform] = useState("linkedin");
 
   return (
-    <div className="min-h-screen bg-transparent overflow-x-hidden">
-
-      {/* ── Slim page header — NOT a hero ── */}
-      {/* <div className="border-b border-border/60 bg-background/60 backdrop-blur-sm sticky top-0 z-20">
-        <div className="container mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">PostBloom</span>
-            <span className="text-border">/</span>
-            <span>Learn more</span>
-          </div>
-          <Button size="sm" className="rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 h-8 gap-1.5 shrink-0">
-            Get started <ArrowRight className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </div> */}
-
-      {/* ── Page intro — compact, not a hero ── */}
-      <div className="container mx-auto max-w-6xl px-4 sm:px-6 pt-10 sm:pt-14 pb-6">
-        <div className="max-w-2xl">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-2" style={{ letterSpacing: "-0.025em" }}>
-            Everything PostBloom does
-          </h1>
-          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-            One input. Four platforms. A fraction of the time.
-          </p>
-        </div>
+    <div className="relative overflow-hidden bg-[#f4f7fb] text-slate-950 dark:bg-[#060810] dark:text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(circle_at_top,_rgba(94,129,255,0.18),_transparent_52%),radial-gradient(circle_at_20%_20%,_rgba(80,196,255,0.14),_transparent_34%),radial-gradient(circle_at_80%_12%,_rgba(80,255,191,0.10),_transparent_28%)] dark:bg-[radial-gradient(circle_at_top,_rgba(94,129,255,0.24),_transparent_52%),radial-gradient(circle_at_20%_20%,_rgba(80,196,255,0.14),_transparent_34%),radial-gradient(circle_at_80%_12%,_rgba(80,255,191,0.10),_transparent_28%)]" />
+        <div className="absolute left-[-10rem] top-[8rem] h-[24rem] w-[24rem] rounded-full bg-[radial-gradient(circle,_rgba(110,149,255,0.16),_transparent_70%)] dark:bg-[radial-gradient(circle,_rgba(110,149,255,0.22),_transparent_70%)]" />
+        <div className="absolute right-[-8rem] top-[20rem] h-[22rem] w-[22rem] rounded-full bg-[radial-gradient(circle,_rgba(60,214,176,0.12),_transparent_70%)] dark:bg-[radial-gradient(circle,_rgba(60,214,176,0.18),_transparent_70%)]" />
       </div>
 
-      {/* ── Stats row ── */}
-      <div className="container mx-auto max-w-6xl px-4 sm:px-6 pb-10 sm:pb-14">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {stats.map((stat, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: i * 0.06 }}
-            >
-              <div className="rounded-xl border border-border/70 bg-card/70 p-4 sm:p-5 flex flex-col gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                  {stat.icon}
-                </div>
-                <div>
-                  <p className="text-2xl sm:text-3xl font-black tracking-tight text-foreground" style={{ letterSpacing: "-0.03em" }}>
-                    {stat.value}
-                  </p>
-                  <p className="text-sm font-semibold text-foreground/80 mt-0.5">{stat.label}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{stat.sub}</p>
-                </div>
+      <section className="relative mx-auto max-w-6xl px-6 pb-18 pt-28 sm:px-8 md:pb-24 md:pt-32">
+        <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+          <div className="max-w-3xl">
+            <Badge className="rounded-full border border-slate-200/80 bg-white/80 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/8 dark:text-white/72">
+              Product overview
+            </Badge>
+
+            <h1 className="mt-6 bg-[linear-gradient(180deg,#07111f_0%,#23324e_44%,#607492_100%)] bg-clip-text text-5xl font-black leading-[0.92] tracking-[-0.06em] text-transparent sm:text-6xl lg:text-[5.25rem] dark:bg-[linear-gradient(180deg,#f8fbff_0%,#cad5e8_42%,#7d89a2_100%)]">
+              Learn More
+              <br />
+              About the
+              <br />
+              Product.
+            </h1>
+
+            <p className="mt-6 max-w-2xl text-sm leading-7 text-slate-600 dark:text-[#a6afc3] sm:text-base">
+              Post Genius helps you turn one raw idea into platform-ready content for LinkedIn, X, Instagram, and Peerlist. The experience is built to feel fast, professional, and reliable so your workflow stays simple even when your publishing goals grow.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/sign-up"
+                className="inline-flex min-w-[190px] items-center justify-center rounded-xl bg-[linear-gradient(180deg,#dbe6ff_0%,#9fbcff_100%)] px-6 py-3 text-sm font-semibold text-[#081224] shadow-[0_18px_50px_rgba(110,149,255,0.26)] transition-transform duration-200 hover:-translate-y-0.5"
+              >
+                Start Creating
+              </Link>
+              <a
+                href="#platforms"
+                className="inline-flex min-w-[190px] items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-6 py-3 text-sm font-semibold text-slate-900 transition-colors duration-200 hover:bg-slate-50 dark:border-white/12 dark:bg-white/6 dark:text-white dark:hover:bg-white/10"
+              >
+                Explore Platform Outputs
+              </a>
+            </div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+            className="rounded-[2rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(243,247,255,0.88))] p-6 shadow-[0_30px_120px_rgba(15,23,42,0.10)] backdrop-blur dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,19,30,0.94),rgba(8,10,18,0.96))] dark:shadow-[0_30px_120px_rgba(0,0,0,0.34)]"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400 dark:text-white/38">
+                  Why it works
+                </p>
+                <h2 className="mt-3 text-2xl font-black tracking-[-0.05em] text-slate-950 dark:text-white">
+                  One system.
+                  <br />
+                  Four polished outputs.
+                </h2>
               </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-white/6">
+                <Rocket className="h-6 w-6 text-[#6f8dff] dark:text-[#a9bbff]" />
+              </div>
+            </div>
 
-      <div className="border-t border-border/40" />
-
-      {/* ── How it works ── */}
-      <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-8">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">How it works</p>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ letterSpacing: "-0.02em" }}>
-              Your multi-platform workflow
-            </h2>
-          </div>
-          <p className="text-sm text-muted-foreground max-w-xs">From idea to published content across all platforms in minutes.</p>
-        </div>
-
-        <div className="space-y-4">
-          {workflowSteps.map((step, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.08, duration: 0.35 }}
-            >
-              <Card className="border border-border/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                <CardContent className="p-5 sm:p-6 md:p-7">
-                  <div className="flex flex-col sm:flex-row gap-5 sm:gap-7 items-start">
-
-                    {/* Step badge + icon */}
-                    <div className="flex items-center gap-3 sm:flex-col sm:items-center sm:gap-2 shrink-0">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white text-sm font-black shrink-0">
-                        {step.step}
-                      </div>
-                      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary sm:mx-auto shrink-0">
-                        {step.icon}
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="grow min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <h3 className="text-base sm:text-lg font-bold tracking-tight">{step.title}</h3>
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full">
-                          <Clock className="h-2.5 w-2.5" /> Saves 5+ hrs
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{step.description}</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        {step.features.map((f, fi) => (
-                          <div key={fi} className="flex items-start gap-2">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 mt-0.5 shrink-0" />
-                            <span className="text-xs text-foreground/75 leading-snug">{f}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Platform avatars */}
-                    <div className="shrink-0 hidden md:flex flex-col items-center gap-2 rounded-xl bg-muted/50 border border-border/50 px-4 py-3">
-                      <div className="flex -space-x-1.5">
-                        {platforms.map((p) => (
-                          <div key={p.id} className={`w-7 h-7 rounded-full ${p.color} flex items-center justify-center border-2 border-background [&>svg]:h-3.5 [&>svg]:w-3.5`}>
-                            {p.icon}
-                          </div>
-                        ))}
-                      </div>
-                      <p className="text-[11px] text-muted-foreground font-medium">4 platforms</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      <div className="border-t border-border/40" />
-
-      {/* ── Platform content tabs ── */}
-      <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-8">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Output formats</p>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ letterSpacing: "-0.02em" }}>
-              Optimized for each platform
-            </h2>
-          </div>
-          <p className="text-sm text-muted-foreground max-w-xs">One topic or draft → four copy-ready posts.</p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-          <Tabs value={activePlatform} onValueChange={setActivePlatform}>
-
-            {/* Tab bar */}
-            <TabsList className="w-full h-auto p-1.5 bg-muted/40 border-b border-border rounded-none grid grid-cols-4 gap-1">
-              {platforms.map((p) => (
-                <TabsTrigger
-                  key={p.id}
-                  value={p.id}
-                  className={cn(
-                    "flex items-center justify-center gap-2 rounded-lg py-2.5 px-2 sm:px-3 text-sm font-medium transition-all duration-150 cursor-pointer",
-                    "text-muted-foreground hover:text-foreground hover:bg-background/70",
-                    "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/80"
-                  )}
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              {stats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="rounded-2xl border border-slate-200/80 bg-white/85 p-4 dark:border-white/8 dark:bg-white/6"
                 >
-                  <span className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg ${p.color} flex items-center justify-center text-white shrink-0 [&>svg]:h-3.5 [&>svg]:w-3.5 sm:[&>svg]:h-4 sm:[&>svg]:w-4`}>
-                    {p.icon}
-                  </span>
-                  <span className="hidden sm:inline font-semibold text-xs sm:text-sm">{p.shortName}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-            {/* Content panels */}
-            {platforms.map((p) => {
-              const content = platformContent[p.id as keyof typeof platformContent];
-              return (
-                <TabsContent key={p.id} value={p.id} className="mt-0 outline-none data-[state=inactive]:hidden">
-                  <motion.div
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border"
-                  >
-                    {/* Left — what we optimise */}
-                    <div className="p-5 sm:p-6 md:p-7">
-                      <div className="flex items-center gap-3 mb-5">
-                        <div className={`w-9 h-9 rounded-xl ${p.color} flex items-center justify-center text-white shrink-0 [&>svg]:h-4 [&>svg]:w-4`}>
-                          {p.icon}
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-bold text-foreground leading-tight">{p.name}</h3>
-                          <p className="text-xs text-muted-foreground">{content.subtitle}</p>
-                        </div>
-                      </div>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">What we optimise</p>
-                      <ul className="space-y-2.5">
-                        {content.features.map((item, idx) => (
-                          <li key={idx} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 mt-0.5 shrink-0" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Right — sample */}
-                    <div className="p-5 sm:p-6 md:p-7 bg-muted/20">
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Sample output</p>
-                      <div className={`rounded-xl border border-border bg-background p-4 sm:p-5 border-l-4 ${content.accentColor} mb-2.5`}>
-                        <p className="text-sm text-foreground/90 leading-relaxed mb-2.5">
-                          {content.sample.text}
-                        </p>
-                        {content.sample.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5">
-                            {content.sample.tags.map((tag) => (
-                              <span key={tag} className={`text-xs font-semibold ${content.sample.tagColor}`}>{tag}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">{content.sample.meta}</p>
-                    </div>
-                  </motion.div>
-                </TabsContent>
-              );
-            })}
-          </Tabs>
-        </div>
-      </div>
-
-      <div className="border-t border-border/40" />
-
-      {/* ── Use cases ── */}
-      <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-8">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Who it's for</p>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ letterSpacing: "-0.02em" }}>
-              Who benefits most
-            </h2>
-          </div>
-          <p className="text-sm text-muted-foreground max-w-xs">Professionals managing multiple platforms see the biggest gains.</p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {useCases.map((uc, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.07, duration: 0.3 }}
-            >
-              <Card className="h-full border border-border/60 bg-card/70 hover:shadow-md hover:border-primary/20 transition-all duration-300 group">
-                <CardContent className="p-5">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:bg-primary/15 transition-colors [&>svg]:h-4 [&>svg]:w-4">
-                    {uc.icon}
+                  <div className="text-2xl font-black tracking-[-0.05em] text-slate-950 dark:text-white">
+                    {stat.value}
                   </div>
-                  <h3 className="text-sm font-bold mb-1 tracking-tight text-foreground">{uc.title}</h3>
-                  <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{uc.description}</p>
-                  <ul className="space-y-1.5">
-                    {uc.features.map((f, fi) => (
-                      <li key={fi} className="flex items-start gap-1.5">
-                        <div className="w-1 h-1 rounded-full bg-primary mt-1.5 shrink-0" />
-                        <span className="text-xs text-foreground/70 leading-snug">{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      <div className="border-t border-border/40" />
-
-      {/* ── CTA — compact, not a full section ── */}
-      <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14">
-        <div className="rounded-2xl border border-border/60 bg-card/60 p-6 sm:p-8 md:p-10 flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8">
-          <div className="grow min-w-0">
-            <div className="flex flex-wrap gap-3 mb-3">
-              {[
-                { value: "20+", label: "hrs saved / week" },
-                { value: "4",   label: "platforms" },
-                { value: "80%", label: "less writing time" },
-              ].map((s, i) => (
-                <div key={i} className="flex items-baseline gap-1">
-                  <span className="text-xl font-black text-foreground tracking-tight" style={{ letterSpacing: "-0.02em" }}>{s.value}</span>
-                  <span className="text-xs text-muted-foreground font-medium">{s.label}</span>
+                  <div className="mt-1 text-sm font-semibold text-slate-800 dark:text-white/90">{stat.label}</div>
+                  <div className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400 dark:text-white/38">
+                    {stat.hint}
+                  </div>
                 </div>
               ))}
             </div>
-            <h2 className="text-lg sm:text-xl font-bold tracking-tight mb-1" style={{ letterSpacing: "-0.02em" }}>
-              Ready to reclaim your time?
-            </h2>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
-              Start generating content for all four platforms today. No credit card required.
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="relative border-t border-slate-200/80 bg-[#edf3fa] dark:border-white/6 dark:bg-[#090c14]">
+        <div className="mx-auto max-w-6xl px-6 py-18 sm:px-8 sm:py-20">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-white/42">
+              Designed for modern publishing
             </p>
+            <h2 className="mt-4 text-3xl font-black uppercase tracking-[-0.05em] text-slate-950 dark:text-white sm:text-5xl">
+              A clearer way to create
+            </h2>
           </div>
-          <div className="shrink-0 flex flex-col sm:items-end gap-2">
-            <Button
-              size="lg"
-              className="rounded-full bg-blue-600 hover:bg-blue-700 text-white gap-2 font-bold px-7 h-11 shadow-md hover:shadow-lg hover:shadow-blue-500/20 transition-all whitespace-nowrap"
-            >
-              <Rocket className="h-4 w-4" />
-              Start free trial
-            </Button>
-            <p className="text-xs text-muted-foreground text-center sm:text-right">Cancel anytime</p>
+
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
+            {pillars.map(({ icon: Icon, title, description }) => (
+              <Card
+                key={title}
+                className="rounded-[1.7rem] border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(243,247,255,0.92))] shadow-[0_16px_50px_rgba(15,23,42,0.06)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(16,19,30,0.95),rgba(10,13,20,0.92))] dark:shadow-none"
+              >
+                <CardContent className="p-6">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-white/6">
+                    <Icon className="h-5 w-5 text-[#6f8dff] dark:text-[#bed0ff]" />
+                  </div>
+                  <h3 className="mt-5 text-lg font-semibold text-slate-950 dark:text-white">{title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-[#9da7bc]">{description}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
+      <section className="border-t border-slate-200/80 dark:border-white/6">
+        <div className="mx-auto max-w-6xl px-6 py-18 sm:px-8 sm:py-20">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-white/42">
+                Workflow
+              </p>
+              <h2 className="mt-4 text-3xl font-black uppercase tracking-[-0.05em] text-slate-950 dark:text-white sm:text-5xl">
+                Built to remove friction
+              </h2>
+            </div>
+            <p className="max-w-md text-sm leading-7 text-slate-600 dark:text-[#9da7bc]">
+              The product experience is simple on purpose: less setup, fewer decisions, and much faster distribution.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-5 lg:grid-cols-3">
+            {workflow.map(({ step, title, description, bullets, icon: Icon }) => (
+              <Card
+                key={step}
+                className="rounded-[1.7rem] border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,249,255,0.94))] shadow-[0_20px_60px_rgba(15,23,42,0.06)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(15,19,29,0.95),rgba(9,12,19,0.94))] dark:shadow-none"
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-black tracking-[0.2em] text-slate-400 dark:text-white/34">
+                      {step}
+                    </div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-white/6">
+                      <Icon className="h-5 w-5 text-[#6f8dff] dark:text-[#bed0ff]" />
+                    </div>
+                  </div>
+                  <h3 className="mt-6 text-xl font-semibold text-slate-950 dark:text-white">{title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-[#9da7bc]">{description}</p>
+                  <div className="mt-6 space-y-3">
+                    {bullets.map((bullet) => (
+                      <div key={bullet} className="flex items-start gap-3 text-sm text-slate-700 dark:text-[#d6def0]">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                        <span>{bullet}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="platforms"
+        className="border-t border-slate-200/80 bg-[#edf3fa] dark:border-white/6 dark:bg-[#090c14]"
+      >
+        <div className="mx-auto max-w-6xl px-6 py-18 sm:px-8 sm:py-20">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-white/42">
+                Platform detail
+              </p>
+              <h2 className="mt-4 text-3xl font-black uppercase tracking-[-0.05em] text-slate-950 dark:text-white sm:text-5xl">
+                Content that feels native
+              </h2>
+            </div>
+            <p className="max-w-md text-sm leading-7 text-slate-600 dark:text-[#9da7bc]">
+              Each destination has its own pace, formatting habits, and audience expectations. The product adapts your message accordingly.
+            </p>
+          </div>
+
+          <div className="mt-12 overflow-hidden rounded-[2rem] border border-slate-200/90 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur dark:border-white/8 dark:bg-[rgba(11,13,20,0.94)] dark:shadow-none">
+            <Tabs value={activePlatform} onValueChange={setActivePlatform}>
+              <TabsList className="grid h-auto w-full grid-cols-2 gap-2 rounded-none border-b border-slate-200 bg-slate-50/80 p-3 md:grid-cols-4 dark:border-white/8 dark:bg-white/4">
+                {platforms.map((platform) => (
+                  <TabsTrigger
+                    key={platform.id}
+                    value={platform.id}
+                    className={cn(
+                      "flex items-center justify-center gap-2 rounded-2xl border border-transparent px-3 py-3 text-sm font-semibold text-slate-500 transition-all duration-200",
+                      "hover:bg-white hover:text-slate-900 dark:hover:bg-white/8 dark:hover:text-white",
+                      "data-[state=active]:border-slate-200 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm dark:data-[state=active]:border-white/10 dark:data-[state=active]:bg-white/8 dark:data-[state=active]:text-white"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br text-white",
+                        platform.gradient
+                      )}
+                    >
+                      {platform.icon}
+                    </span>
+                    <span>{platform.shortName}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              {platforms.map((platform) => (
+                <TabsContent key={platform.id} value={platform.id} className="mt-0">
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]"
+                  >
+                    <div className="border-b border-slate-200 p-6 lg:border-b-0 lg:border-r dark:border-white/8 sm:p-8">
+                      <div
+                        className={cn(
+                          "inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:border-white/10 dark:bg-white/6 dark:text-white/56"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br text-white",
+                            platform.gradient
+                          )}
+                        >
+                          {platform.icon}
+                        </span>
+                        {platform.name}
+                      </div>
+
+                      <h3 className="mt-6 text-2xl font-black tracking-[-0.04em] text-slate-950 dark:text-white">
+                        {platform.subtitle}
+                      </h3>
+
+                      <div className="mt-6 space-y-3">
+                        {platform.features.map((feature) => (
+                          <div key={feature} className="flex items-start gap-3 text-sm text-slate-700 dark:text-[#d6def0]">
+                            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                            <span>{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="p-6 sm:p-8">
+                      <div
+                        className={cn(
+                          "rounded-[1.75rem] border border-slate-200 bg-gradient-to-br p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] dark:border-white/8 dark:shadow-none",
+                          platform.panelTone
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-white/38">
+                              {platform.preview.label}
+                            </p>
+                            <h4 className="mt-3 text-xl font-semibold text-slate-950 dark:text-white">
+                              {platform.preview.title}
+                            </h4>
+                          </div>
+                          <div
+                            className={cn(
+                              "flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-sm",
+                              platform.gradient
+                            )}
+                          >
+                            {platform.icon}
+                          </div>
+                        </div>
+
+                        <div className="mt-6 rounded-[1.4rem] border border-white/70 bg-white/90 p-5 dark:border-white/8 dark:bg-[#0c1019]">
+                          <p className="text-sm leading-7 text-slate-700 dark:text-[#d8dff0]">
+                            {platform.preview.text}
+                          </p>
+                        </div>
+
+                        <div className="mt-4 flex items-center justify-between text-xs uppercase tracking-[0.16em] text-slate-400 dark:text-white/36">
+                          <span>{platform.preview.footer}</span>
+                          <span>Copy-ready</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-slate-200/80 dark:border-white/6">
+        <div className="mx-auto max-w-6xl px-6 py-18 sm:px-8 sm:py-20">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-white/42">
+                Best fit
+              </p>
+              <h2 className="mt-4 text-3xl font-black uppercase tracking-[-0.05em] text-slate-950 dark:text-white sm:text-5xl">
+                Made for ambitious teams and makers
+              </h2>
+            </div>
+            <p className="max-w-md text-sm leading-7 text-slate-600 dark:text-[#9da7bc]">
+              If your product, personal brand, or company needs a stronger publishing rhythm, this workflow is built for you.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            {useCases.map(({ title, description, icon: Icon }) => (
+              <Card
+                key={title}
+                className="rounded-[1.6rem] border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(245,248,255,0.94))] shadow-[0_16px_50px_rgba(15,23,42,0.05)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(15,19,30,0.95),rgba(10,13,20,0.92))] dark:shadow-none"
+              >
+                <CardContent className="p-6">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-white/6">
+                    <Icon className="h-5 w-5 text-[#6f8dff] dark:text-[#bed0ff]" />
+                  </div>
+                  <h3 className="mt-5 text-lg font-semibold text-slate-950 dark:text-white">{title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-[#9da7bc]">{description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-slate-200/80 bg-[#edf3fa] px-6 py-18 dark:border-white/6 dark:bg-[#090c14] sm:px-8 sm:py-22">
+        <div className="mx-auto max-w-6xl rounded-[2.2rem] border border-slate-200/90 bg-[linear-gradient(135deg,rgba(255,255,255,0.97),rgba(238,244,255,0.96)_48%,rgba(229,245,241,0.95)_100%)] px-8 py-12 shadow-[0_30px_120px_rgba(15,23,42,0.10)] dark:border-white/8 dark:bg-[linear-gradient(135deg,rgba(16,20,31,0.98),rgba(22,28,43,0.96)_48%,rgba(10,37,31,0.92)_100%)] dark:shadow-[0_30px_120px_rgba(0,0,0,0.34)] sm:px-12 sm:py-14">
+          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-white/42">
+                Ready when you are
+              </p>
+              <h2 className="mt-4 text-3xl font-black uppercase tracking-[-0.05em] text-slate-950 dark:text-white sm:text-5xl">
+                Write less.
+                <br />
+                Publish smarter.
+              </h2>
+              <p className="mt-5 text-sm leading-7 text-slate-600 dark:text-[#b9c3d8] sm:text-base">
+                Start with one idea and turn it into a more professional multi-platform presence with less effort, better consistency, and a much cleaner content workflow.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-4 lg:items-end">
+              <Link href="/sign-up">
+                <Button
+                  size="lg"
+                  className="h-12 rounded-xl bg-[linear-gradient(180deg,#dbe6ff_0%,#9fbcff_100%)] px-7 text-sm font-semibold text-[#081224] shadow-[0_16px_40px_rgba(110,149,255,0.26)] hover:opacity-95"
+                >
+                  Start for Free
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <div className="flex items-center gap-4 text-xs uppercase tracking-[0.16em] text-slate-400 dark:text-white/38">
+                <span className="inline-flex items-center gap-2">
+                  <Clock3 className="h-3.5 w-3.5" />
+                  Faster workflow
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Professional output
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
