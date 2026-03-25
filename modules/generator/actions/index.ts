@@ -7,6 +7,7 @@ import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { Platform } from '@/lib/generated/prisma/client';
+import { toUserFriendlyError } from '@/lib/error-utils';
 
 /**
  * A streaming Server Action for content generation.
@@ -35,7 +36,10 @@ export async function generateStreamAction(data: ContentRequest) {
       }
     } catch (error) {
       console.error('Server Action Streaming Error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown generation error';
+      const errorMessage = toUserFriendlyError(
+        error,
+        'We could not generate your content right now. Please try again.'
+      );
       await writer.write(encoder.encode(`[[ERROR]] ${errorMessage}`));
     } finally {
       await writer.close();
@@ -59,7 +63,7 @@ export async function savePostAction(data: {
 }) {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
-    return { success: false, error: 'Unauthorized' };
+    return { success: false, error: 'Please sign in to save your post.' };
   }
   try {
     // 2. Create the post and its variants in a single transaction
@@ -97,7 +101,7 @@ export async function savePostAction(data: {
 export async function getUserPostsAction() {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
-    return { success: false, error: 'Unauthorized' };
+    return { success: false, error: 'Please sign in to view your posts.' };
   }
   try {
     const posts = await prisma.post.findMany({
@@ -134,7 +138,7 @@ export async function getUserPostsAction() {
  */
 export async function deletePostAction(postId: string) {
   const { userId: clerkId } = await auth();
-  if (!clerkId) return { success: false, error: 'Unauthorized' };
+  if (!clerkId) return { success: false, error: 'Please sign in to delete this post.' };
   try {
     // Verify ownership and delete in one go
     const deleteResult = await prisma.post.deleteMany({
@@ -161,7 +165,7 @@ export async function deletePostAction(postId: string) {
  */
 export async function getPostByIdAction(postId: string) {
   const { userId: clerkId } = await auth();
-  if (!clerkId) return { success: false, error: 'Unauthorized' };
+  if (!clerkId) return { success: false, error: 'Please sign in to open this post.' };
   try {
     const post = await prisma.post.findFirst({
       where: { 

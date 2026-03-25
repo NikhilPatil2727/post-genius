@@ -25,6 +25,7 @@ import { useEffect, useState, useCallback } from "react";
 import { getUserPostsAction, deletePostAction } from "@/modules/generator/actions";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { toUserFriendlyError } from "@/lib/error-utils";
 
 // Main navigation items
 const mainNavItems = [
@@ -45,9 +46,12 @@ export function AppSidebar() {
       const result = await getUserPostsAction();
       if (result.success && result.posts) {
         setPosts(result.posts);
+      } else if (!result.success) {
+        toast.error(result.error || "We could not load your recent posts.");
       }
     } catch (error) {
       console.error("Failed to fetch posts:", error);
+      toast.error(toUserFriendlyError(error, "We could not load your recent posts."));
     } finally {
       setLoading(false);
     }
@@ -91,7 +95,7 @@ export function AppSidebar() {
         toast.error(result.error || "Failed to delete post");
       }
     } catch (error) {
-      toast.error("An error occurred");
+      toast.error(toUserFriendlyError(error, "We could not delete this post."));
     }
   };
 

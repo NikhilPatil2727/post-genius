@@ -10,6 +10,10 @@ import type { ContentResponse, ContentRequest } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateStreamAction, savePostAction, getPostByIdAction } from '@/modules/generator/actions';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { toUserFriendlyError } from '@/lib/error-utils';
+
+const CONTENT_PLATFORMS = ['linkedin', 'twitter', 'instagram', 'peerlist'] as const;
+type ContentPlatformKey = (typeof CONTENT_PLATFORMS)[number];
 
 function GeneratePageContent() {
   const [loading, setLoading] = useState(false);
@@ -55,8 +59,8 @@ function GeneratePageContent() {
         };
         
         variants.forEach((v: { platform: string; content: string }) => {
-          const platformKey = v.platform.toLowerCase() as keyof ContentResponse;
-          if (platformKey in newContent) {
+          const platformKey = v.platform.toLowerCase() as ContentPlatformKey;
+          if (CONTENT_PLATFORMS.includes(platformKey)) {
             newContent[platformKey] = v.content;
           }
         });
@@ -65,11 +69,11 @@ function GeneratePageContent() {
         setHasGenerated(true);
         setError(null);
       } else {
-        setError(result.error || 'Failed to load post');
+        setError(result.error || 'We could not load this post.');
       }
     } catch (err) {
       console.error("Failed to load post:", err);
-      setError('An error occurred while loading the post');
+      setError(toUserFriendlyError(err, 'We could not load this post.'));
     } finally {
       setLoading(false);
     }
@@ -150,7 +154,12 @@ function GeneratePageContent() {
 
         // Check for error marker from server action
         if (accumulatedText.includes('[[ERROR]]')) {
-          throw new Error(accumulatedText.split('[[ERROR]]')[1].trim());
+          throw new Error(
+            toUserFriendlyError(
+              accumulatedText.split('[[ERROR]]')[1].trim(),
+              'We could not generate your content right now. Please try again.'
+            )
+          );
         }
 
         // Extract content between markers using Regex
@@ -203,12 +212,16 @@ function GeneratePageContent() {
         if (result.success && result.post) {
           // Dispatch event with the new post data for the sidebar to refresh optimistically
           window.dispatchEvent(new CustomEvent('post-saved', { detail: result.post }));
+        } else if (!result.success) {
+          setError(result.error || 'Your content was generated, but we could not save it.');
         }
+      } else {
+        setError('No content was generated. Please try a clearer topic or rewrite input.');
       }
 
     } catch (err) {
       console.error('Generation process error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred during generation');
+      setError(toUserFriendlyError(err, 'We could not generate your content right now. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -317,7 +330,7 @@ function GeneratePageContent() {
                   <AlertCircle className="h-5 w-5 text-red-600" />
                   <p className="text-base font-bold text-red-600">Action Failed</p>
                 </div>
-                <p className="text-sm text-red-500/90 dark:text-red-400 mb-4 font-mono break-words leading-relaxed">
+                <p className="text-sm text-red-500/90 dark:text-red-400 mb-4 break-words leading-relaxed">
                   {error}
                 </p>
                 <Button
