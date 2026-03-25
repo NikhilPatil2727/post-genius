@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 
 import { CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, PenTool, RefreshCw, Sparkles, Target, Zap } from "lucide-react";
+import { PenTool, RefreshCw } from "lucide-react";
 import type { ContentRequest } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -34,21 +34,11 @@ export default function GeneratorForm({
   loading,
   initialData,
 }: GeneratorFormProps) {
-  const [mode, setMode] = useState<"topic" | "rewrite">("topic");
-  const [topic, setTopic] = useState("");
-  const [text, setText] = useState("");
-  const [tone, setTone] = useState("professional");
-  const [audience, setAudience] = useState("general");
-
-  useEffect(() => {
-    if (initialData) {
-      if (initialData.mode) setMode(initialData.mode);
-      if (initialData.topic) setTopic(initialData.topic);
-      if (initialData.text) setText(initialData.text);
-      if (initialData.tone) setTone(initialData.tone);
-      if (initialData.audience) setAudience(initialData.audience);
-    }
-  }, [initialData]);
+  const [mode, setMode] = useState<"topic" | "rewrite">(initialData?.mode ?? "topic");
+  const [topic, setTopic] = useState(initialData?.topic ?? "");
+  const [text, setText] = useState(initialData?.text ?? "");
+  const [tone, setTone] = useState(initialData?.tone ?? "professional");
+  const [audience, setAudience] = useState(initialData?.audience ?? "general");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

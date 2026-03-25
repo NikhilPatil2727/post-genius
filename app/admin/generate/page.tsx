@@ -54,10 +54,10 @@ function GeneratePageContent() {
           peerlist: '',
         };
         
-        variants.forEach((v: any) => {
+        variants.forEach((v: { platform: string; content: string }) => {
           const platformKey = v.platform.toLowerCase() as keyof ContentResponse;
           if (platformKey in newContent) {
-            (newContent as any)[platformKey] = v.content;
+            newContent[platformKey] = v.content;
           }
         });
         
@@ -303,7 +303,7 @@ function GeneratePageContent() {
           transition={{ delay: 0.1 }}
           className="lg:col-span-4 lg:sticky lg:top-8"
         >
-          <GeneratorForm onSubmit={handleGenerate} loading={loading} initialData={initialData} />
+          <GeneratorForm key={postId ?? 'new'} onSubmit={handleGenerate} loading={loading} initialData={initialData} />
 
           <AnimatePresence>
             {error && (
@@ -342,47 +342,56 @@ function GeneratePageContent() {
           {hasGenerated ? (
             <ContentDisplay content={content} isStreaming={loading} />
           ) : (
-            <div className="h-full min-h-[500px] flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] bg-zinc-50/30 dark:bg-zinc-950/20 p-12 text-center group relative overflow-hidden">
+            <div className="min-h-[500px] rounded-[2rem] border border-zinc-200/70 bg-white/80 p-8 shadow-sm dark:border-zinc-800/70 dark:bg-zinc-950/30">
               {loading ? (
-                <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
-                    <div className="h-16 w-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-                  </div>
-                  <div className="space-y-3">
-                    <h3 className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 font-serif">Retrieving Post</h3>
-                    <p className="text-zinc-500 dark:text-zinc-400 text-[10px] font-black tracking-[0.3em] uppercase opacity-70">Syncing with history...</p>
+                <div className="flex h-full min-h-[420px] flex-col items-center justify-center gap-5">
+                  <div className="h-12 w-12 rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100 animate-spin" />
+                  <div className="space-y-2 text-center">
+                    <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">Preparing drafts</h3>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">Generating content for your selected platforms.</p>
                   </div>
                 </div>
               ) : (
-                <>
-                  <div className="space-y-8 max-w-md mx-auto text-center">
-                    <div className="space-y-4">
-                      <h3 className="text-4xl md:text-6xl font-extrabold tracking-tighter text-zinc-900 dark:text-zinc-50 font-serif">
-                        Ready to Create
-                      </h3>
-                      <div className="h-1 w-16 bg-zinc-900 dark:bg-zinc-50 mx-auto rounded-full" />
+                <div className="flex h-full min-h-[420px] flex-col justify-between">
+                  <div className="max-w-2xl space-y-4">
+                    <div className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
+                      Editorial workspace
                     </div>
-                    <p className="text-zinc-500 dark:text-zinc-400 text-lg leading-relaxed font-medium">
-                      Your platform-optimized narratives will appear here. Start by defining your topic or pasting a draft on the left.
-                    </p>
+                    <div className="space-y-3">
+                      <h3 className="text-2xl font-medium tracking-tight text-zinc-900 dark:text-zinc-100">
+                        Start with one clear idea
+                      </h3>
+                      <p className="max-w-xl text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                        Add a topic or paste a draft on the left. Your generated content will appear here in a clean review area where you can edit, check length, and copy each platform version.
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="mt-12 flex gap-8">
-                    <div className="flex flex-col items-center gap-2 group/platform cursor-default">
-                      <div className="h-1 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 group-hover/platform:bg-blue-500 transition-all duration-300" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 group-hover/platform:text-zinc-900 dark:group-hover/platform:text-zinc-100 transition-colors">LinkedIn</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-2 group/platform cursor-default">
-                      <div className="h-1 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 group-hover/platform:bg-zinc-900 dark:group-hover/platform:bg-white transition-all duration-300" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 group-hover/platform:text-zinc-900 dark:group-hover/platform:text-zinc-100 transition-colors">X / Twitter</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-2 group/platform cursor-default">
-                      <div className="h-1 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 group-hover/platform:bg-pink-500 transition-all duration-300" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 group-hover/platform:text-zinc-900 dark:group-hover/platform:text-zinc-100 transition-colors">Instagram</span>
-                    </div>
+                  <div className="grid gap-4 pt-8 md:grid-cols-3">
+                    {[
+                      {
+                        title: "Create",
+                        description: "Generate first drafts for LinkedIn, X, Instagram, and Peerlist from one input.",
+                      },
+                      {
+                        title: "Review",
+                        description: "Read each version in a focused layout designed for quick checking and revision.",
+                      },
+                      {
+                        title: "Refine",
+                        description: "Use the inline editor to adjust tone, structure, and formatting before you publish.",
+                      },
+                    ].map((item) => (
+                      <div
+                        key={item.title}
+                        className="rounded-2xl border border-zinc-200/70 bg-zinc-50/70 p-5 dark:border-zinc-800/70 dark:bg-zinc-900/40"
+                      >
+                        <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{item.title}</h4>
+                        <p className="mt-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">{item.description}</p>
+                      </div>
+                    ))}
                   </div>
-                </>
+                </div>
               )}
             </div>
           )}
