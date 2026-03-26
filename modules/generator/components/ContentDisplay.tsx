@@ -5,9 +5,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bold,
   Eraser,
+  Heart,
   Italic,
   List,
   ListOrdered,
+  MessageCircle,
+  Repeat2,
+  Send,
   Strikethrough,
   Underline,
 } from 'lucide-react';
@@ -24,26 +28,43 @@ interface ContentDisplayProps {
   isStreaming?: boolean;
 }
 
-const PLATFORM_CONFIG: Record<Platform, { name: string; icon: React.ReactNode; characterLimit?: number }> = {
+const PLATFORM_CONFIG: Record<
+  Platform,
+  {
+    name: string;
+    icon: React.ReactNode;
+    characterLimit?: number;
+    brandClass: string;
+    softClass: string;
+  }
+> = {
   linkedin: {
     name: 'LinkedIn',
-    icon: <FaLinkedin className="h-3.5 w-3.5" />,
+    icon: <FaLinkedin className="h-4 w-4 text-[#0A66C2]" />,
     characterLimit: 3000,
+    brandClass: 'border-[#0A66C2]/20 bg-[#0A66C2]/10 text-[#0A66C2]',
+    softClass: 'from-[#0A66C2]/6 to-[#0A66C2]/0 dark:from-[#0A66C2]/15 dark:to-transparent',
   },
   twitter: {
     name: 'X',
-    icon: <FaXTwitter className="h-3.5 w-3.5" />,
+    icon: <FaXTwitter className="h-4 w-4 text-[#111111] dark:text-white" />,
     characterLimit: 280,
+    brandClass: 'border-zinc-400/30 bg-zinc-500/10 text-zinc-700 dark:text-zinc-200',
+    softClass: 'from-zinc-500/8 to-transparent dark:from-zinc-400/15 dark:to-transparent',
   },
   instagram: {
     name: 'Instagram',
-    icon: <FaInstagram className="h-3.5 w-3.5" />,
+    icon: <FaInstagram className="h-4 w-4 text-[#E4405F]" />,
     characterLimit: 2200,
+    brandClass: 'border-[#E4405F]/20 bg-[#E4405F]/10 text-[#E4405F]',
+    softClass: 'from-[#F77737]/10 via-[#E4405F]/8 to-[#833AB4]/5 dark:from-[#F77737]/20 dark:via-[#E4405F]/15 dark:to-[#833AB4]/10',
   },
   peerlist: {
     name: 'Peerlist',
-    icon: <SiPeerlist className="h-3.5 w-3.5" />,
+    icon: <SiPeerlist className="h-4 w-4 text-[#00AA45]" />,
     characterLimit: 2000,
+    brandClass: 'border-[#00AA45]/20 bg-[#00AA45]/10 text-[#00AA45]',
+    softClass: 'from-[#00AA45]/8 to-transparent dark:from-[#00AA45]/18 dark:to-transparent',
   },
 };
 
@@ -269,6 +290,7 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
   const cleanLength = stripMarkdown(activeContent).length;
   const limit = activeConfig.characterLimit || 280;
   const progress = cleanLength / limit;
+  const showPostActions = !isEditing && Boolean(content[activeTab]);
 
   return (
     <>
@@ -299,33 +321,49 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
             position: relative;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            height: 40px;
-            padding: 0;
-            border: 0;
-            background: transparent;
-            color: #6B7280;
+            gap: 8px;
+            height: 38px;
+            padding: 0 12px;
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 999px;
+            background: #FFFFFF;
+            color: #52525B;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
             white-space: nowrap;
+            transition: all 0.2s ease;
           }
           .dark .content-tab {
-            color: #A3A3A3;
+            color: #A1A1AA;
+            border-color: rgba(255,255,255,0.12);
+            background: #1A1A1A;
           }
           .content-tab.active {
             color: #0F0F0F;
+            border-color: rgba(37,99,235,0.25);
+            box-shadow: 0 8px 20px rgba(37,99,235,0.12);
           }
           .dark .content-tab.active {
             color: #EDEDED;
+            border-color: rgba(96,165,250,0.35);
           }
           .content-tab.active::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: -1px;
-            height: 2px;
-            background: #2563EB;
+            content: none;
+          }
+          .content-tab:hover {
+            transform: translateY(-1px);
+          }
+          .post-shell {
+            border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: #FFFFFF;
+            box-shadow: 0 16px 44px rgba(15,23,42,0.08);
+            overflow: hidden;
+          }
+          .dark .post-shell {
+            border-color: rgba(255,255,255,0.08);
+            background: #18181B;
+            box-shadow: 0 18px 52px rgba(0,0,0,0.35);
           }
           .content-scroll::-webkit-scrollbar {
             width: 4px;
@@ -368,7 +406,7 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
         }}
       />
 
-      <div className="content-display flex h-full flex-col overflow-hidden rounded-[10px] border border-[rgba(0,0,0,0.08)] bg-white dark:border-[rgba(255,255,255,0.08)] dark:bg-[#1A1A1A]">
+      <div className="content-display flex h-full flex-col overflow-hidden rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white dark:border-[rgba(255,255,255,0.08)] dark:bg-[#1A1A1A]">
         <div className="flex items-center justify-between px-5 py-4">
           <div className="flex items-center gap-2">
             <h3 className="text-[13px] font-medium text-[#0F0F0F] dark:text-[#EDEDED]">Generated drafts</h3>
@@ -397,7 +435,7 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
                 onClick={() => setActiveTab(id)}
                 className={cn('content-tab', isActive && 'active')}
               >
-                <span className="text-[#6B7280] dark:text-[#A3A3A3]">{PLATFORM_CONFIG[id].icon}</span>
+                <span>{PLATFORM_CONFIG[id].icon}</span>
                 <span>{PLATFORM_CONFIG[id].name}</span>
                 {isComplete ? <span className="h-1 w-1 rounded-full bg-[#22C55E]" /> : null}
               </button>
@@ -413,16 +451,25 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.14 }}
-              className="mx-auto w-full max-w-3xl"
+              className="mx-auto w-full max-w-2xl"
             >
-              <Card className="rounded-[10px] border border-[rgba(0,0,0,0.08)] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:border-[rgba(255,255,255,0.08)] dark:bg-[#1A1A1A]">
-                <CardHeader className="flex flex-row items-center justify-between px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#6B7280] dark:text-[#A3A3A3]">{activeConfig.icon}</span>
-                    <CardTitle className="text-[13px] font-medium text-[#0F0F0F] dark:text-[#EDEDED]">{activeConfig.name}</CardTitle>
+              <Card className="post-shell relative rounded-2xl border-0">
+                <div className={cn('absolute inset-x-0 top-0 h-24 bg-gradient-to-r', activeConfig.softClass)} />
+                <CardHeader className="relative flex flex-row items-center justify-between px-4 py-4">
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white text-base dark:border-white/15 dark:bg-zinc-900">
+                      {activeConfig.icon}
+                    </span>
+                    <div className="space-y-0.5">
+                      <CardTitle className="text-[13px] font-semibold text-[#0F0F0F] dark:text-[#EDEDED]">Your Post</CardTitle>
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{activeConfig.name}</p>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <span className={cn('rounded-full border px-2 py-1 text-[11px] font-semibold', activeConfig.brandClass)}>
+                      {activeConfig.name}
+                    </span>
                     {isEditable && !isEditing && content[activeTab] ? (
                       <button
                         type="button"
@@ -510,8 +557,41 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
                     </div>
                   )}
 
+                  {showPostActions ? (
+                    <div className="mt-4 grid grid-cols-4 gap-2 border-t border-[rgba(0,0,0,0.08)] pt-3 dark:border-[rgba(255,255,255,0.08)]">
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                      >
+                        <Heart className="h-3.5 w-3.5" />
+                        <span>Like</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        <span>Comment</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                      >
+                        <Repeat2 className="h-3.5 w-3.5" />
+                        <span>Repost</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                        <span>Send</span>
+                      </button>
+                    </div>
+                  ) : null}
+
                   {activeConfig.characterLimit && content[activeTab] ? (
-                    <div className="mt-4 flex items-center justify-between gap-4 border-t border-[rgba(0,0,0,0.08)] pt-3 dark:border-[rgba(255,255,255,0.08)]">
+                    <div className="mt-3 flex items-center justify-between gap-4 border-t border-[rgba(0,0,0,0.08)] pt-3 dark:border-[rgba(255,255,255,0.08)]">
                       <span className="text-[12px] font-normal text-[#6B7280] dark:text-[#9CA3AF]" style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
                         {cleanLength} / {limit}
                       </span>
