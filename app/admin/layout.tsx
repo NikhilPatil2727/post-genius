@@ -1,4 +1,5 @@
 import type React from "react"
+import { Suspense } from "react"
 
 import { SidebarInset } from "@/components/ui/sidebar"
 
@@ -10,7 +11,9 @@ import AppHeader from "@/modules/dashboard/components/app-header"
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarWrapper>
-      <AppSidebar />
+      <Suspense fallback={null}>
+        <AppSidebar />
+      </Suspense>
       <SidebarInset>
        <AppHeader/>
         <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>

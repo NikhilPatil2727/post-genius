@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 import { CardTitle, CardDescription } from "@/components/ui/card";
@@ -39,6 +39,17 @@ export default function GeneratorForm({
   const [text, setText] = useState(initialData?.text ?? "");
   const [tone, setTone] = useState(initialData?.tone ?? "professional");
   const [audience, setAudience] = useState(initialData?.audience ?? "general");
+
+  // Sync state with initialData when it changes
+  useEffect(() => {
+    if (initialData) {
+      setMode(initialData.mode || "topic");
+      setTopic(initialData.topic || "");
+      setText(initialData.text || "");
+      setTone(initialData.tone || "professional");
+      setAudience(initialData.audience || "general");
+    }
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -93,6 +93,7 @@ function GeneratePageContent() {
 
   useEffect(() => {
     if (postId) {
+      clearPage();
       loadPost(postId);
     } else {
       clearPage();

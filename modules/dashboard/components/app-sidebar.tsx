@@ -19,12 +19,13 @@ import {
 } from "@/components/ui/sidebar";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { getUserPostsAction, deletePostAction } from "@/modules/generator/actions";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { toUserFriendlyError } from "@/lib/error-utils";
+import { cn } from "@/lib/utils";
 
 type SidebarPost = {
   id: string;
@@ -43,6 +44,8 @@ const mainNavItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentPostId = searchParams.get("id");
   const [posts, setPosts] = useState<SidebarPost[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -178,11 +181,20 @@ export function AppSidebar() {
                     <SidebarMenuItem key={post.id} className="group relative list-none">
                       <SidebarMenuButton
                         asChild
-                        className="pr-10 h-auto py-3 rounded-xl border border-transparent hover:border-border hover:bg-card/80 transition-all shadow-none hover:shadow-sm"
+                        isActive={currentPostId === post.id}
+                        className={cn(
+                          "pr-10 h-auto py-3 rounded-xl border border-transparent transition-all shadow-none hover:shadow-sm",
+                          currentPostId === post.id 
+                            ? "bg-card border-border text-foreground shadow-sm" 
+                            : "hover:border-border hover:bg-card/80"
+                        )}
                       >
-                        <Link href={`/admin/generate?id=${post.id}`}>
+                        <Link href={`/admin/generate?id=${post.id}`} scroll={false}>
                           <div className="flex flex-col items-start gap-1 w-full truncate">
-                            <span className="truncate w-full font-bold text-[13px] text-zinc-700 dark:text-zinc-200">
+                            <span className={cn(
+                              "truncate w-full font-bold text-[13px]",
+                              currentPostId === post.id ? "text-primary" : "text-zinc-700 dark:text-zinc-200"
+                            )}>
                               {post.topic || (post.sourceText ? post.sourceText.slice(0, 40) : "Draft Creation")}
                             </span>
                             <div className="flex items-center gap-2">
