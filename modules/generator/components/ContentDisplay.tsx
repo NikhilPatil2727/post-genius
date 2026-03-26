@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useUser } from '@clerk/nextjs';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bold,
@@ -164,10 +165,12 @@ function useTypingEffect(rawContent: string, isStreaming: boolean) {
 const EDITABLE_PLATFORMS: Platform[] = ['linkedin', 'twitter', 'instagram', 'peerlist'];
 
 export function ContentDisplay({ content, isStreaming = false }: ContentDisplayProps) {
+  const { user } = useUser();
   const [copied, setCopied] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Platform>('linkedin');
   const [editingPlatform, setEditingPlatform] = useState<Platform | null>(null);
   const [editedContent, setEditedContent] = useState<Partial<Record<Platform, string>>>({});
+  const [expandedPosts, setExpandedPosts] = useState<Partial<Record<Platform, boolean>>>({});
   const editableRef = useRef<HTMLDivElement | null>(null);
 
   const platformIds: Platform[] = ['linkedin', 'twitter', 'instagram', 'peerlist'];
@@ -291,6 +294,14 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
   const limit = activeConfig.characterLimit || 280;
   const progress = cleanLength / limit;
   const showPostActions = !isEditing && Boolean(content[activeTab]);
+  const isExpanded = expandedPosts[activeTab] ?? false;
+  const PREVIEW_LIMIT = 360;
+  const strippedActiveContent = stripMarkdown(activeContent);
+  const isLongPost = strippedActiveContent.length > PREVIEW_LIMIT;
+  const previewText = isExpanded || !isLongPost ? activeContent : `${strippedActiveContent.slice(0, PREVIEW_LIMIT).trimEnd()}...`;
+  const fakeLikes = Math.max(12, Math.min(96, Math.round(cleanLength / 14)));
+  const fakeComments = Math.max(2, Math.min(34, Math.round(cleanLength / 80)));
+  const displayName = user?.fullName || user?.firstName || 'You';
 
   return (
     <>
@@ -298,8 +309,8 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
         dangerouslySetInnerHTML={{
           __html: `
           .content-display {
-            font-family: Inter, system-ui, sans-serif;
-            background: #FAFAFA;
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f3f4f6;
             color: #0F0F0F;
           }
           .dark .content-display {
@@ -333,6 +344,11 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
             white-space: nowrap;
             transition: all 0.2s ease;
           }
+          .content-tab:focus-visible {
+            outline: none;
+            border-color: rgba(59,130,246,0.45);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.14);
+          }
           .dark .content-tab {
             color: #A1A1AA;
             border-color: rgba(255,255,255,0.12);
@@ -354,10 +370,10 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
             transform: translateY(-1px);
           }
           .post-shell {
-            border-radius: 16px;
-            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 0;
+            border: 1px solid #e5e7eb;
             background: #FFFFFF;
-            box-shadow: 0 16px 44px rgba(15,23,42,0.08);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
             overflow: hidden;
           }
           .dark .post-shell {
@@ -372,6 +388,12 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
           .content-scroll::-webkit-scrollbar-thumb {
             background: rgba(0,0,0,0.12);
             border-radius: 999px;
+          }
+          .action-btn {
+            transition: background-color 0.18s ease, color 0.18s ease;
+          }
+          .action-btn:hover {
+            background: #f3f4f6;
           }
           .dark .content-scroll::-webkit-scrollbar-thumb {
             background: rgba(255,255,255,0.12);
@@ -406,7 +428,7 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
         }}
       />
 
-      <div className="content-display flex h-full flex-col overflow-hidden rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white dark:border-[rgba(255,255,255,0.08)] dark:bg-[#1A1A1A]">
+      <div className="content-display flex h-full flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-[#f3f4f6] dark:border-[rgba(255,255,255,0.08)] dark:bg-[#1A1A1A]">
         <div className="flex items-center justify-between px-5 py-4">
           <div className="flex items-center gap-2">
             <h3 className="text-[13px] font-medium text-[#0F0F0F] dark:text-[#EDEDED]">Generated drafts</h3>
@@ -451,24 +473,28 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.14 }}
-              className="mx-auto w-full max-w-2xl"
+              className="mx-auto w-full max-w-[480px]"
             >
-              <Card className="post-shell relative rounded-2xl border-0">
+              <Card className="post-shell relative flex w-full flex-col rounded-none border-0">
                 <div className={cn('absolute inset-x-0 top-0 h-24 bg-gradient-to-r', activeConfig.softClass)} />
-                <CardHeader className="relative flex flex-row items-center justify-between px-4 py-4">
+                <CardHeader className="relative flex shrink-0 flex-row items-center justify-between border-b border-[#e5e7eb] px-4 py-4 dark:border-[rgba(255,255,255,0.08)]">
                   <div className="flex items-center gap-3">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white text-base dark:border-white/15 dark:bg-zinc-900">
-                      {activeConfig.icon}
+                    <span className="relative inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#e5e7eb] bg-white text-base shadow-sm dark:border-white/15 dark:bg-zinc-900">
+                      {user?.imageUrl ? (
+                        <img src={user.imageUrl} alt={displayName} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-200">{displayName.charAt(0)}</span>
+                      )}
                     </span>
                     <div className="space-y-0.5">
-                      <CardTitle className="text-[13px] font-semibold text-[#0F0F0F] dark:text-[#EDEDED]">Your Post</CardTitle>
-                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{activeConfig.name}</p>
+                      <CardTitle className="text-[14px] font-semibold text-[#111827] dark:text-[#EDEDED]">{displayName}</CardTitle>
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{activeConfig.name} Member · now</p>
                     </div>
                   </div>
 
                   <div className="flex flex-wrap items-center justify-end gap-2">
-                    <span className={cn('rounded-full border px-2 py-1 text-[11px] font-semibold', activeConfig.brandClass)}>
-                      {activeConfig.name}
+                    <span className={cn('rounded-full border px-2 py-1 text-[11px] font-semibold', activeConfig.brandClass)} aria-hidden>
+                      {activeConfig.icon}
                     </span>
                     {isEditable && !isEditing && content[activeTab] ? (
                       <button
@@ -510,7 +536,8 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
                   </div>
                 </CardHeader>
 
-                <CardContent className="editor-container px-4 pb-4 pt-0">
+                <CardContent className="editor-container flex flex-col px-4 pb-4 pt-3">
+                  <div className="pr-1">
                   {isEditing ? (
                     <>
                       <div className="mb-3 flex items-center gap-1">
@@ -543,51 +570,101 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
                         suppressContentEditableWarning
                         onInput={handleEditableInput}
                         data-placeholder={`Edit your ${activeConfig.name} draft...`}
-                        className="min-h-[120px] rounded-[8px] border border-[rgba(0,0,0,0.12)] px-[14px] py-3 text-sm font-normal leading-relaxed text-[#0F0F0F] outline-none focus:border-[#2563EB] dark:border-[rgba(255,255,255,0.12)] dark:text-[#EDEDED]"
+                        className="min-h-[220px] rounded-[12px] border border-[#d1d5db] bg-white px-[14px] py-3 text-sm font-normal leading-relaxed text-[#111827] outline-none transition-all duration-200 focus:border-[#60a5fa] focus:ring-2 focus:ring-[#bfdbfe] dark:border-[rgba(255,255,255,0.12)] dark:text-[#EDEDED] md:min-h-full"
                       />
                     </>
                   ) : content[activeTab] ? (
-                    <FormattedText
-                      text={activeContent}
-                      className="text-sm font-normal leading-relaxed text-[#0F0F0F] dark:text-[#EDEDED]"
-                    />
+                    <div>
+                      <FormattedText
+                        text={previewText}
+                        className="text-[15px] font-normal leading-7 text-[#111827] dark:text-[#EDEDED]"
+                      />
+                      {isLongPost ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedPosts((prev) => ({ ...prev, [activeTab]: !isExpanded }))
+                          }
+                          className="mt-1 text-[12px] font-semibold text-zinc-500 transition-colors duration-200 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+                        >
+                          {isExpanded ? 'See less' : 'See more'}
+                        </button>
+                      ) : null}
+                    </div>
                   ) : (
                     <div className="py-10 text-center text-[12px] font-normal text-[#9CA3AF]">
-                      {isStreaming && streamingPlatform !== activeTab ? 'Generating…' : 'No content yet'}
+                      {isStreaming && streamingPlatform !== activeTab ? 'Generating…' : 'Share your thoughts...'}
                     </div>
                   )}
 
-                  {showPostActions ? (
-                    <div className="mt-4 grid grid-cols-4 gap-2 border-t border-[rgba(0,0,0,0.08)] pt-3 dark:border-[rgba(255,255,255,0.08)]">
+                  </div>
+
+                  {isEditing ? (
+                    <div className="mt-4 flex items-center justify-between border-t border-[#e5e7eb] pt-3 dark:border-[rgba(255,255,255,0.08)]">
+                      <div className="flex items-center gap-1">
+                        <button type="button" className="action-btn inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-[12px] font-medium text-zinc-500 dark:text-zinc-400">
+                          <Heart className="h-3.5 w-3.5" />
+                          <span>Like</span>
+                        </button>
+                        <button type="button" className="action-btn inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-[12px] font-medium text-zinc-500 dark:text-zinc-400">
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          <span>Comment</span>
+                        </button>
+                        <button type="button" className="action-btn inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-[12px] font-medium text-zinc-500 dark:text-zinc-400">
+                          <Repeat2 className="h-3.5 w-3.5" />
+                          <span>Repost</span>
+                        </button>
+                        <button type="button" className="action-btn inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-[12px] font-medium text-zinc-500 dark:text-zinc-400">
+                          <Send className="h-3.5 w-3.5" />
+                          <span>Send</span>
+                        </button>
+                      </div>
                       <button
                         type="button"
-                        className="inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                        className="rounded-md bg-[#2563eb] px-4 py-2 text-[12px] font-semibold text-white transition-colors duration-200 hover:bg-[#1d4ed8]"
+                      >
+                        Post
+                      </button>
+                    </div>
+                  ) : null}
+
+                  {showPostActions ? (
+                    <>
+                    <div className="mt-4 flex items-center justify-between border-t border-[#e5e7eb] pt-3 text-[12px] text-zinc-500 dark:border-[rgba(255,255,255,0.08)] dark:text-zinc-400">
+                      <span>{fakeLikes} likes</span>
+                      <span>{fakeComments} comments · 1 repost</span>
+                    </div>
+                    <div className="mt-2 grid grid-cols-4 gap-2 border-t border-[#e5e7eb] pt-2 dark:border-[rgba(255,255,255,0.08)]">
+                      <button
+                        type="button"
+                        className="action-btn inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                       >
                         <Heart className="h-3.5 w-3.5" />
                         <span>Like</span>
                       </button>
                       <button
                         type="button"
-                        className="inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                        className="action-btn inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                       >
                         <MessageCircle className="h-3.5 w-3.5" />
                         <span>Comment</span>
                       </button>
                       <button
                         type="button"
-                        className="inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                        className="action-btn inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                       >
                         <Repeat2 className="h-3.5 w-3.5" />
                         <span>Repost</span>
                       </button>
                       <button
                         type="button"
-                        className="inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                        className="action-btn inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                       >
                         <Send className="h-3.5 w-3.5" />
                         <span>Send</span>
                       </button>
                     </div>
+                    </>
                   ) : null}
 
                   {activeConfig.characterLimit && content[activeTab] ? (
