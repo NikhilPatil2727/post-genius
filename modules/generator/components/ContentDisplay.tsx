@@ -13,6 +13,7 @@ import {
   MessageCircle,
   Repeat2,
   Send,
+  SmilePlus,
   Strikethrough,
   Underline,
 } from 'lucide-react';
@@ -20,6 +21,7 @@ import { FaInstagram, FaLinkedin, FaXTwitter } from 'react-icons/fa6';
 import { SiPeerlist } from 'react-icons/si';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { FormattedText } from './FormattedText';
 import type { ContentResponse, Platform } from '@/types';
 import { cn } from '@/lib/utils';
@@ -163,6 +165,7 @@ function useTypingEffect(rawContent: string, isStreaming: boolean) {
 }
 
 const EDITABLE_PLATFORMS: Platform[] = ['linkedin', 'twitter', 'instagram', 'peerlist'];
+const EMOJIS = ['😀', '🔥', '✨', '🚀', '💡', '🎉', '👏', '🙌', '💯', '✅', '😍', '🤝'];
 
 export function ContentDisplay({ content, isStreaming = false }: ContentDisplayProps) {
   const { user } = useUser();
@@ -172,6 +175,7 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
   const [editedContent, setEditedContent] = useState<Partial<Record<Platform, string>>>({});
   const [expandedPosts, setExpandedPosts] = useState<Partial<Record<Platform, boolean>>>({});
   const editableRef = useRef<HTMLDivElement | null>(null);
+  const selectionRef = useRef<Range | null>(null);
 
   const platformIds: Platform[] = ['linkedin', 'twitter', 'instagram', 'peerlist'];
   const streamingPlatform = isStreaming
@@ -226,6 +230,7 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
       if (editableRef.current) {
         editableRef.current.innerHTML = markdownToHtml(originalContent);
         editableRef.current.focus();
+        saveSelection();
       }
     }, 0);
   };
@@ -249,7 +254,61 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
     if (editableRef.current) {
       const markdown = htmlToMarkdown(editableRef.current.innerHTML);
       setEditedContent((prev) => ({ ...prev, [activeTab]: markdown }));
+      saveSelection();
     }
+  };
+
+  const saveSelection = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || !editableRef.current) return;
+
+    const range = selection.getRangeAt(0);
+    if (editableRef.current.contains(range.commonAncestorContainer)) {
+      selectionRef.current = range.cloneRange();
+    }
+  };
+
+  const placeCaretAtEnd = (element: HTMLDivElement) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    range.collapse(false);
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    selectionRef.current = range.cloneRange();
+  };
+
+  const insertEmoji = (emoji: string) => {
+    if (!editableRef.current) return;
+
+    editableRef.current.focus();
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+
+    if (selectionRef.current) {
+      selection?.addRange(selectionRef.current);
+    } else {
+      placeCaretAtEnd(editableRef.current);
+    }
+
+    const activeSelection = window.getSelection();
+    if (!activeSelection || activeSelection.rangeCount === 0) return;
+
+    const range = activeSelection.getRangeAt(0);
+    range.deleteContents();
+    const textNode = document.createTextNode(emoji);
+    range.insertNode(textNode);
+
+    range.setStartAfter(textNode);
+    range.collapse(true);
+    activeSelection.removeAllRanges();
+    activeSelection.addRange(range);
+    selectionRef.current = range.cloneRange();
+
+    const markdown = htmlToMarkdown(editableRef.current.innerHTML);
+    setEditedContent((prev) => ({ ...prev, [activeTab]: markdown }));
   };
 
   const applyFormat = (type: 'bold' | 'italic' | 'strike' | 'underline' | 'bullet' | 'numbered' | 'clear') => {
@@ -331,6 +390,7 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
           .content-tab {
             position: relative;
             display: inline-flex;
+            cursor: pointer;
             align-items: center;
             gap: 8px;
             height: 38px;
@@ -500,7 +560,7 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
                       <button
                         type="button"
                         onClick={startEditing}
-                        className="rounded-[8px] border border-[rgba(0,0,0,0.12)] px-3 py-1.5 text-[13px] font-medium text-[#0F0F0F] dark:border-[rgba(255,255,255,0.12)] dark:text-[#EDEDED]"
+                        className="cursor-pointer rounded-[8px] border border-[rgba(0,0,0,0.12)] px-3 py-1.5 text-[13px] font-medium text-[#0F0F0F] dark:border-[rgba(255,255,255,0.12)] dark:text-[#EDEDED]"
                       >
                         Edit
                       </button>
@@ -511,14 +571,14 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
                         <button
                           type="button"
                           onClick={cancelEdit}
-                          className="px-2 py-1.5 text-[13px] font-medium text-[#6B7280] dark:text-[#A3A3A3]"
+                          className="cursor-pointer px-2 py-1.5 text-[13px] font-medium text-[#6B7280] dark:text-[#A3A3A3]"
                         >
                           Cancel
                         </button>
                         <button
                           type="button"
                           onClick={saveEdit}
-                          className="px-2 py-1.5 text-[13px] font-medium text-[#2563EB]"
+                          className="cursor-pointer px-2 py-1.5 text-[13px] font-medium text-[#2563EB]"
                         >
                           Save
                         </button>
@@ -529,7 +589,7 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
                       type="button"
                       onClick={() => copyToClipboard(activeContent, activeTab)}
                       disabled={!content[activeTab]}
-                      className="rounded-[8px] border border-[rgba(0,0,0,0.12)] px-3 py-1.5 text-[13px] font-medium text-[#0F0F0F] disabled:opacity-50 dark:border-[rgba(255,255,255,0.12)] dark:text-[#EDEDED]"
+                      className="cursor-pointer rounded-[8px] border border-[rgba(0,0,0,0.12)] px-3 py-1.5 text-[13px] font-medium text-[#0F0F0F] disabled:opacity-50 dark:border-[rgba(255,255,255,0.12)] dark:text-[#EDEDED]"
                     >
                       {copied === activeTab ? 'Copied' : 'Copy'}
                     </button>
@@ -541,27 +601,58 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
                   {isEditing ? (
                     <>
                       <div className="mb-3 flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onClick={() => applyFormat('bold')}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onMouseDown={saveSelection} onClick={() => applyFormat('bold')}>
                           <Bold className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onClick={() => applyFormat('italic')}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onMouseDown={saveSelection} onClick={() => applyFormat('italic')}>
                           <Italic className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onClick={() => applyFormat('strike')}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onMouseDown={saveSelection} onClick={() => applyFormat('strike')}>
                           <Strikethrough className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onClick={() => applyFormat('underline')}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onMouseDown={saveSelection} onClick={() => applyFormat('underline')}>
                           <Underline className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onClick={() => applyFormat('bullet')}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onMouseDown={saveSelection} onClick={() => applyFormat('bullet')}>
                           <List className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onClick={() => applyFormat('numbered')}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onMouseDown={saveSelection} onClick={() => applyFormat('numbered')}>
                           <ListOrdered className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onClick={() => applyFormat('clear')}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onMouseDown={saveSelection} onClick={() => applyFormat('clear')}>
                           <Eraser className="h-3.5 w-3.5" />
                         </Button>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]"
+                              onMouseDown={saveSelection}
+                            >
+                              <SmilePlus className="h-3.5 w-3.5" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            align="start"
+                            className="w-auto rounded-[12px] border border-[#e5e7eb] bg-white p-2 shadow-lg dark:border-[rgba(255,255,255,0.08)] dark:bg-[#18181B]"
+                            onOpenAutoFocus={(event) => event.preventDefault()}
+                          >
+                            <div className="grid grid-cols-4 gap-1">
+                              {EMOJIS.map((emoji) => (
+                                <button
+                                  key={emoji}
+                                  type="button"
+                                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-[8px] text-lg transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                  onMouseDown={(event) => event.preventDefault()}
+                                  onClick={() => insertEmoji(emoji)}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </div>
 
                       <div
@@ -569,6 +660,8 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
                         contentEditable
                         suppressContentEditableWarning
                         onInput={handleEditableInput}
+                        onKeyUp={saveSelection}
+                        onMouseUp={saveSelection}
                         data-placeholder={`Edit your ${activeConfig.name} draft...`}
                         className="min-h-[220px] rounded-[12px] border border-[#d1d5db] bg-white px-[14px] py-3 text-sm font-normal leading-relaxed text-[#111827] outline-none transition-all duration-200 focus:border-[#60a5fa] focus:ring-2 focus:ring-[#bfdbfe] dark:border-[rgba(255,255,255,0.12)] dark:text-[#EDEDED] md:min-h-full"
                       />
@@ -585,7 +678,7 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
                           onClick={() =>
                             setExpandedPosts((prev) => ({ ...prev, [activeTab]: !isExpanded }))
                           }
-                          className="mt-1 text-[12px] font-semibold text-zinc-500 transition-colors duration-200 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+                          className="mt-1 cursor-pointer text-[12px] font-semibold text-zinc-500 transition-colors duration-200 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
                         >
                           {isExpanded ? 'See less' : 'See more'}
                         </button>
@@ -599,35 +692,6 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
 
                   </div>
 
-                  {isEditing ? (
-                    <div className="mt-4 flex items-center justify-between border-t border-[#e5e7eb] pt-3 dark:border-[rgba(255,255,255,0.08)]">
-                      <div className="flex items-center gap-1">
-                        <button type="button" className="action-btn inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-[12px] font-medium text-zinc-500 dark:text-zinc-400">
-                          <Heart className="h-3.5 w-3.5" />
-                          <span>Like</span>
-                        </button>
-                        <button type="button" className="action-btn inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-[12px] font-medium text-zinc-500 dark:text-zinc-400">
-                          <MessageCircle className="h-3.5 w-3.5" />
-                          <span>Comment</span>
-                        </button>
-                        <button type="button" className="action-btn inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-[12px] font-medium text-zinc-500 dark:text-zinc-400">
-                          <Repeat2 className="h-3.5 w-3.5" />
-                          <span>Repost</span>
-                        </button>
-                        <button type="button" className="action-btn inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-[12px] font-medium text-zinc-500 dark:text-zinc-400">
-                          <Send className="h-3.5 w-3.5" />
-                          <span>Send</span>
-                        </button>
-                      </div>
-                      <button
-                        type="button"
-                        className="rounded-md bg-[#2563eb] px-4 py-2 text-[12px] font-semibold text-white transition-colors duration-200 hover:bg-[#1d4ed8]"
-                      >
-                        Post
-                      </button>
-                    </div>
-                  ) : null}
-
                   {showPostActions ? (
                     <>
                     <div className="mt-4 flex items-center justify-between border-t border-[#e5e7eb] pt-3 text-[12px] text-zinc-500 dark:border-[rgba(255,255,255,0.08)] dark:text-zinc-400">
@@ -637,28 +701,28 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
                     <div className="mt-2 grid grid-cols-4 gap-2 border-t border-[#e5e7eb] pt-2 dark:border-[rgba(255,255,255,0.08)]">
                       <button
                         type="button"
-                        className="action-btn inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                        className="action-btn inline-flex cursor-pointer items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                       >
                         <Heart className="h-3.5 w-3.5" />
                         <span>Like</span>
                       </button>
                       <button
                         type="button"
-                        className="action-btn inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                        className="action-btn inline-flex cursor-pointer items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                       >
                         <MessageCircle className="h-3.5 w-3.5" />
                         <span>Comment</span>
                       </button>
                       <button
                         type="button"
-                        className="action-btn inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                        className="action-btn inline-flex cursor-pointer items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                       >
                         <Repeat2 className="h-3.5 w-3.5" />
                         <span>Repost</span>
                       </button>
                       <button
                         type="button"
-                        className="action-btn inline-flex items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                        className="action-btn inline-flex cursor-pointer items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                       >
                         <Send className="h-3.5 w-3.5" />
                         <span>Send</span>
