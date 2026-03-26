@@ -213,6 +213,8 @@ function GeneratePageContent() {
         if (result.success && result.post) {
           // Dispatch event with the new post data for the sidebar to refresh optimistically
           window.dispatchEvent(new CustomEvent('post-saved', { detail: result.post }));
+          router.replace(`/admin/generate?id=${result.post.id}`);
+          router.refresh();
         } else if (!result.success) {
           setError(result.error || 'Your content was generated, but we could not save it.');
         }

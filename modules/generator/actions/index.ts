@@ -3,7 +3,7 @@
 import { streamGenerateContent } from '@/lib/gemini';
 import { ContentRequest } from '@/types';
 
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { Platform } from '@/lib/generated/prisma/client';
@@ -66,10 +66,34 @@ export async function savePostAction(data: {
     return { success: false, error: 'Please sign in to save your post.' };
   }
   try {
+    const clerkUser = await currentUser();
+    const email = clerkUser?.emailAddresses[0]?.emailAddress;
+
+    if (!email) {
+      return { success: false, error: 'We could not verify your account email to save this post.' };
+    }
+
+    const dbUser = await prisma.user.upsert({
+      where: { clerkId },
+      update: {
+        email,
+        firstName: clerkUser?.firstName ?? null,
+        lastName: clerkUser?.lastName ?? null,
+        imageUrl: clerkUser?.imageUrl ?? null,
+      },
+      create: {
+        clerkId,
+        email,
+        firstName: clerkUser?.firstName ?? null,
+        lastName: clerkUser?.lastName ?? null,
+        imageUrl: clerkUser?.imageUrl ?? null,
+      },
+    });
+
     // 2. Create the post and its variants in a single transaction
     const post = await prisma.post.create({
       data: {
-        user: { connect: { clerkId } },
+        user: { connect: { id: dbUser.id } },
         topic: data.topic,
         sourceText: data.sourceText,
         tone: data.tone,
@@ -85,8 +109,8 @@ export async function savePostAction(data: {
         variants: true,
       },
     });
-    // Revalidate dashboard to show the new post
-    revalidatePath('/dashboard');
+    revalidatePath('/admin/generate');
+    revalidatePath('/admin');
     
     return { success: true, post };
   } catch (error) {
@@ -152,7 +176,8 @@ export async function deletePostAction(postId: string) {
       return { success: false, error: 'Post not found or access denied' };
     }
 
-    revalidatePath('/dashboard');
+    revalidatePath('/admin/generate');
+    revalidatePath('/admin');
     return { success: true };
   } catch (error) {
     console.error('Error deleting post:', error);
