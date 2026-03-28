@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 interface ContentDisplayProps {
   content: ContentResponse;
   isStreaming?: boolean;
+  summary?: string | null;
 }
 
 const PLATFORM_CONFIG: Record<
@@ -167,7 +168,7 @@ function useTypingEffect(rawContent: string, isStreaming: boolean) {
 const EDITABLE_PLATFORMS: Platform[] = ['linkedin', 'twitter', 'instagram', 'peerlist'];
 const EMOJIS = ['😀', '🔥', '✨', '🚀', '💡', '🎉', '👏', '🙌', '💯', '✅', '😍', '🤝'];
 
-export function ContentDisplay({ content, isStreaming = false }: ContentDisplayProps) {
+export function ContentDisplay({ content, isStreaming = false, summary }: ContentDisplayProps) {
   const { user } = useUser();
   const [copied, setCopied] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Platform>('linkedin');
@@ -490,9 +491,16 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
 
       <div className="content-display flex h-full flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-[#f3f4f6] dark:border-[rgba(255,255,255,0.08)] dark:bg-[#1A1A1A]">
         <div className="flex items-center justify-between px-5 py-4">
-          <div className="flex items-center gap-2">
-            <h3 className="text-[13px] font-medium text-[#0F0F0F] dark:text-[#EDEDED]">Generated drafts</h3>
-            {isStreaming ? <span className="stream-dot" /> : null}
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <h3 className="text-[13px] font-medium text-[#0F0F0F] dark:text-[#EDEDED]">Generated drafts</h3>
+              {isStreaming ? <span className="stream-dot" /> : null}
+            </div>
+            {summary ? (
+              <p className="max-w-xl text-[12px] leading-5 text-zinc-500 dark:text-zinc-400">
+                {summary}
+              </p>
+            ) : null}
           </div>
 
           <button

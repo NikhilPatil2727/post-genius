@@ -11,6 +11,19 @@ export const MARKERS = {
   PEERLIST: '[[PEERLIST]]',
 };
 
+export const GEMINI_FLASH_MODEL = "gemini-2.5-flash";
+export const GEMINI_FLASH_PREVIEW_MODEL = "gemini-2.5-flash";
+
+export function getGeminiClient(apiKey?: string) {
+  const resolvedApiKey = apiKey || process.env.GEMINI_API_KEY;
+
+  if (!resolvedApiKey) {
+    throw new Error("Gemini API key is not configured");
+  }
+
+  return new GoogleGenAI({ apiKey: resolvedApiKey });
+}
+
 const SYSTEM_PROMPT = `You are an elite Social Media Ghostwriter and Content Strategist. 
 Your goal is to transform raw ideas or topics into viral-ready, high-engagement content across 4 specific platforms.
 You write with a "Human-First" approach: avoid corporate jargon, robotic listicles, or cliché AI openings.`;
@@ -75,8 +88,8 @@ export async function* streamGenerateContent(
   tone?: string,
   audience?: string
 ) {
-  const ai = new GoogleGenAI({ apiKey });
-  const MODEL_NAME = "gemini-2.5-flash"; 
+  const ai = getGeminiClient(apiKey);
+  const MODEL_NAME = GEMINI_FLASH_MODEL; 
 
   const mainPrompt = BUILD_MAIN_PROMPT(mode, topic, text, tone, audience);
 

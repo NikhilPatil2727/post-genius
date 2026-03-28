@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 
 import { CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,9 +16,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { PenTool, RefreshCw } from "lucide-react";
+import { PenTool, Play, RefreshCw } from "lucide-react";
 import type { ContentRequest } from "@/types";
 import { cn } from "@/lib/utils";
+import { YouTubeInput } from "./YouTubeInput";
 
 interface GeneratorFormProps {
   onSubmit: (data: ContentRequest) => void;
@@ -34,28 +35,33 @@ export default function GeneratorForm({
   loading,
   initialData,
 }: GeneratorFormProps) {
-  const [mode, setMode] = useState<"topic" | "rewrite">(initialData?.mode ?? "topic");
+  const [mode, setMode] = useState<"topic" | "rewrite" | "youtube">(initialData?.mode ?? "topic");
   const [topic, setTopic] = useState(initialData?.topic ?? "");
   const [text, setText] = useState(initialData?.text ?? "");
+  const [youtubeUrl, setYoutubeUrl] = useState(initialData?.youtubeUrl ?? "");
   const [tone, setTone] = useState(initialData?.tone ?? "professional");
   const [audience, setAudience] = useState(initialData?.audience ?? "general");
+  const [youtubeError, setYoutubeError] = useState<string | null>(null);
 
-  // Sync state with initialData when it changes
-  useEffect(() => {
-    if (initialData) {
-      setMode(initialData.mode || "topic");
-      setTopic(initialData.topic || "");
-      setText(initialData.text || "");
-      setTone(initialData.tone || "professional");
-      setAudience(initialData.audience || "general");
-    }
-  }, [initialData]);
+  const isValidYouTubeUrl = (value: string) =>
+    /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w-]{11}/.test(value.trim());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (mode === "youtube") {
+      if (!isValidYouTubeUrl(youtubeUrl)) {
+        setYoutubeError("Invalid YouTube URL");
+        return;
+      }
+
+      setYoutubeError(null);
+    }
+
     const data: ContentRequest = { mode, tone, audience };
     if (mode === "topic") data.topic = topic;
-    else data.text = text;
+    else if (mode === "rewrite") data.text = text;
+    else data.youtubeUrl = youtubeUrl;
     onSubmit(data);
   };
 
@@ -76,15 +82,23 @@ export default function GeneratorForm({
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 form-scrollbar">
           <Tabs
             value={mode}
-            onValueChange={(v) => setMode(v as "topic" | "rewrite")}
+            onValueChange={(v) => {
+              setMode(v as "topic" | "rewrite" | "youtube");
+              if (v !== "youtube") {
+                setYoutubeError(null);
+              }
+            }}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-2 w-full h-10 p-1 bg-zinc-100 dark:bg-zinc-800/50 rounded-lg mb-4">
+            <TabsList className="grid grid-cols-3 w-full h-10 p-1 bg-zinc-100 dark:bg-zinc-800/50 rounded-lg mb-4">
               <TabsTrigger value="topic" className="flex items-center gap-2 rounded-md font-bold text-xs transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:shadow-sm">
                 <PenTool className="h-3 w-3" /> Topic
               </TabsTrigger>
               <TabsTrigger value="rewrite" className="flex items-center gap-2 rounded-md font-bold text-xs transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:shadow-sm">
                 <RefreshCw className="h-3 w-3" /> Rewrite
+              </TabsTrigger>
+              <TabsTrigger value="youtube" className="flex items-center gap-2 rounded-md font-bold text-xs transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:shadow-sm">
+                <Play className="h-3 w-3" /> YouTube
               </TabsTrigger>
             </TabsList>
 
@@ -121,6 +135,20 @@ export default function GeneratorForm({
                   className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus-visible:ring-primary shadow-inner resize-none leading-relaxed p-3"
                 />
               </div>
+            </TabsContent>
+
+            <TabsContent value="youtube" className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-300">
+              <YouTubeInput
+                value={youtubeUrl}
+                onChange={(value) => {
+                  setYoutubeUrl(value);
+                  if (youtubeError && isValidYouTubeUrl(value)) {
+                    setYoutubeError(null);
+                  }
+                }}
+                error={youtubeError}
+                disabled={loading}
+              />
             </TabsContent>
           </Tabs>
 
@@ -183,7 +211,7 @@ export default function GeneratorForm({
             )}
             <div className="relative flex items-center justify-center gap-2 z-10">
               {loading ? (
-                <span>Crafting Content...</span>
+                <span>{mode === "youtube" ? "Analyzing Video..." : "Crafting Content..."}</span>
               ) : (
                 <span>Generate Content</span>
               )}

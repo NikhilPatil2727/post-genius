@@ -17,6 +17,10 @@ import { toUserFriendlyError } from '@/lib/error-utils';
 export async function generateStreamAction(data: ContentRequest) {
   const { mode, topic, text, tone, audience, apiKey } = data;
 
+  if (mode === 'youtube') {
+    throw new Error('YouTube generation is handled by a separate server action.');
+  }
+
   if (!apiKey) {
     throw new Error('Gemini API key is required');
   }

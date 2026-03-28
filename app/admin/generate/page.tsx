@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { generateStreamAction, savePostAction, getPostByIdAction } from '@/modules/generator/actions';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toUserFriendlyError } from '@/lib/error-utils';
+import { generatePostFromYouTube } from '@/modules/youtube/actions';
 
 const CONTENT_PLATFORMS = ['linkedin', 'twitter', 'instagram', 'peerlist'] as const;
 type ContentPlatformKey = (typeof CONTENT_PLATFORMS)[number];
@@ -25,6 +26,7 @@ function GeneratePageContent() {
   });
   const [hasGenerated, setHasGenerated] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<string | null>(null);
 
   const [apiKey, setApiKey] = useState<string>('');
   const [showApiKeyError, setShowApiKeyError] = useState(false);
@@ -33,6 +35,9 @@ function GeneratePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const postId = searchParams.get('id');
+  const formKey = postId
+    ? `${postId}-${initialData.mode ?? 'draft'}-${initialData.youtubeUrl ?? initialData.topic ?? initialData.text ?? ''}`
+    : 'new';
 
   // Load post if ID is present in URL
   const loadPost = useCallback(async (id: string) => {
@@ -41,12 +46,22 @@ function GeneratePageContent() {
       const result = await getPostByIdAction(id);
       if (result.success && result.post) {
         const { topic, sourceText, tone, audience, variants } = result.post;
+        const persistedSummary =
+          typeof window !== 'undefined' ? sessionStorage.getItem(`youtube-summary:${id}`) : null;
         
         // Update form data
         setInitialData({
-          mode: topic ? 'topic' : 'rewrite',
+          mode: sourceText && /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w-]{11}/.test(sourceText)
+            ? 'youtube'
+            : topic
+              ? 'topic'
+              : 'rewrite',
           topic: topic || '',
           text: sourceText || '',
+          youtubeUrl:
+            sourceText && /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w-]{11}/.test(sourceText)
+              ? sourceText
+              : '',
           tone: tone || 'professional',
           audience: audience || 'general'
         });
@@ -68,6 +83,7 @@ function GeneratePageContent() {
         setContent(newContent);
         setHasGenerated(true);
         setError(null);
+        setSummary(persistedSummary);
       } else {
         setError(result.error || 'We could not load this post.');
       }
@@ -88,6 +104,7 @@ function GeneratePageContent() {
       instagram: '',
       peerlist: '',
     });
+    setSummary(null);
     setError(null);
   }, []);
 
@@ -113,7 +130,7 @@ function GeneratePageContent() {
   };
 
   const handleGenerate = async (data: ContentRequest) => {
-    if (!apiKey || apiKey.trim() === '') {
+    if (data.mode !== 'youtube' && (!apiKey || apiKey.trim() === '')) {
       setShowApiKeyError(true);
       return;
     }
@@ -130,8 +147,63 @@ function GeneratePageContent() {
       instagram: '',
       peerlist: '',
     });
+    setSummary(null);
 
     try {
+      if (data.mode === 'youtube') {
+        const youtubeResult = await generatePostFromYouTube({
+          youtubeUrl: data.youtubeUrl || '',
+          voice: data.tone || 'professional',
+          audience: data.audience || 'general',
+          platforms: ['linkedin', 'twitter', 'instagram', 'peerlist'],
+        });
+
+        if (!youtubeResult.success) {
+          throw new Error(youtubeResult.error);
+        }
+
+        const finalContent: ContentResponse = {
+          linkedin: youtubeResult.data.posts.linkedin || '',
+          twitter: youtubeResult.data.posts.twitter || '',
+          instagram: youtubeResult.data.posts.instagram || '',
+          peerlist: youtubeResult.data.posts.peerlist || '',
+        };
+
+        setContent(finalContent);
+        setSummary(youtubeResult.data.keySummary);
+
+        const variants = [
+          { platform: 'LINKEDIN' as const, content: finalContent.linkedin },
+          { platform: 'TWITTER' as const, content: finalContent.twitter },
+          { platform: 'INSTAGRAM' as const, content: finalContent.instagram },
+          { platform: 'PEERLIST' as const, content: finalContent.peerlist },
+        ].filter(v => v.content.length > 0);
+
+        if (variants.length === 0) {
+          setError('No content was generated. Please try another video.');
+          return;
+        }
+
+        const result = await savePostAction({
+          topic: youtubeResult.data.videoTitle,
+          sourceText: data.youtubeUrl,
+          tone: data.tone,
+          audience: data.audience,
+          variants
+        });
+
+        if (result.success && result.post) {
+          sessionStorage.setItem(`youtube-summary:${result.post.id}`, youtubeResult.data.keySummary);
+          window.dispatchEvent(new CustomEvent('post-saved', { detail: result.post }));
+          router.replace(`/admin/generate?id=${result.post.id}`);
+          router.refresh();
+        } else if (!result.success) {
+          setError(result.error || 'Your content was generated, but we could not save it.');
+        }
+
+        return;
+      }
+
       // Call the Server Action directly
       const stream = await generateStreamAction({ ...data, apiKey });
 
@@ -319,7 +391,7 @@ function GeneratePageContent() {
           transition={{ delay: 0.1 }}
           className="lg:col-span-4 lg:sticky lg:top-8"
         >
-          <GeneratorForm key={postId ?? 'new'} onSubmit={handleGenerate} loading={loading} initialData={initialData} />
+          <GeneratorForm key={formKey} onSubmit={handleGenerate} loading={loading} initialData={initialData} />
 
           <AnimatePresence>
             {error && (
@@ -356,7 +428,7 @@ function GeneratePageContent() {
           className="lg:col-span-8 min-h-[600px]"
         >
           {hasGenerated ? (
-            <ContentDisplay content={content} isStreaming={loading} />
+            <ContentDisplay content={content} isStreaming={loading} summary={summary} />
           ) : (
             <div className="min-h-[500px] rounded-[2rem] border border-zinc-200/70 bg-white/80 p-8 shadow-sm dark:border-zinc-800/70 dark:bg-zinc-950/30">
               {loading ? (
