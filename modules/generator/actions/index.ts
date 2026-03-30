@@ -21,6 +21,10 @@ export async function generateStreamAction(data: ContentRequest) {
     throw new Error('Gemini API key is required');
   }
 
+  if (mode === 'youtube') {
+    throw new Error('YouTube generation uses a dedicated server action.');
+  }
+
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
   const encoder = new TextEncoder();

@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import type { ContentResponse } from "@/types";
 
 /**
  * MARKERS for streaming protocol.
@@ -9,6 +10,19 @@ export const MARKERS = {
   TWITTER: '[[TWITTER]]',
   INSTAGRAM: '[[INSTAGRAM]]',
   PEERLIST: '[[PEERLIST]]',
+};
+
+const MODEL_NAME = "gemini-2.5-flash";
+
+const CONTENT_RESPONSE_SCHEMA = {
+  type: "object",
+  properties: {
+    linkedin: { type: "string" },
+    twitter: { type: "string" },
+    instagram: { type: "string" },
+    peerlist: { type: "string" },
+  },
+  required: ["linkedin", "twitter", "instagram", "peerlist"],
 };
 
 const SYSTEM_PROMPT = `You are an elite Social Media Ghostwriter and Content Strategist. 
@@ -76,7 +90,6 @@ export async function* streamGenerateContent(
   audience?: string
 ) {
   const ai = new GoogleGenAI({ apiKey });
-  const MODEL_NAME = "gemini-2.5-flash"; 
 
   const mainPrompt = BUILD_MAIN_PROMPT(mode, topic, text, tone, audience);
 
@@ -110,4 +123,74 @@ export async function* streamGenerateContent(
     console.error('Gemini Stream Error:', error);
     throw error;
   }
+}
+
+function normalizeStructuredContentResponse(value: unknown): ContentResponse {
+  if (!value || typeof value !== "object") {
+    throw new Error("Gemini returned an invalid JSON response.");
+  }
+
+  const record = value as Record<string, unknown>;
+
+  return {
+    linkedin: typeof record.linkedin === "string" ? record.linkedin.trim() : "",
+    twitter: typeof record.twitter === "string" ? record.twitter.trim() : "",
+    instagram: typeof record.instagram === "string" ? record.instagram.trim() : "",
+    peerlist: typeof record.peerlist === "string" ? record.peerlist.trim() : "",
+  };
+}
+
+export async function generateContentFromTranscript(
+  apiKey: string,
+  youtubeUrl: string,
+  transcriptText: string,
+  tone?: string,
+  audience?: string
+): Promise<ContentResponse> {
+  const ai = new GoogleGenAI({ apiKey });
+
+  const response = await ai.models.generateContent({
+    model: MODEL_NAME,
+    contents: [
+      {
+        role: "user",
+        parts: [
+          {
+            text: `
+Transform the following YouTube transcript into polished social posts for LinkedIn, X, Instagram, and Peerlist.
+
+Context:
+- SOURCE TYPE: YouTube video transcript
+- YOUTUBE URL: ${youtubeUrl}
+- VOICE TONE: ${tone || "professional"}
+- TARGET AUDIENCE: ${audience || "general"}
+
+Rules:
+- Keep the core message accurate to the transcript.
+- Remove filler, repetition, sponsor mentions, and off-topic sections.
+- Make each platform version feel native to that platform.
+- Do not mention that the source was AI-generated.
+- Return valid JSON only.
+
+Platform rules:
+- LinkedIn: clear hook, short paragraphs, actionable takeaway, end with exactly 3 relevant hashtags.
+- Twitter: max 280 characters, sharp and concise.
+- Instagram: compelling opener, readable body, end with exactly 5 relevant hashtags.
+- Peerlist: maker/tech-focused update style, practical and transparent, end with exactly 5 relevant tags or hashtags.
+
+Transcript:
+${transcriptText}
+            `.trim(),
+          },
+        ],
+      },
+    ],
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: CONTENT_RESPONSE_SCHEMA,
+      systemInstruction: SYSTEM_PROMPT,
+    },
+  });
+
+  return normalizeStructuredContentResponse(JSON.parse(response.text ?? "{}"));
 }
