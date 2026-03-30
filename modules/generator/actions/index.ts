@@ -3,10 +3,10 @@
 import { streamGenerateContent } from '@/lib/gemini';
 import { ContentRequest } from '@/types';
 
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { Platform } from '@/lib/generated/prisma/client';
+import { Platform, Prisma } from '@/lib/generated/prisma/client';
 import { toUserFriendlyError } from '@/lib/error-utils';
 
 /**
@@ -66,34 +66,10 @@ export async function savePostAction(data: {
     return { success: false, error: 'Please sign in to save your post.' };
   }
   try {
-    const clerkUser = await currentUser();
-    const email = clerkUser?.emailAddresses[0]?.emailAddress;
-
-    if (!email) {
-      return { success: false, error: 'We could not verify your account email to save this post.' };
-    }
-
-    const dbUser = await prisma.user.upsert({
-      where: { clerkId },
-      update: {
-        email,
-        firstName: clerkUser?.firstName ?? null,
-        lastName: clerkUser?.lastName ?? null,
-        imageUrl: clerkUser?.imageUrl ?? null,
-      },
-      create: {
-        clerkId,
-        email,
-        firstName: clerkUser?.firstName ?? null,
-        lastName: clerkUser?.lastName ?? null,
-        imageUrl: clerkUser?.imageUrl ?? null,
-      },
-    });
-
-    // 2. Create the post and its variants in a single transaction
+    // Create the post and its variants in a single transaction
     const post = await prisma.post.create({
       data: {
-        user: { connect: { id: dbUser.id } },
+        user: { connect: { clerkId } },
         topic: data.topic,
         sourceText: data.sourceText,
         tone: data.tone,
@@ -114,6 +90,13 @@ export async function savePostAction(data: {
     
     return { success: true, post };
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return {
+        success: false,
+        error: 'Your account is not ready yet. Please reload the homepage and try again.',
+      };
+    }
+
     console.error('Error saving post:', error);
     return { success: false, error: 'Failed to save generated content' };
   }

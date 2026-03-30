@@ -19,28 +19,64 @@ export const onboardUser = async () => {
       return { success: false, error: "No email found" };
     }
 
-    const existingUser = await prisma.user.upsert({
+    const userData = {
+      firstName: firstName ?? null,
+      lastName: lastName ?? null,
+      imageUrl: imageUrl ?? null,
+      email,
+    };
+
+    const existingUser = await prisma.user.findUnique({
       where: {
         clerkId: id
       },
-      update: {
-        firstName: firstName ?? null,
-        lastName: lastName ?? null,
-        imageUrl: imageUrl ?? null,
-        email: email
-      },
-      create: {
-        clerkId: id,
-        firstName: firstName ?? null,
-        lastName: lastName ?? null,
-        imageUrl: imageUrl ?? null,
-        email: email
+      select: {
+        id: true,
+        clerkId: true,
+        firstName: true,
+        lastName: true,
+        imageUrl: true,
+        email: true,
       }
+    });
+
+    if (!existingUser) {
+      const createdUser = await prisma.user.create({
+        data: {
+          clerkId: id,
+          ...userData,
+        }
+      });
+
+      return {
+        success: true,
+        user: createdUser
+      };
+    }
+
+    const needsUpdate =
+      existingUser.firstName !== userData.firstName ||
+      existingUser.lastName !== userData.lastName ||
+      existingUser.imageUrl !== userData.imageUrl ||
+      existingUser.email !== userData.email;
+
+    if (!needsUpdate) {
+      return {
+        success: true,
+        user: existingUser
+      };
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: {
+        clerkId: id
+      },
+      data: userData
     });
 
     return {
       success: true,
-      user: existingUser
+      user: updatedUser
     };
 
   } catch (error) {

@@ -1,14 +1,16 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "../../../lib/prisma";
 
-
-
 export const CurrentUserName = async () => {
-        const user=await currentUser();
+        const { userId } = await auth();
+
+        if (!userId) {
+            return null;
+        }
 
         const currentUserName=await prisma.user.findUnique({
             where:{
-                clerkId:user?.id
+                clerkId:userId
             },
             select:{
                 firstName:true,
