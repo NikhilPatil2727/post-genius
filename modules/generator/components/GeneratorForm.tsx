@@ -77,7 +77,7 @@ export default function GeneratorForm({
               <TabsTrigger value="rewrite" className="flex items-center gap-2 rounded-md font-bold text-xs transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:shadow-sm">
                 <RefreshCw className="h-3 w-3" /> Rewrite
               </TabsTrigger>
-              <TabsTrigger value="youtube" className="flex items-center gap-2 rounded-md font-bold text-xs transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:shadow-sm">
+              <TabsTrigger value="youtube" className="flex items-center gap-2 rounded-md font-bold text-xs text-red-600 transition-all hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 data-[state=active]:bg-red-50 data-[state=active]:text-red-700 data-[state=active]:shadow-sm dark:data-[state=active]:bg-red-950/40 dark:data-[state=active]:text-red-300">
                 <Video className="h-3 w-3" /> YouTube
               </TabsTrigger>
             </TabsList>
