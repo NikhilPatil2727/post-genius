@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -169,6 +169,11 @@ const EMOJIS = ['😀', '🔥', '✨', '🚀', '💡', '🎉', '👏', '🙌', '
 
 export function ContentDisplay({ content, isStreaming = false }: ContentDisplayProps) {
   const { user } = useUser();
+  const isHydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const [copied, setCopied] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Platform>('linkedin');
   const [editingPlatform, setEditingPlatform] = useState<Platform | null>(null);
@@ -360,7 +365,8 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
   const previewText = isExpanded || !isLongPost ? activeContent : `${strippedActiveContent.slice(0, PREVIEW_LIMIT).trimEnd()}...`;
   const fakeLikes = Math.max(12, Math.min(96, Math.round(cleanLength / 14)));
   const fakeComments = Math.max(2, Math.min(34, Math.round(cleanLength / 80)));
-  const displayName = user?.fullName || user?.firstName || 'You';
+  const displayName = isHydrated ? user?.fullName || user?.firstName || 'You' : 'You';
+  const userImageUrl = isHydrated ? user?.imageUrl : undefined;
 
   return (
     <>
@@ -540,8 +546,8 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
                 <CardHeader className="relative flex shrink-0 flex-row items-center justify-between border-b border-[#e5e7eb] px-4 py-4 dark:border-[rgba(255,255,255,0.08)]">
                   <div className="flex items-center gap-3">
                     <span className="relative inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#e5e7eb] bg-white text-base shadow-sm dark:border-white/15 dark:bg-zinc-900">
-                      {user?.imageUrl ? (
-                        <img src={user.imageUrl} alt={displayName} className="h-full w-full object-cover" />
+                      {userImageUrl ? (
+                        <img src={userImageUrl} alt={displayName} className="h-full w-full object-cover" />
                       ) : (
                         <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-200">{displayName.charAt(0)}</span>
                       )}

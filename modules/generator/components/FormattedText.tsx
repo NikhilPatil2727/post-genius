@@ -1,4 +1,3 @@
-// components/FormattedText.tsx
 import React from 'react';
 
 interface FormattedTextProps {
@@ -6,68 +5,60 @@ interface FormattedTextProps {
   className?: string;
 }
 
-export const FormattedText = ({ text, className = "" }: FormattedTextProps) => {
+export const FormattedText = ({ text, className = '' }: FormattedTextProps) => {
   if (!text) return null;
 
-  // 1. Pre-process text: Collapse excess blank lines
   const processedText = text.replace(/\n{3,}/g, '\n\n').trim();
 
-  // 2. Parse inline formatting helper
-  const renderInline = (str: string): React.ReactNode[] => {
+  const renderInline = (str: string, keyPrefix: string): React.ReactNode[] => {
     let parts: (string | React.ReactNode)[] = [str];
 
-    // Bold: **text**
-    parts = parts.flatMap(part => {
+    parts = parts.flatMap((part) => {
       if (typeof part !== 'string') return part;
-      return part.split(/(\*\*[^*]+?\*\*)/g).map(p => {
-        if (p.startsWith('**') && p.endsWith('**') && p.length > 4) {
-          return <strong key={Math.random()}>{p.slice(2, -2)}</strong>;
+      return part.split(/(\*\*[^*]+?\*\*)/g).map((piece, index) => {
+        if (piece.startsWith('**') && piece.endsWith('**') && piece.length > 4) {
+          return <strong key={`${keyPrefix}-bold-${index}`}>{piece.slice(2, -2)}</strong>;
         }
-        return p;
+        return piece;
       });
     });
 
-    // Italic: *text* (avoid bold)
-    parts = parts.flatMap(part => {
+    parts = parts.flatMap((part) => {
       if (typeof part !== 'string') return part;
-      return part.split(/(\*[^*]+?\*)/g).map(p => {
-        if (p.startsWith('*') && p.endsWith('*') && !p.startsWith('**') && p.length > 2) {
-          return <em key={Math.random()}>{p.slice(1, -1)}</em>;
+      return part.split(/(\*[^*]+?\*)/g).map((piece, index) => {
+        if (piece.startsWith('*') && piece.endsWith('*') && !piece.startsWith('**') && piece.length > 2) {
+          return <em key={`${keyPrefix}-italic-${index}`}>{piece.slice(1, -1)}</em>;
         }
-        return p;
+        return piece;
       });
     });
 
-    // Strike: ~~text~~
-    parts = parts.flatMap(part => {
+    parts = parts.flatMap((part) => {
       if (typeof part !== 'string') return part;
-      return part.split(/(~~[^~]+?~~)/g).map(p => {
-        if (p.startsWith('~~') && p.endsWith('~~') && p.length > 4) {
-          return <del key={Math.random()}>{p.slice(2, -2)}</del>;
+      return part.split(/(~~[^~]+?~~)/g).map((piece, index) => {
+        if (piece.startsWith('~~') && piece.endsWith('~~') && piece.length > 4) {
+          return <del key={`${keyPrefix}-strike-${index}`}>{piece.slice(2, -2)}</del>;
         }
-        return p;
+        return piece;
       });
     });
 
-    // Underline: <u>text</u>
-    parts = parts.flatMap(part => {
+    parts = parts.flatMap((part) => {
       if (typeof part !== 'string') return part;
-      return part.split(/(<u>.*?<\/u>)/gi).map(p => {
-        if (p.toLowerCase().startsWith('<u>') && p.toLowerCase().endsWith('</u>')) {
-          return <u key={Math.random()}>{p.slice(3, -4)}</u>;
+      return part.split(/(<u>.*?<\/u>)/gi).map((piece, index) => {
+        if (piece.toLowerCase().startsWith('<u>') && piece.toLowerCase().endsWith('</u>')) {
+          return <u key={`${keyPrefix}-underline-${index}`}>{piece.slice(3, -4)}</u>;
         }
-        return p;
+        return piece;
       });
     });
 
     return parts;
   };
 
-  // 3. Line-by-line parsing with state for grouping
   const lines = processedText.split('\n');
   const elements: React.ReactNode[] = [];
-  
-  let currentGroup: { type: 'ul' | 'ol' | 'p', items: React.ReactNode[] } | null = null;
+  let currentGroup: { type: 'ul' | 'ol' | 'p'; items: React.ReactNode[] } | null = null;
 
   const pushGroup = () => {
     if (!currentGroup) return;
@@ -77,79 +68,97 @@ export const FormattedText = ({ text, className = "" }: FormattedTextProps) => {
       const listClass = Tag === 'ul' ? 'list-disc' : 'list-decimal';
       elements.push(
         <Tag key={`list-${elements.length}`} className={`${listClass} pl-5 space-y-1 my-3`}>
-          {currentGroup.items.map((item, i) => <li key={i}>{item}</li>)}
+          {currentGroup.items.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
         </Tag>
       );
-    } else if (currentGroup.type === 'p') {
+    } else {
       elements.push(
         <p key={`p-${elements.length}`} className="mb-3 last:mb-0">
-          {currentGroup.items.map((item, i) => (
-            <React.Fragment key={i}>
+          {currentGroup.items.map((item, index) => (
+            <React.Fragment key={index}>
               {item}
-              {i < currentGroup!.items.length - 1 && <br />}
+              {index < currentGroup.items.length - 1 && <br />}
             </React.Fragment>
           ))}
         </p>
       );
     }
+
     currentGroup = null;
   };
 
   lines.forEach((line, index) => {
     const trimmedLine = line.trim();
 
-    // Headings
     if (trimmedLine.startsWith('### ')) {
       pushGroup();
-      elements.push(<h3 key={`h3-${index}`} className="text-base font-bold mt-4 mb-2">{renderInline(trimmedLine.slice(4))}</h3>);
-    } else if (trimmedLine.startsWith('## ')) {
-      pushGroup();
-      elements.push(<h2 key={`h2-${index}`} className="text-lg font-bold mt-5 mb-2">{renderInline(trimmedLine.slice(3))}</h2>);
-    } else if (trimmedLine.startsWith('# ')) {
-      pushGroup();
-      elements.push(<h1 key={`h1-${index}`} className="text-xl font-bold mt-6 mb-3">{renderInline(trimmedLine.slice(2))}</h1>);
+      elements.push(
+        <h3 key={`h3-${index}`} className="text-base font-bold mt-4 mb-2">
+          {renderInline(trimmedLine.slice(4), `h3-${index}`)}
+        </h3>
+      );
+      return;
     }
-    // Unordered Lists
-    else if (trimmedLine.startsWith('• ') || trimmedLine.startsWith('* ') || trimmedLine.startsWith('- ')) {
-      const content = trimmedLine.replace(/^(•|\*|-)\s+/, '');
-      if (currentGroup && currentGroup.type === 'ul') {
-        currentGroup.items.push(renderInline(content));
+
+    if (trimmedLine.startsWith('## ')) {
+      pushGroup();
+      elements.push(
+        <h2 key={`h2-${index}`} className="text-lg font-bold mt-5 mb-2">
+          {renderInline(trimmedLine.slice(3), `h2-${index}`)}
+        </h2>
+      );
+      return;
+    }
+
+    if (trimmedLine.startsWith('# ')) {
+      pushGroup();
+      elements.push(
+        <h1 key={`h1-${index}`} className="text-xl font-bold mt-6 mb-3">
+          {renderInline(trimmedLine.slice(2), `h1-${index}`)}
+        </h1>
+      );
+      return;
+    }
+
+    if (/^(?:•|\*|-)\s+/.test(trimmedLine)) {
+      const content = trimmedLine.replace(/^(?:•|\*|-)\s+/, '');
+      if (currentGroup?.type === 'ul') {
+        currentGroup.items.push(renderInline(content, `ul-${index}`));
       } else {
         pushGroup();
-        currentGroup = { type: 'ul', items: [renderInline(content)] };
+        currentGroup = { type: 'ul', items: [renderInline(content, `ul-${index}`)] };
       }
+      return;
     }
-    // Ordered Lists
-    else if (/^\d+\.\s/.test(trimmedLine)) {
+
+    if (/^\d+\.\s/.test(trimmedLine)) {
       const content = trimmedLine.replace(/^\d+\.\s+/, '');
-      if (currentGroup && currentGroup.type === 'ol') {
-        currentGroup.items.push(renderInline(content));
+      if (currentGroup?.type === 'ol') {
+        currentGroup.items.push(renderInline(content, `ol-${index}`));
       } else {
         pushGroup();
-        currentGroup = { type: 'ol', items: [renderInline(content)] };
+        currentGroup = { type: 'ol', items: [renderInline(content, `ol-${index}`)] };
       }
+      return;
     }
-    // Empty Line
-    else if (trimmedLine === '') {
+
+    if (trimmedLine === '') {
       pushGroup();
       elements.push(<div key={`space-${index}`} className="h-2" />);
+      return;
     }
-    // Paragraph content
-    else {
-      if (currentGroup && currentGroup.type === 'p') {
-        currentGroup.items.push(renderInline(line));
-      } else {
-        pushGroup();
-        currentGroup = { type: 'p', items: [renderInline(line)] };
-      }
+
+    if (currentGroup?.type === 'p') {
+      currentGroup.items.push(renderInline(line, `p-${index}`));
+    } else {
+      pushGroup();
+      currentGroup = { type: 'p', items: [renderInline(line, `p-${index}`)] };
     }
   });
 
-  pushGroup(); // Final flush
+  pushGroup();
 
-  return (
-    <div className={`prose prose-sm dark:prose-invert max-w-none ${className}`}>
-      {elements}
-    </div>
-  );
+  return <div className={`prose prose-sm dark:prose-invert max-w-none ${className}`}>{elements}</div>;
 };
