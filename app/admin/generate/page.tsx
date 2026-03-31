@@ -9,11 +9,15 @@ import { Input } from '@/components/ui/input';
 import type { ContentResponse, ContentRequest } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateStreamAction, savePostAction, getPostByIdAction } from '@/modules/generator/actions';
+import { generateYouTubePostAction } from '@/modules/generator/actions/youtube';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toUserFriendlyError } from '@/lib/error-utils';
 
 const CONTENT_PLATFORMS = ['linkedin', 'twitter', 'instagram', 'peerlist'] as const;
 type ContentPlatformKey = (typeof CONTENT_PLATFORMS)[number];
+
+const isYouTubeUrl = (value?: string | null) =>
+  Boolean(value && /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)/i.test(value));
 
 function GeneratePageContent() {
   const [loading, setLoading] = useState(false);
@@ -33,6 +37,7 @@ function GeneratePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const postId = searchParams.get('id');
+  const generatorFormKey = JSON.stringify(initialData);
 
   // Load post if ID is present in URL
   const loadPost = useCallback(async (id: string) => {
@@ -41,12 +46,14 @@ function GeneratePageContent() {
       const result = await getPostByIdAction(id);
       if (result.success && result.post) {
         const { topic, sourceText, tone, audience, variants } = result.post;
+        const isYoutubeSource = !topic && isYouTubeUrl(sourceText);
         
         // Update form data
         setInitialData({
-          mode: topic ? 'topic' : 'rewrite',
+          mode: topic ? 'topic' : isYoutubeSource ? 'youtube' : 'rewrite',
           topic: topic || '',
-          text: sourceText || '',
+          text: isYoutubeSource ? '' : sourceText || '',
+          youtubeUrl: isYoutubeSource ? sourceText || '' : '',
           tone: tone || 'professional',
           audience: audience || 'general'
         });
@@ -132,13 +139,6 @@ function GeneratePageContent() {
     });
 
     try {
-      // Call the Server Action directly
-      const stream = await generateStreamAction({ ...data, apiKey });
-
-      const reader = stream.getReader();
-      const decoder = new TextDecoder();
-
-      let accumulatedText = '';
       const finalContent: ContentResponse = {
         linkedin: '',
         twitter: '',
@@ -146,50 +146,74 @@ function GeneratePageContent() {
         peerlist: '',
       };
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      if (data.mode === 'youtube') {
+        const result = await generateYouTubePostAction({
+          youtubeUrl: data.youtubeUrl,
+          tone: data.tone,
+          audience: data.audience,
+          apiKey,
+        });
 
-        const chunk = decoder.decode(value, { stream: true });
-        accumulatedText += chunk;
-
-        // Check for error marker from server action
-        if (accumulatedText.includes('[[ERROR]]')) {
-          throw new Error(
-            toUserFriendlyError(
-              accumulatedText.split('[[ERROR]]')[1].trim(),
-              'We could not generate your content right now. Please try again.'
-            )
-          );
+        if (!result.success) {
+          throw new Error(result.error || 'We could not process this YouTube video.');
         }
 
-        // Extract content between markers using Regex
-        const contentMap: Partial<ContentResponse> = {};
+        Object.assign(finalContent, result.content);
+        setContent(result.content);
+      } else {
+        // Call the Server Action directly
+        const stream = await generateStreamAction({ ...data, apiKey });
 
-        const linkedinMatch = accumulatedText.match(/\[\[LINKEDIN\]\]([\s\S]*?)(?=\[\[|$)/);
-        const twitterMatch = accumulatedText.match(/\[\[TWITTER\]\]([\s\S]*?)(?=\[\[|$)/);
-        const instagramMatch = accumulatedText.match(/\[\[INSTAGRAM\]\]([\s\S]*?)(?=\[\[|$)/);
-        const peerlistMatch = accumulatedText.match(/\[\[PEERLIST\]\]([\s\S]*?)(?=\[\[|$)/);
+        const reader = stream.getReader();
+        const decoder = new TextDecoder();
 
-        if (linkedinMatch) {
-          contentMap.linkedin = linkedinMatch[1].trim();
-          finalContent.linkedin = contentMap.linkedin;
-        }
-        if (twitterMatch) {
-          contentMap.twitter = twitterMatch[1].trim();
-          finalContent.twitter = contentMap.twitter;
-        }
-        if (instagramMatch) {
-          contentMap.instagram = instagramMatch[1].trim();
-          finalContent.instagram = contentMap.instagram;
-        }
-        if (peerlistMatch) {
-          contentMap.peerlist = peerlistMatch[1].trim();
-          finalContent.peerlist = contentMap.peerlist;
-        }
+        let accumulatedText = '';
 
-        if (Object.keys(contentMap).length > 0) {
-          setContent(prev => ({ ...prev, ...contentMap }));
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          accumulatedText += chunk;
+
+          // Check for error marker from server action
+          if (accumulatedText.includes('[[ERROR]]')) {
+            throw new Error(
+              toUserFriendlyError(
+                accumulatedText.split('[[ERROR]]')[1].trim(),
+                'We could not generate your content right now. Please try again.'
+              )
+            );
+          }
+
+          // Extract content between markers using Regex
+          const contentMap: Partial<ContentResponse> = {};
+
+          const linkedinMatch = accumulatedText.match(/\[\[LINKEDIN\]\]([\s\S]*?)(?=\[\[|$)/);
+          const twitterMatch = accumulatedText.match(/\[\[TWITTER\]\]([\s\S]*?)(?=\[\[|$)/);
+          const instagramMatch = accumulatedText.match(/\[\[INSTAGRAM\]\]([\s\S]*?)(?=\[\[|$)/);
+          const peerlistMatch = accumulatedText.match(/\[\[PEERLIST\]\]([\s\S]*?)(?=\[\[|$)/);
+
+          if (linkedinMatch) {
+            contentMap.linkedin = linkedinMatch[1].trim();
+            finalContent.linkedin = contentMap.linkedin;
+          }
+          if (twitterMatch) {
+            contentMap.twitter = twitterMatch[1].trim();
+            finalContent.twitter = contentMap.twitter;
+          }
+          if (instagramMatch) {
+            contentMap.instagram = instagramMatch[1].trim();
+            finalContent.instagram = contentMap.instagram;
+          }
+          if (peerlistMatch) {
+            contentMap.peerlist = peerlistMatch[1].trim();
+            finalContent.peerlist = contentMap.peerlist;
+          }
+
+          if (Object.keys(contentMap).length > 0) {
+            setContent(prev => ({ ...prev, ...contentMap }));
+          }
         }
       }
 
@@ -203,8 +227,8 @@ function GeneratePageContent() {
 
       if (variants.length > 0) {
         const result = await savePostAction({
-          topic: data.topic,
-          sourceText: data.text,
+          topic: data.mode === 'topic' ? data.topic : undefined,
+          sourceText: data.mode === 'youtube' ? data.youtubeUrl : data.text,
           tone: data.tone,
           audience: data.audience,
           variants
@@ -319,7 +343,7 @@ function GeneratePageContent() {
           transition={{ delay: 0.1 }}
           className="lg:col-span-4 lg:sticky lg:top-8"
         >
-          <GeneratorForm key={postId ?? 'new'} onSubmit={handleGenerate} loading={loading} initialData={initialData} />
+          <GeneratorForm key={generatorFormKey} onSubmit={handleGenerate} loading={loading} initialData={initialData} />
 
           <AnimatePresence>
             {error && (
