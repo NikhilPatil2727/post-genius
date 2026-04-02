@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { onboardUser } from "@/modules/auth/actions";
 import { AnimatedTooltipPreview } from "@/components/animated-tooltip-demo";
+import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import {
   Accordion,
   AccordionContent,
@@ -288,12 +289,18 @@ export default async function HomePage() {
           </div>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href={primaryHref}
-              className="inline-flex min-w-[180px] items-center justify-center rounded-xl bg-[linear-gradient(180deg,#d7e3ff_0%,#9cbcff_100%)] px-6 py-3 text-sm font-semibold text-[#081224] shadow-[0_10px_40px_rgba(128,157,255,0.28)] transition-transform duration-200 hover:-translate-y-0.5"
+            <HoverBorderGradient
+              as="div"
+              containerClassName="rounded-full bg-transparent dark:bg-transparent"
+              className="rounded-full dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2"
             >
-              {user ? "Open Generator" : "Start for Free"}
-            </Link>
+              <Link
+                href={primaryHref}
+                className="inline-flex min-w-[100px] items-center justify-center rounded-[inherit] px-4 py-2 text-sm font-semibold transition-transform duration-200 hover:-translate-y-0.5"
+              >
+                {user ? "Open Generator" : "Start for Free"}
+              </Link>
+            </HoverBorderGradient>
             <Link
               href="/learn-more"
               className="inline-flex min-w-[180px] items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition-colors duration-200 hover:bg-slate-50 dark:border-white/14 dark:bg-white/6 dark:text-white dark:hover:bg-white/10"
