@@ -10,12 +10,84 @@ import {
   Zap,
 } from "lucide-react";
 import { onboardUser } from "@/modules/auth/actions";
+import { AnimatedTooltipPreview } from "@/components/animated-tooltip-demo";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+
+const platformPills = [
+  {
+    label: "LinkedIn",
+    icon: (
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="h-4 w-4"
+        fill="none"
+      >
+        <path
+          fill="#0A66C2"
+          d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.05-1.86-3.05-1.87 0-2.15 1.45-2.15 2.95v5.67H9.32V9h3.42v1.56h.05c.48-.9 1.64-1.86 3.38-1.86 3.61 0 4.28 2.38 4.28 5.47v6.28ZM5.3 7.43A2.07 2.07 0 1 1 5.3 3.3a2.07 2.07 0 0 1 0 4.14ZM7.08 20.45H3.5V9h3.57v11.45Z"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "Twitter",
+    icon: (
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="h-4 w-4"
+        fill="currentColor"
+      >
+        <path d="M18.9 2H22l-6.77 7.73L23.2 22h-6.25l-4.9-7.42L5.56 22H2.45l7.24-8.28L1.8 2h6.4l4.43 6.78L18.9 2Zm-1.1 18h1.73L7.26 3.9H5.4L17.8 20Z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Instagram",
+    icon: (
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="h-4 w-4"
+        fill="none"
+      >
+        <defs>
+          <linearGradient id="instagram-gradient" x1="4" y1="20" x2="20" y2="4" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#F58529" />
+            <stop offset="0.35" stopColor="#DD2A7B" />
+            <stop offset="0.7" stopColor="#8134AF" />
+            <stop offset="1" stopColor="#515BD4" />
+          </linearGradient>
+        </defs>
+        <rect x="3.5" y="3.5" width="17" height="17" rx="5" stroke="url(#instagram-gradient)" strokeWidth="2" />
+        <circle cx="12" cy="12" r="4" stroke="url(#instagram-gradient)" strokeWidth="2" />
+        <circle cx="17.2" cy="6.8" r="1.2" fill="url(#instagram-gradient)" />
+      </svg>
+    ),
+  },
+  {
+    label: "Peerlist",
+    icon: (
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="h-4 w-4"
+        fill="none"
+      >
+        <path
+          d="M7 4.5h6.1a4.4 4.4 0 1 1 0 8.8H9.6v6.2H7V4.5Zm2.6 6.4h3.2a1.8 1.8 0 1 0 0-3.6H9.6v3.6Z"
+          fill="#00AA45"
+        />
+      </svg>
+    ),
+  },
+];
 
 const painPoints = [
   {
@@ -200,8 +272,20 @@ export default async function HomePage() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-slate-600 dark:text-[#a0a9bd] sm:text-base">
-            One-to-many content transformation. Drop your raw thought and let the product reshape it into polished posts for every major social channel.
+            Generate content for Instagram, Twitter, LinkedIn, and Peerlist in one click.
           </p>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            {platformPills.map((platform) => (
+              <div
+                key={platform.label}
+                className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-4 py-1.5 text-sm text-slate-700 shadow-[0_8px_24px_rgba(15,23,42,0.05)] backdrop-blur-sm dark:border-white/10 dark:bg-white/5 dark:text-white/80 dark:shadow-none"
+              >
+                <span className="shrink-0">{platform.icon}</span>
+                <span>{platform.label}</span>
+              </div>
+            ))}
+          </div>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
@@ -218,12 +302,25 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs uppercase tracking-[0.22em] text-slate-400 dark:text-white/38">
-            <span>Available on</span>
-            <span className="text-slate-600 dark:text-white/62">LinkedIn</span>
-            <span className="text-slate-600 dark:text-white/62">X / Twitter</span>
-            <span className="text-slate-600 dark:text-white/62">Instagram</span>
-            <span className="text-slate-600 dark:text-white/62">Peerlist</span>
+          <div className="mt-8">
+            <AnimatedTooltipPreview />
+          </div>
+
+          <div className="mt-6 flex items-center justify-center gap-6 text-center sm:gap-10">
+            <div>
+              <p className="text-xl font-bold text-slate-950 dark:text-white">10+</p>
+              <p className="text-sm text-slate-500 dark:text-white/50">Active creators</p>
+            </div>
+            <div className="h-8 w-px bg-slate-200 dark:bg-white/10" />
+            <div>
+              <p className="text-xl font-bold text-slate-950 dark:text-white">10 hrs</p>
+              <p className="text-sm text-slate-500 dark:text-white/50">Saved per week</p>
+            </div>
+            <div className="h-8 w-px bg-slate-200 dark:bg-white/10" />
+            <div>
+              <p className="text-xl font-bold text-slate-950 dark:text-white">4 platforms</p>
+              <p className="text-sm text-slate-500 dark:text-white/50">In one click</p>
+            </div>
           </div>
         </div>
       </section>
