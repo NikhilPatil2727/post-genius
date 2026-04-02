@@ -3,14 +3,13 @@ import {
   ArrowRight,
   Check,
   ChevronRight,
-  Clock3,
-  MessageSquareWarning,
   Sparkles,
   WandSparkles,
   Zap,
 } from "lucide-react";
 import { onboardUser } from "@/modules/auth/actions";
 import { AnimatedTooltipPreview } from "@/components/animated-tooltip-demo";
+import { BrokenSection } from "@/modules/home/components/BrokenSection";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import {
   Accordion,
@@ -87,27 +86,6 @@ const platformPills = [
         />
       </svg>
     ),
-  },
-];
-
-const painPoints = [
-  {
-    icon: Clock3,
-    title: "Writing Hours",
-    description:
-      "Rewriting the same idea for every channel slows momentum and kills consistency.",
-  },
-  {
-    icon: MessageSquareWarning,
-    title: "Inconsistent Tone",
-    description:
-      "One post sounds sharp, the next sounds off. Brand trust drops when voice keeps changing.",
-  },
-  {
-    icon: Zap,
-    title: "Algorithm Fatigue",
-    description:
-      "Every platform rewards different structure, hooks, and formatting. Manual work does not scale.",
   },
 ];
 
@@ -332,31 +310,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-t border-slate-200 bg-[#eef2f8] dark:border-white/6 dark:bg-[#090b12]">
-        <div className="mx-auto max-w-6xl px-6 py-20 sm:px-8">
-          <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-white/42">Why creators switch</p>
-            <h2 className="mt-4 text-3xl font-black uppercase tracking-[-0.05em] text-slate-950 dark:text-white sm:text-5xl">
-              The old way is broken
-            </h2>
-          </div>
 
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
-            {painPoints.map(({ icon: Icon, title, description }) => (
-              <div
-                key={title}
-                className="rounded-[1.6rem] border border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,247,252,0.92))] p-6 shadow-[0_10px_40px_rgba(15,23,42,0.06)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(18,20,31,0.96),rgba(12,14,22,0.9))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-white/6">
-                  <Icon className="h-5 w-5 text-[#6f8dff] dark:text-[#abc0ff]" />
-                </div>
-                <h3 className="mt-5 text-lg font-semibold text-slate-950 dark:text-white">{title}</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-[#98a1b5]">{description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <BrokenSection />
 
       <section id="how-it-works" className="border-t border-slate-200 dark:border-white/6">
         <div className="mx-auto max-w-6xl px-6 py-20 sm:px-8">
