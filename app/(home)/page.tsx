@@ -10,6 +10,7 @@ import {
 import { onboardUser } from "@/modules/auth/actions";
 import { AnimatedTooltipPreview } from "@/components/animated-tooltip-demo";
 import { BrokenSection } from "@/modules/home/components/BrokenSection";
+import { HomeHeroTypewriter } from "@/components/home-hero-typewriter";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import {
   Accordion,
@@ -242,13 +243,9 @@ export default async function HomePage() {
             Built for creators, founders, and growth teams
           </div>
 
-          <h1 className="mt-8 bg-[linear-gradient(180deg,#0f172a_0%,#334155_42%,#7c8aa3_100%)] bg-clip-text text-5xl font-black uppercase leading-[0.92] tracking-[-0.06em] text-transparent sm:text-6xl md:text-7xl lg:text-[5.75rem] dark:bg-[linear-gradient(180deg,#f8fbff_0%,#bcc7df_42%,#7c859d_100%)]">
-            Write Once.
-            <br />
-            Post
-            <br />
-            Everywhere.
-          </h1>
+          <div className="mt-2 flex justify-center">
+            <HomeHeroTypewriter />
+          </div>
 
           <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-slate-600 dark:text-[#a0a9bd] sm:text-base">
             Generate content for Instagram, Twitter, LinkedIn, and Peerlist in one click.
