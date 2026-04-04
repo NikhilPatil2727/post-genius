@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { onboardUser } from "@/modules/auth/actions";
 import { AnimatedTooltipPreview } from "@/components/animated-tooltip-demo";
+import HeroScrollDemo from "@/components/container-scroll-animation-demo";
 import { BrokenSection } from "@/modules/home/components/BrokenSection";
 import { HomeHeroTypewriter } from "@/components/home-hero-typewriter";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
@@ -341,9 +342,11 @@ export default async function HomePage() {
 
       <section id="features" className="scroll-mt-28 border-t border-slate-200 bg-[#eef2f8] dark:border-white/6 dark:bg-[#090b12]">
         <div className="mx-auto max-w-6xl px-6 py-20 sm:px-8">
+          <HeroScrollDemo />
+
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-white/42">Everything you need</p>
-            <h2 className="mt-4 text-3xl font-black uppercase tracking-[-0.05em] text-slate-950 dark:text-white sm:text-5xl">
+            <h2 className="mt-12 text-3xl font-black uppercase tracking-[-0.05em] text-slate-950 dark:text-white sm:text-5xl">
               The content engine
             </h2>
           </div>
