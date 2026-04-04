@@ -58,11 +58,11 @@ export function PricingSection({ pricing, primaryHref }: PricingSectionProps) {
   return (
     <section
       id="pricing"
-      className="relative overflow-hidden border-t border-slate-200 bg-[linear-gradient(180deg,#eef3fb_0%,#e7edf9_100%)] dark:border-white/6 dark:bg-[#060913]"
+      className="scroll-mt-28 relative overflow-hidden border-t border-slate-200 bg-[linear-gradient(180deg,#eef3fb_0%,#e7edf9_100%)] dark:border-white/6 dark:bg-[linear-gradient(180deg,#06070d_0%,#090b12_100%)]"
     >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(132,155,205,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(132,155,205,0.12)_1px,transparent_1px)] bg-[size:76px_76px] opacity-45 dark:bg-[linear-gradient(rgba(111,141,255,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(111,141,255,0.12)_1px,transparent_1px)] dark:opacity-30" />
-        <div className="absolute left-1/2 top-24 h-72 w-72 -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(111,141,255,0.22),transparent_68%)] blur-3xl dark:bg-[radial-gradient(circle,rgba(111,141,255,0.22),transparent_68%)]" />
+        <div className="absolute left-1/2 top-24 h-72 w-72 -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(111,141,255,0.22),transparent_68%)] blur-3xl dark:bg-[radial-gradient(circle,rgba(111,141,255,0.18),transparent_68%)]" />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-6 py-20 sm:px-8">
@@ -71,7 +71,7 @@ export function PricingSection({ pricing, primaryHref }: PricingSectionProps) {
             <button
               type="button"
               onClick={() => setBillingPeriod("monthly")}
-              className={billingPeriod === "monthly" ? "text-slate-950 dark:text-white" : "text-slate-500 dark:text-white/55"}
+              className={billingPeriod === "monthly" ? "cursor-pointer text-slate-950 dark:text-white" : "cursor-pointer text-slate-500 dark:text-white/55"}
             >
               Monthly
             </button>
@@ -81,7 +81,7 @@ export function PricingSection({ pricing, primaryHref }: PricingSectionProps) {
               onClick={() =>
                 setBillingPeriod((current) => (current === "monthly" ? "annually" : "monthly"))
               }
-              className="relative inline-flex h-9 w-20 items-center rounded-full border border-[#86a6ff]/40 bg-[linear-gradient(180deg,#8fb0ff_0%,#6f8dff_100%)] px-1 shadow-[0_0_24px_rgba(111,141,255,0.28)] dark:bg-[linear-gradient(180deg,#7c9cff_0%,#5d7fff_100%)] dark:shadow-[0_0_24px_rgba(111,141,255,0.35)]"
+              className="relative inline-flex h-9 w-20 cursor-pointer items-center rounded-full border border-[#86a6ff]/40 bg-[linear-gradient(180deg,#8fb0ff_0%,#6f8dff_100%)] px-1 shadow-[0_0_24px_rgba(111,141,255,0.28)] dark:bg-[linear-gradient(180deg,#7c9cff_0%,#5d7fff_100%)] dark:shadow-[0_0_24px_rgba(111,141,255,0.35)]"
             >
               <span
                 className={`block h-7 w-7 rounded-full bg-white shadow-[0_4px_18px_rgba(8,18,36,0.28)] transition-transform duration-300 ${
@@ -92,7 +92,7 @@ export function PricingSection({ pricing, primaryHref }: PricingSectionProps) {
             <button
               type="button"
               onClick={() => setBillingPeriod("annually")}
-              className={billingPeriod === "annually" ? "text-slate-950 dark:text-white" : "text-slate-500 dark:text-white/55"}
+              className={billingPeriod === "annually" ? "cursor-pointer text-slate-950 dark:text-white" : "cursor-pointer text-slate-500 dark:text-white/55"}
             >
               Annually
             </button>
@@ -115,8 +115,8 @@ export function PricingSection({ pricing, primaryHref }: PricingSectionProps) {
               className={[
                 "relative flex min-h-[42rem] flex-col rounded-[2rem] border p-8",
                 plan.featured
-                  ? "border-[#8babff]/60 bg-[linear-gradient(180deg,rgba(228,237,255,0.98),rgba(215,227,255,0.98)_24%,rgba(195,214,255,0.94)_100%)] shadow-[0_0_0_1px_rgba(130,160,255,0.2),0_28px_80px_rgba(84,118,225,0.18)] dark:border-[#7a9bff]/50 dark:bg-[linear-gradient(180deg,rgba(87,120,255,0.26),rgba(28,39,86,0.95)_24%,rgba(10,14,26,0.98)_100%)] dark:shadow-[0_0_0_1px_rgba(130,160,255,0.25),0_28px_90px_rgba(55,85,182,0.32)]"
-                  : "border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(243,247,255,0.94))] shadow-[0_20px_60px_rgba(15,23,42,0.08)] dark:border-[#243357] dark:bg-[linear-gradient(180deg,rgba(21,30,58,0.98),rgba(8,12,24,0.98))] dark:shadow-[0_20px_70px_rgba(5,10,20,0.28)]",
+                  ? "border-[#8babff]/60 bg-[linear-gradient(180deg,rgba(228,237,255,0.98),rgba(215,227,255,0.98)_24%,rgba(195,214,255,0.94)_100%)] shadow-[0_0_0_1px_rgba(130,160,255,0.2),0_28px_80px_rgba(84,118,225,0.18)] dark:border-[#7a9bff]/45 dark:bg-[linear-gradient(180deg,rgba(65,91,190,0.30),rgba(18,24,44,0.97)_28%,rgba(8,10,18,0.99)_100%)] dark:shadow-[0_0_0_1px_rgba(130,160,255,0.2),0_28px_90px_rgba(8,12,24,0.55)]"
+                  : "border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(243,247,255,0.94))] shadow-[0_20px_60px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(14,17,28,0.98),rgba(8,10,18,0.96))] dark:shadow-[0px_0px_27px_0px_rgba(45,45,45,0.45)]",
               ].join(" ")}
             >
               <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_top,rgba(129,158,255,0.18),transparent_42%)] dark:bg-[radial-gradient(circle_at_top,rgba(129,158,255,0.16),transparent_42%)]" />

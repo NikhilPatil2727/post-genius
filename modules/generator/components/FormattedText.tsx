@@ -62,13 +62,14 @@ export const FormattedText = ({ text, className = '' }: FormattedTextProps) => {
 
   const pushGroup = () => {
     if (!currentGroup) return;
+    const group = currentGroup;
 
-    if (currentGroup.type === 'ul' || currentGroup.type === 'ol') {
-      const Tag = currentGroup.type;
+    if (group.type === 'ul' || group.type === 'ol') {
+      const Tag = group.type;
       const listClass = Tag === 'ul' ? 'list-disc' : 'list-decimal';
       elements.push(
         <Tag key={`list-${elements.length}`} className={`${listClass} pl-5 space-y-1 my-3`}>
-          {currentGroup.items.map((item, index) => (
+          {group.items.map((item, index) => (
             <li key={index}>{item}</li>
           ))}
         </Tag>
@@ -76,10 +77,10 @@ export const FormattedText = ({ text, className = '' }: FormattedTextProps) => {
     } else {
       elements.push(
         <p key={`p-${elements.length}`} className="mb-3 last:mb-0">
-          {currentGroup.items.map((item, index) => (
+          {group.items.map((item, index) => (
             <React.Fragment key={index}>
               {item}
-              {index < currentGroup.items.length - 1 && <br />}
+              {index < group.items.length - 1 && <br />}
             </React.Fragment>
           ))}
         </p>

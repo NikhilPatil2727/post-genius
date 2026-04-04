@@ -10,8 +10,7 @@ import { cn } from "@/lib/utils";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 
 const navigation = [
-  { name: "Features", href: "/#features" },
-  { name: "How It Works", href: "/#how-it-works" },
+  { name: "Home", href: "/" },
   { name: "Pricing", href: "/#pricing" },
   { name: "FAQ", href: "/#faq" },
   { name: "Learn More", href: "/learn-more" },
@@ -31,7 +30,7 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-3 z-50 mx-auto w-[min(96%,1120px)] rounded-2xl border transition-all duration-300",
+        "fixed inset-x-0 top-3 z-50 mx-auto w-[min(92%,980px)] rounded-2xl border transition-all duration-300",
         "border-slate-200/70 bg-[#f6f8fc] dark:border-white/8 dark:bg-[#07090f]",
         scrolled
           ? "shadow-[0_14px_60px_rgba(15,23,42,0.16)] dark:shadow-[0_14px_60px_rgba(0,0,0,0.36)]"

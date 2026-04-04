@@ -355,7 +355,7 @@ export default async function HomePage() {
 
       <PricingSection pricing={pricing} primaryHref={primaryHref} />
 
-      <section id="faq" className="border-t border-slate-200 dark:border-white/6">
+      <section id="faq" className="scroll-mt-28 border-t border-slate-200 dark:border-white/6">
         <div className="mx-auto max-w-4xl px-6 py-20 sm:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-black uppercase tracking-[-0.05em] text-slate-950 dark:text-white sm:text-5xl">
