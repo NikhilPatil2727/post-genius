@@ -11,6 +11,7 @@ import { onboardUser } from "@/modules/auth/actions";
 import { AnimatedTooltipPreview } from "@/components/animated-tooltip-demo";
 import HeroScrollDemo from "@/components/container-scroll-animation-demo";
 import { BrokenSection } from "@/modules/home/components/BrokenSection";
+import { PricingSection } from "@/modules/home/components/PricingSection";
 import { HomeHeroTypewriter } from "@/components/home-hero-typewriter";
 import { TextHoverEffect } from "@/components/ui/text-hover-effect";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
@@ -352,69 +353,7 @@ export default async function HomePage() {
 
 
 
-      <section id="pricing" className="border-t border-slate-200 bg-[#eef2f8] dark:border-white/6 dark:bg-[#090b12]">
-        <div className="mx-auto max-w-6xl px-6 py-20 sm:px-8">
-          <div className="text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-white/42">Monthly billing</p>
-            <h2 className="font-display mt-4 text-3xl font-black uppercase tracking-[-0.05em] text-slate-950 dark:text-white sm:text-5xl">
-              Simple, transparent pricing
-            </h2>
-          </div>
-
-          <div className="mt-12 grid gap-5 lg:grid-cols-3">
-            {pricing.map((plan) => (
-              <div
-                key={plan.name}
-                className={[
-                  "rounded-[1.7rem] border p-7",
-                  plan.featured
-                    ? "border-[#8aa6ff] bg-[linear-gradient(180deg,rgba(234,240,255,0.98),rgba(219,228,252,0.98))] shadow-[0_0_0_1px_rgba(149,176,255,0.18),0_20px_60px_rgba(86,111,255,0.12)] dark:bg-[linear-gradient(180deg,rgba(25,31,54,0.98),rgba(15,18,30,0.98))] dark:shadow-[0_0_0_1px_rgba(149,176,255,0.16),0_20px_60px_rgba(86,111,255,0.16)]"
-                    : "border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,247,252,0.92))] shadow-[0_10px_40px_rgba(15,23,42,0.06)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(17,20,31,0.94),rgba(11,13,20,0.92))] dark:shadow-none",
-                ].join(" ")}
-              >
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-slate-950 dark:text-white">{plan.name}</h3>
-                  {plan.featured ? (
-                    <span className="rounded-full border border-[#8aa6ff]/40 bg-[#8aa6ff]/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#4766d6] dark:text-[#c8d5ff]">
-                      Most Popular
-                    </span>
-                  ) : null}
-                </div>
-
-                <div className="mt-5 flex items-end gap-2">
-                  <span className="text-4xl font-black tracking-[-0.05em] text-slate-950 dark:text-white">{plan.price}</span>
-                  <span className="pb-1 text-sm text-slate-500 dark:text-[#98a1b5]">/ month</span>
-                </div>
-
-                <p className="mt-3 text-sm text-slate-600 dark:text-[#98a1b5]">{plan.description}</p>
-
-                <ul className="mt-8 space-y-3">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-3 text-sm text-slate-700 dark:text-[#d4daea]">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-white/6">
-                        <Check className="h-3 w-3" />
-                      </span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                <Link
-                  href={plan.name === "Team" ? "/learn-more" : primaryHref}
-                  className={[
-                    "mt-8 inline-flex w-full items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold transition-colors",
-                    plan.featured
-                      ? "bg-[linear-gradient(180deg,#d7e3ff_0%,#9cbcff_100%)] text-[#081224]"
-                      : "border border-slate-200 bg-white text-slate-950 hover:bg-slate-50 dark:border-white/12 dark:bg-white/6 dark:text-white dark:hover:bg-white/10",
-                  ].join(" ")}
-                >
-                  {plan.cta}
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <PricingSection pricing={pricing} primaryHref={primaryHref} />
 
       <section id="faq" className="border-t border-slate-200 dark:border-white/6">
         <div className="mx-auto max-w-4xl px-6 py-20 sm:px-8">

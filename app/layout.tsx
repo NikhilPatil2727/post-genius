@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { Toaster } from '@/components/ui/sonner';
 
 import { ClerkProvider } from '@clerk/nextjs';
 
@@ -35,7 +36,8 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-              {children}
+            {children}
+            <Toaster richColors position="top-right" />
           </ThemeProvider>
         </ClerkProvider>
       </body>
