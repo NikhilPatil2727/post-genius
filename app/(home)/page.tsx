@@ -336,7 +336,7 @@ export default async function HomePage() {
 
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-white/42">Everything you need</p>
-            <h2 className="mt-12 text-3xl font-black uppercase tracking-[-0.05em] text-slate-950 dark:text-white sm:text-5xl">
+            <h2 className="font-display mt-12 text-3xl font-black uppercase tracking-[-0.05em] text-slate-950 dark:text-white sm:text-5xl">
               The content engine
             </h2>
           </div>
@@ -356,7 +356,7 @@ export default async function HomePage() {
         <div className="mx-auto max-w-6xl px-6 py-20 sm:px-8">
           <div className="text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-white/42">Monthly billing</p>
-            <h2 className="mt-4 text-3xl font-black uppercase tracking-[-0.05em] text-slate-950 dark:text-white sm:text-5xl">
+            <h2 className="font-display mt-4 text-3xl font-black uppercase tracking-[-0.05em] text-slate-950 dark:text-white sm:text-5xl">
               Simple, transparent pricing
             </h2>
           </div>

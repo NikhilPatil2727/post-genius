@@ -97,8 +97,7 @@ export function BrokenSection() {
             Why creators switch
           </p>
           <h2
-            className="mt-4 text-4xl font-black uppercase leading-[0.88] tracking-[-0.06em] text-slate-950 sm:text-5xl lg:text-[4.25rem] dark:text-white"
-            style={{ fontFamily: '"Barlow Condensed", "Bebas Neue", sans-serif' }}
+            className="font-display mt-4 text-4xl font-black uppercase leading-[0.88] tracking-[-0.06em] text-slate-950 sm:text-5xl lg:text-[4.25rem] dark:text-white"
           >
             THE OLD WAY IS BROKEN
           </h2>

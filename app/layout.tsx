@@ -1,11 +1,19 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Plus_Jakarta_Sans, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 
 import { ClerkProvider } from '@clerk/nextjs';
 
-const inter = Inter({ subsets: ['latin'] });
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-plus-jakarta',
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+});
 
 export const metadata: Metadata = {
   title: 'PostBloom',
@@ -19,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${plusJakartaSans.variable} ${spaceGrotesk.variable} font-sans`}>
         <ClerkProvider>
           <ThemeProvider
             attribute="class"
