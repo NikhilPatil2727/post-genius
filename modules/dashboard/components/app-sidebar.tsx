@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { toUserFriendlyError } from "@/lib/error-utils";
 import { cn } from "@/lib/utils";
+import { SparklesText } from "@/components/ui/sparkles-text";
 
 type SidebarPost = {
   id: string;
@@ -109,9 +110,13 @@ export function AppSidebar() {
     <Sidebar className="[&_[data-sidebar=sidebar]]:bg-background [&_[data-sidebar=sidebar]]:text-foreground [&_[data-slot=sidebar-gap]]:bg-transparent">
       <SidebarHeader>
         <Link href={"/"} className="flex flex-col gap-0 items-start p-4 hover:opacity-80 transition-opacity">
-          <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white leading-none">
+          <SparklesText
+            sparklesCount={7}
+            colors={{ first: "#2563eb", second: "#6f8dff" }}
+            className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white leading-none"
+          >
             Post<span className="text-blue-600">Bloom</span>
-          </h1>
+          </SparklesText>
           <span className="text-[8px] uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 font-black mt-1.5">
             Editorial
           </span>

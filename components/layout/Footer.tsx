@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Instagram, Linkedin, Twitter } from "lucide-react";
+import { SparklesText } from "@/components/ui/sparkles-text";
 
 const footerSections = [
   {
@@ -36,9 +37,13 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-6 py-14 sm:px-8">
         <div className="grid gap-10 md:grid-cols-[1.3fr_repeat(3,1fr)]">
           <div className="max-w-sm">
-            <div className="inline-flex text-sm font-black tracking-[-0.04em] text-slate-950 dark:text-white">
+            <SparklesText
+              sparklesCount={6}
+              colors={{ first: "#6f8dff", second: "#a9bfff" }}
+              className="inline-flex text-sm font-black tracking-[-0.04em] text-slate-950 dark:text-white"
+            >
               Post<span className="text-[#6f8dff] dark:text-[#a9bfff]">Bloom</span>
-            </div>
+            </SparklesText>
             <p className="mt-5 text-sm leading-7 text-slate-600 dark:text-white/52">
               Turn one rough thought into polished social content built for modern distribution.
             </p>

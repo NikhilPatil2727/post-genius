@@ -14,6 +14,8 @@ import { BrokenSection } from "@/modules/home/components/BrokenSection";
 import { HomeHeroTypewriter } from "@/components/home-hero-typewriter";
 import { TextHoverEffect } from "@/components/ui/text-hover-effect";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
+import { RainbowButton } from "@/components/ui/rainbow-button";
+import { AnimatedGradientText } from "@/components/ui/animated-gradient-text";
 import {
   Accordion,
   AccordionContent,
@@ -92,29 +94,6 @@ const platformPills = [
   },
 ];
 
-const steps = [
-  {
-    number: "1",
-    eyebrow: "Input",
-    title: "Drop Idea",
-    description: "Paste a raw thought, story, launch note, or insight you want to turn into content.",
-    detail: "Raw note, voice memo, launch update",
-  },
-  {
-    number: "2",
-    eyebrow: "Adapt",
-    title: "Choose Platforms",
-    description: "Select LinkedIn, X, Instagram, and Peerlist. We adapt structure for each one.",
-    detail: "Tone, format, length, CTA",
-  },
-  {
-    number: "3",
-    eyebrow: "Ship",
-    title: "Post Everywhere",
-    description: "Receive polished platform-ready drafts with hooks, CTA flow, and clean formatting.",
-    detail: "Ready to review, copy, and publish",
-  },
-];
 
 const features = [
   {
@@ -246,9 +225,29 @@ export default async function HomePage() {
 
       <section className="relative mx-auto max-w-6xl px-6 pb-24 pt-32 sm:px-8 md:pb-28 md:pt-36">
         <div className="mx-auto max-w-4xl text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-xs font-medium text-slate-600 shadow-[0_0_0_1px_rgba(255,255,255,0.4)] backdrop-blur dark:border-white/12 dark:bg-white/6 dark:text-white/80 dark:shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+          <div className="group relative inline-flex items-center justify-center rounded-full bg-white/80 px-4 py-2 shadow-[inset_0_-8px_10px_rgba(111,141,255,0.12)] backdrop-blur transition-shadow duration-500 ease-out hover:shadow-[inset_0_-5px_10px_rgba(111,141,255,0.22)] dark:bg-white/6">
+            <span
+              className="animate-gradient absolute inset-0 block rounded-[inherit] bg-[linear-gradient(90deg,rgba(111,141,255,0.5),rgba(146,168,255,0.5),rgba(111,141,255,0.5))] bg-[length:300%_100%] p-[1px]"
+              style={{
+                WebkitMask:
+                  "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                WebkitMaskComposite: "destination-out",
+                mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                maskComposite: "subtract",
+                WebkitClipPath: "padding-box",
+              }}
+            />
             <span className="h-2 w-2 rounded-full bg-[#6f8dff] dark:bg-[#92a8ff]" />
-            Built for creators, founders, and growth teams
+            <hr className="mx-2 h-4 w-px shrink-0 bg-slate-300 dark:bg-white/20" />
+            <AnimatedGradientText
+              className="text-xs font-medium"
+              speed={1.2}
+              colorFrom="#6f8dff"
+              colorTo="#92a8ff"
+            >
+              Built for creators, founders, and growth teams
+            </AnimatedGradientText>
+            <ChevronRight className="ml-1 size-4 stroke-slate-500 transition-transform duration-300 ease-in-out group-hover:translate-x-0.5 dark:stroke-white/50" />
           </div>
 
           <div className="mt-2 flex justify-center">
@@ -284,12 +283,11 @@ export default async function HomePage() {
                 {user ? "Open Generator" : "Start for Free"}
               </Link>
             </HoverBorderGradient>
-            <Link
-              href="/learn-more"
-              className="inline-flex min-w-[180px] items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition-colors duration-200 hover:bg-slate-50 dark:border-white/14 dark:bg-white/6 dark:text-white dark:hover:bg-white/10"
-            >
-              See it in Action
-            </Link>
+            <RainbowButton asChild size="lg" className="min-w-[180px] rounded-xl">
+              <Link href="/learn-more">
+                See it in Action
+              </Link>
+            </RainbowButton>
           </div>
 
           <div className="mt-8">
@@ -341,86 +339,7 @@ export default async function HomePage() {
 
       <BrokenSection />
 
-      <section
-        id="how-it-works"
-        className="relative overflow-hidden border-t border-slate-200 bg-[linear-gradient(180deg,#f8fbff_0%,#eef3fb_100%)] dark:border-white/6 dark:bg-[linear-gradient(180deg,#080b12_0%,#0c111b_100%)]"
-      >
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-[-8rem] top-12 h-64 w-64 rounded-full bg-[radial-gradient(circle,_rgba(92,133,255,0.16),_transparent_68%)] blur-2xl dark:bg-[radial-gradient(circle,_rgba(92,133,255,0.18),_transparent_68%)]" />
-          <div className="absolute right-[-6rem] top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,_rgba(52,211,153,0.12),_transparent_72%)] blur-2xl dark:bg-[radial-gradient(circle,_rgba(125,211,252,0.12),_transparent_72%)]" />
-          <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(148,163,184,0.45),transparent)] dark:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.14),transparent)]" />
-        </div>
 
-        <div className="relative mx-auto max-w-6xl px-6 py-20 sm:px-8 lg:py-24">
-          <div className="grid gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-start lg:gap-12">
-            <div className="max-w-xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur dark:border-white/10 dark:bg-white/6 dark:text-white/55 dark:shadow-none">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 dark:bg-sky-300" />
-                How it works
-              </div>
-
-              <h2 className="mt-6 text-3xl font-black uppercase tracking-[-0.05em] text-slate-950 dark:text-white sm:text-5xl">
-                From spark to stream in seconds.
-              </h2>
-
-              <p className="mt-5 max-w-lg text-sm leading-7 text-slate-600 dark:text-[#98a1b5] sm:text-base">
-                Built like a clean editorial pipeline, so your team can move from rough thinking to platform-ready output without friction.
-              </p>
-
-              <div className="mt-8 grid grid-cols-2 gap-3 sm:max-w-md">
-                <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.06)] backdrop-blur dark:border-white/10 dark:bg-white/6 dark:shadow-none">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-white/40">Typical input</p>
-                  <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">Messy first draft</p>
-                </div>
-                <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-[0_12px_32px_rgba(15,23,42,0.06)] backdrop-blur dark:border-white/10 dark:bg-white/6 dark:shadow-none">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-white/40">Final output</p>
-                  <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">Polished multi-post set</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="absolute left-[1.15rem] right-[1.15rem] top-8 hidden h-px bg-[linear-gradient(90deg,rgba(148,163,184,0.45),rgba(148,163,184,0.18))] dark:bg-[linear-gradient(90deg,rgba(255,255,255,0.16),rgba(255,255,255,0.06))] md:block" />
-
-              <div className="grid gap-4 md:grid-cols-3 md:gap-5">
-                {steps.map((step) => (
-                  <article
-                    key={step.number}
-                    className="group relative overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,255,0.92))] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(15,23,42,0.12)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(19,24,38,0.96),rgba(10,14,24,0.94))] dark:shadow-none"
-                  >
-                    <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#7c9cff,#6ee7b7)] opacity-80 dark:bg-[linear-gradient(90deg,#88a5ff,#7dd3fc)]" />
-                    <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-[radial-gradient(circle,_rgba(124,156,255,0.22),_transparent_70%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-[radial-gradient(circle,_rgba(136,165,255,0.16),_transparent_72%)]" />
-
-                    <div className="relative z-10">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm font-bold text-slate-950 shadow-[0_8px_24px_rgba(15,23,42,0.08)] transition-transform duration-300 group-hover:scale-105 dark:border-white/10 dark:bg-white/8 dark:text-white dark:shadow-none">
-                          {step.number}
-                        </div>
-                        <p className="pt-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-white/38">
-                          {step.eyebrow}
-                        </p>
-                      </div>
-
-                      <h3 className="mt-8 text-xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
-                        {step.title}
-                      </h3>
-                      <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-[#98a1b5]">
-                        {step.description}
-                      </p>
-
-                      <div className="mt-6 border-t border-slate-200/80 pt-4 dark:border-white/10">
-                        <p className="text-xs font-medium tracking-[0.02em] text-slate-500 dark:text-white/46">
-                          {step.detail}
-                        </p>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <section id="features" className="scroll-mt-28 border-t border-slate-200 bg-[#eef2f8] dark:border-white/6 dark:bg-[#090b12]">
         <div className="mx-auto max-w-6xl px-6 py-20 sm:px-8">

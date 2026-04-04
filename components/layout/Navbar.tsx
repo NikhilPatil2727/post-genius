@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { ModeToggle } from "../ModeToggle";
+import { SparklesText } from "../ui/sparkles-text";
 import { cn } from "@/lib/utils";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 
@@ -39,9 +40,13 @@ export function Navbar() {
     >
       <div className="flex items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/" className="flex items-center gap-3">
-          <span className="text-sm font-black tracking-[-0.04em] text-slate-950 dark:text-white sm:text-base">
+          <SparklesText
+            sparklesCount={6}
+            colors={{ first: "#6f8dff", second: "#a9bfff" }}
+            className="text-sm font-black tracking-[-0.04em] text-slate-950 dark:text-white sm:text-base"
+          >
             Post<span className="text-[#6f8dff] dark:text-[#a9bfff]">Bloom</span>
-          </span>
+          </SparklesText>
         </Link>
 
         <nav className="hidden items-center gap-6 lg:flex">
