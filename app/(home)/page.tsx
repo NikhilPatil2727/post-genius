@@ -16,6 +16,7 @@ import { TextHoverEffect } from "@/components/ui/text-hover-effect";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { AnimatedGradientText } from "@/components/ui/animated-gradient-text";
+import { HoverEffect } from "@/components/ui/card-hover-effect";
 import {
   Accordion,
   AccordionContent,
@@ -134,26 +135,14 @@ const features = [
   },
 ];
 
-const testimonials = [
-  {
-    quote:
-      "I used to pause after writing a LinkedIn post because I knew I still had three more rewrites waiting. Now I publish everywhere in one flow.",
-    name: "Aarav Shah",
-    role: "Founder, SaaS Studio",
-  },
-  {
-    quote:
-      "The biggest win is tone control. The drafts still sound like me, just tighter, sharper, and much faster to ship.",
-    name: "Mira Sen",
-    role: "Indie Maker, Launch Notes",
-  },
-  {
-    quote:
-      "We moved from inconsistent social posting to an actual content rhythm. That alone made the product feel more alive.",
-    name: "Rohan Malik",
-    role: "Marketing Lead, Creator Tools",
-  },
-];
+const featureCards = features.map(({ title, description }) => ({
+  title,
+  description,
+  link: "/learn-more",
+}));
+
+
+
 
 const pricing = [
   {
@@ -352,41 +341,16 @@ export default async function HomePage() {
             </h2>
           </div>
 
-          <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {features.map(({ icon: Icon, title, description }) => (
-              <div
-                key={title}
-                className="rounded-[1.5rem] border border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,247,252,0.92))] p-6 shadow-[0_10px_40px_rgba(15,23,42,0.06)] transition-transform duration-200 hover:-translate-y-1 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(17,20,31,0.94),rgba(11,13,20,0.92))] dark:shadow-none"
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-white/6">
-                  <Icon className="h-5 w-5 text-[#6f8dff] dark:text-[#d8e2ff]" />
-                </div>
-                <h3 className="mt-5 text-lg font-semibold text-slate-950 dark:text-white">{title}</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-[#98a1b5]">{description}</p>
-              </div>
-            ))}
+          <div className="mt-10">
+            <HoverEffect
+              items={featureCards}
+              className="mx-auto max-w-5xl px-0 py-0"
+            />
           </div>
         </div>
       </section>
 
-      <section className="border-t border-slate-200 dark:border-white/6">
-        <div className="mx-auto grid max-w-6xl gap-5 px-6 py-20 sm:px-8 lg:grid-cols-3">
-          {testimonials.map((item) => (
-            <figure
-              key={item.name}
-              className="rounded-[1.5rem] border border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,247,252,0.92))] p-6 shadow-[0_10px_40px_rgba(15,23,42,0.06)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(17,20,31,0.96),rgba(11,13,20,0.92))] dark:shadow-none"
-            >
-              <blockquote className="text-sm leading-7 text-slate-700 dark:text-[#d2d8e6]">
-                &ldquo;{item.quote}&rdquo;
-              </blockquote>
-              <figcaption className="mt-6">
-                <div className="text-sm font-semibold text-slate-950 dark:text-white">{item.name}</div>
-                <div className="text-xs uppercase tracking-[0.18em] text-slate-400 dark:text-white/40">{item.role}</div>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-      </section>
+
 
       <section id="pricing" className="border-t border-slate-200 bg-[#eef2f8] dark:border-white/6 dark:bg-[#090b12]">
         <div className="mx-auto max-w-6xl px-6 py-20 sm:px-8">

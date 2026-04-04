@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "motion/react";
 
@@ -19,7 +21,7 @@ export const HoverEffect = ({
   return (
     <div
       className={cn(
-        "grid grid-cols-1 md:grid-cols-2  lg:grid-cols-3  py-10",
+        "grid grid-cols-1 py-10 md:grid-cols-2 lg:grid-cols-3",
         className
       )}
     >
@@ -27,14 +29,14 @@ export const HoverEffect = ({
         <a
           href={item?.link}
           key={item?.link}
-          className="relative group  block p-2 h-full w-full"
+          className="group relative block h-full w-full p-2"
           onMouseEnter={() => setHoveredIndex(idx)}
           onMouseLeave={() => setHoveredIndex(null)}
         >
           <AnimatePresence>
             {hoveredIndex === idx && (
               <motion.span
-                className="absolute inset-0 h-full w-full bg-neutral-200 dark:bg-slate-800/[0.8] block  rounded-3xl"
+                className="absolute inset-0 block h-full w-full rounded-3xl bg-[linear-gradient(180deg,rgba(231,237,255,0.96),rgba(214,226,255,0.92))] dark:bg-[linear-gradient(180deg,rgba(30,37,63,0.92),rgba(16,21,38,0.92))]"
                 layoutId="hoverBackground"
                 initial={{ opacity: 0 }}
                 animate={{
@@ -68,7 +70,7 @@ export const Card = ({
   return (
     <div
       className={cn(
-        "rounded-2xl h-full w-full p-4 overflow-hidden bg-black border border-transparent dark:border-white/[0.2] group-hover:border-slate-700 relative z-20",
+        "relative z-20 h-full w-full overflow-hidden rounded-2xl border border-transparent bg-black p-4 dark:border-white/[0.2] group-hover:border-slate-700",
         className
       )}
     >
@@ -86,7 +88,7 @@ export const CardTitle = ({
   children: React.ReactNode;
 }) => {
   return (
-    <h4 className={cn("text-zinc-100 font-bold tracking-wide mt-4", className)}>
+    <h4 className={cn("mt-4 font-bold tracking-wide text-zinc-100", className)}>
       {children}
     </h4>
   );
@@ -101,7 +103,7 @@ export const CardDescription = ({
   return (
     <p
       className={cn(
-        "mt-8 text-zinc-400 tracking-wide leading-relaxed text-sm",
+        "mt-8 text-sm leading-relaxed tracking-wide text-zinc-400",
         className
       )}
     >
