@@ -30,11 +30,11 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-3 z-50 mx-auto w-[min(92%,980px)] rounded-2xl border transition-all duration-300",
-        "border-slate-200/70 bg-[#f6f8fc] dark:border-white/8 dark:bg-[#07090f]",
+        "fixed inset-x-0 top-3 z-50 mx-auto w-[min(90%,920px)] rounded-2xl border backdrop-blur-xl transition-all duration-300",
+        "border-slate-200/50 bg-white/55 dark:border-white/8 dark:bg-[#07090f]/55",
         scrolled
-          ? "shadow-[0_14px_60px_rgba(15,23,42,0.16)] dark:shadow-[0_14px_60px_rgba(0,0,0,0.36)]"
-          : "shadow-[0_6px_24px_rgba(15,23,42,0.08)] dark:shadow-[0_6px_24px_rgba(0,0,0,0.18)]"
+          ? "shadow-[0_14px_60px_rgba(15,23,42,0.14)] dark:shadow-[0_14px_60px_rgba(0,0,0,0.3)]"
+          : "shadow-[0_6px_24px_rgba(15,23,42,0.06)] dark:shadow-[0_6px_24px_rgba(0,0,0,0.16)]"
       )}
     >
       <div className="flex items-center justify-between px-4 py-3 sm:px-6">
