@@ -166,7 +166,7 @@ export function AppSidebar() {
               <RotateCw className={`size-3.5 text-zinc-400 group-hover:text-primary transition-all ${loading ? 'animate-spin' : ''}`} />
             </button>
           </SidebarGroupLabel>
-          <SidebarGroupContent className="flex-1 overflow-hidden">
+          <SidebarGroupContent className="min-h-0 flex-1 overflow-hidden">
             <SidebarMenu className="px-2 space-y-1">
               {loading && posts.length === 0 ? (
                 <div className="px-4 py-8 flex flex-col items-center gap-3 opacity-50">
@@ -181,7 +181,7 @@ export function AppSidebar() {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-1 max-h-[calc(100vh-320px)] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-200 dark:scroll-thumb-zinc-800">
+                <div className="min-w-0 space-y-1 pr-1">
                   {posts.map((post) => (
                     <SidebarMenuItem key={post.id} className="group relative list-none">
                       <SidebarMenuButton
