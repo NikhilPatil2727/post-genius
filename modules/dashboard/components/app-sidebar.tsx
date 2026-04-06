@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { toUserFriendlyError } from "@/lib/error-utils";
 import { cn } from "@/lib/utils";
+import { SparklesText } from "@/components/ui/sparkles-text";
 
 type SidebarPost = {
   id: string;
@@ -109,9 +110,13 @@ export function AppSidebar() {
     <Sidebar className="[&_[data-sidebar=sidebar]]:bg-background [&_[data-sidebar=sidebar]]:text-foreground [&_[data-slot=sidebar-gap]]:bg-transparent">
       <SidebarHeader>
         <Link href={"/"} className="flex flex-col gap-0 items-start p-4 hover:opacity-80 transition-opacity">
-          <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white leading-none">
+          <SparklesText
+            sparklesCount={7}
+            colors={{ first: "#2563eb", second: "#6f8dff" }}
+            className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white leading-none"
+          >
             Post<span className="text-blue-600">Bloom</span>
-          </h1>
+          </SparklesText>
           <span className="text-[8px] uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 font-black mt-1.5">
             Editorial
           </span>
@@ -119,7 +124,7 @@ export function AppSidebar() {
         <SidebarSeparator className="bg-border" />
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="admin-sidebar-scroll">
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 text-xs font-bold uppercase tracking-widest text-zinc-400 mb-2">Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -161,7 +166,7 @@ export function AppSidebar() {
               <RotateCw className={`size-3.5 text-zinc-400 group-hover:text-primary transition-all ${loading ? 'animate-spin' : ''}`} />
             </button>
           </SidebarGroupLabel>
-          <SidebarGroupContent className="flex-1 overflow-hidden">
+          <SidebarGroupContent className="min-h-0 flex-1 overflow-hidden">
             <SidebarMenu className="px-2 space-y-1">
               {loading && posts.length === 0 ? (
                 <div className="px-4 py-8 flex flex-col items-center gap-3 opacity-50">
@@ -176,7 +181,7 @@ export function AppSidebar() {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-1 max-h-[calc(100vh-320px)] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-200 dark:scroll-thumb-zinc-800">
+                <div className="min-w-0 space-y-1 pr-1">
                   {posts.map((post) => (
                     <SidebarMenuItem key={post.id} className="group relative list-none">
                       <SidebarMenuButton
@@ -225,6 +230,37 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+          .dark .admin-sidebar-scroll {
+            scrollbar-color: rgba(107, 114, 128, 0.7) rgba(24, 24, 27, 0.95);
+          }
+
+          .dark .admin-sidebar-scroll::-webkit-scrollbar {
+            width: 10px;
+          }
+
+          .dark .admin-sidebar-scroll::-webkit-scrollbar-track {
+            background: rgba(24, 24, 27, 0.95);
+          }
+
+          .dark .admin-sidebar-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(113, 113, 122, 0.9), rgba(82, 82, 91, 0.95));
+            border-radius: 9999px;
+            border: 2px solid rgba(24, 24, 27, 0.95);
+          }
+
+          .dark .admin-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, rgba(161, 161, 170, 0.95), rgba(113, 113, 122, 1));
+          }
+
+          .dark .admin-sidebar-scroll::-webkit-scrollbar-corner {
+            background: rgba(24, 24, 27, 0.95);
+          }
+        `,
+        }}
+      />
     </Sidebar>
   );
 }

@@ -5,12 +5,12 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { ModeToggle } from "../ModeToggle";
+import { SparklesText } from "../ui/sparkles-text";
 import { cn } from "@/lib/utils";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 
 const navigation = [
-  { name: "Features", href: "/#features" },
-  { name: "How It Works", href: "/#how-it-works" },
+  { name: "Home", href: "/" },
   { name: "Pricing", href: "/#pricing" },
   { name: "FAQ", href: "/#faq" },
   { name: "Learn More", href: "/learn-more" },
@@ -30,18 +30,22 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-3 z-50 mx-auto w-[min(96%,1120px)] rounded-2xl border transition-all duration-300",
-        "border-slate-200/70 bg-[#f6f8fc] dark:border-white/8 dark:bg-[#07090f]",
+        "fixed inset-x-0 top-3 z-50 mx-auto w-[min(90%,920px)] rounded-2xl border backdrop-blur-xl transition-all duration-300",
+        "border-slate-200/50 bg-white/55 dark:border-white/8 dark:bg-[#07090f]/55",
         scrolled
-          ? "shadow-[0_14px_60px_rgba(15,23,42,0.16)] dark:shadow-[0_14px_60px_rgba(0,0,0,0.36)]"
-          : "shadow-[0_6px_24px_rgba(15,23,42,0.08)] dark:shadow-[0_6px_24px_rgba(0,0,0,0.18)]"
+          ? "shadow-[0_14px_60px_rgba(15,23,42,0.14)] dark:shadow-[0_14px_60px_rgba(0,0,0,0.3)]"
+          : "shadow-[0_6px_24px_rgba(15,23,42,0.06)] dark:shadow-[0_6px_24px_rgba(0,0,0,0.16)]"
       )}
     >
       <div className="flex items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/" className="flex items-center gap-3">
-          <span className="text-sm font-black tracking-[-0.04em] text-slate-950 dark:text-white sm:text-base">
+          <SparklesText
+            sparklesCount={6}
+            colors={{ first: "#6f8dff", second: "#a9bfff" }}
+            className="text-sm font-black tracking-[-0.04em] text-slate-950 dark:text-white sm:text-base"
+          >
             Post<span className="text-[#6f8dff] dark:text-[#a9bfff]">Bloom</span>
-          </span>
+          </SparklesText>
         </Link>
 
         <nav className="hidden items-center gap-6 lg:flex">
