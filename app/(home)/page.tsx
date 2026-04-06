@@ -13,10 +13,10 @@ import HeroScrollDemo from "@/components/container-scroll-animation-demo";
 import { BrokenSection } from "@/modules/home/components/BrokenSection";
 import { PricingSection } from "@/modules/home/components/PricingSection";
 import { HomeHeroTypewriter } from "@/components/home-hero-typewriter";
+import { HomeHeroBadge } from "@/components/home-hero-badge";
 import { TextHoverEffect } from "@/components/ui/text-hover-effect";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { RainbowButton } from "@/components/ui/rainbow-button";
-import { AnimatedGradientText } from "@/components/ui/animated-gradient-text";
 import { HoverEffect } from "@/components/ui/card-hover-effect";
 import {
   Accordion,
@@ -215,30 +215,7 @@ export default async function HomePage() {
 
       <section className="relative mx-auto max-w-6xl px-6 pb-24 pt-32 sm:px-8 md:pb-28 md:pt-36">
         <div className="mx-auto max-w-4xl text-center">
-          <div className="group relative inline-flex items-center justify-center rounded-full bg-white/80 px-4 py-2 shadow-[inset_0_-8px_10px_rgba(111,141,255,0.12)] backdrop-blur transition-shadow duration-500 ease-out hover:shadow-[inset_0_-5px_10px_rgba(111,141,255,0.22)] dark:bg-white/6">
-            <span
-              className="animate-gradient absolute inset-0 block rounded-[inherit] bg-[linear-gradient(90deg,rgba(111,141,255,0.5),rgba(146,168,255,0.5),rgba(111,141,255,0.5))] bg-[length:300%_100%] p-[1px]"
-              style={{
-                WebkitMask:
-                  "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                WebkitMaskComposite: "destination-out",
-                mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                maskComposite: "subtract",
-                WebkitClipPath: "padding-box",
-              }}
-            />
-            <span className="h-2 w-2 rounded-full bg-[#6f8dff] dark:bg-[#92a8ff]" />
-            <hr className="mx-2 h-4 w-px shrink-0 bg-slate-300 dark:bg-white/20" />
-            <AnimatedGradientText
-              className="text-xs font-medium"
-              speed={1.2}
-              colorFrom="#6f8dff"
-              colorTo="#92a8ff"
-            >
-              Built for creators, founders, and growth teams
-            </AnimatedGradientText>
-            <ChevronRight className="ml-1 size-4 stroke-slate-500 transition-transform duration-300 ease-in-out group-hover:translate-x-0.5 dark:stroke-white/50" />
-          </div>
+          <HomeHeroBadge text="Built for creators, founders, and growth teams" />
 
           <div className="mt-2 flex justify-center">
             <HomeHeroTypewriter />
