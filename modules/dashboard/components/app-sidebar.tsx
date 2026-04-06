@@ -124,7 +124,7 @@ export function AppSidebar() {
         <SidebarSeparator className="bg-border" />
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="admin-sidebar-scroll">
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 text-xs font-bold uppercase tracking-widest text-zinc-400 mb-2">Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -230,6 +230,37 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+          .dark .admin-sidebar-scroll {
+            scrollbar-color: rgba(107, 114, 128, 0.7) rgba(24, 24, 27, 0.95);
+          }
+
+          .dark .admin-sidebar-scroll::-webkit-scrollbar {
+            width: 10px;
+          }
+
+          .dark .admin-sidebar-scroll::-webkit-scrollbar-track {
+            background: rgba(24, 24, 27, 0.95);
+          }
+
+          .dark .admin-sidebar-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(113, 113, 122, 0.9), rgba(82, 82, 91, 0.95));
+            border-radius: 9999px;
+            border: 2px solid rgba(24, 24, 27, 0.95);
+          }
+
+          .dark .admin-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, rgba(161, 161, 170, 0.95), rgba(113, 113, 122, 1));
+          }
+
+          .dark .admin-sidebar-scroll::-webkit-scrollbar-corner {
+            background: rgba(24, 24, 27, 0.95);
+          }
+        `,
+        }}
+      />
     </Sidebar>
   );
 }

@@ -70,14 +70,14 @@ export default function GeneratorForm({
             onValueChange={(v) => setMode(v as "topic" | "rewrite" | "youtube")}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-3 w-full h-10 p-1 bg-zinc-100 dark:bg-zinc-800/50 rounded-lg mb-4">
-              <TabsTrigger value="topic" className="flex items-center gap-2 rounded-md font-bold text-xs transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:shadow-sm">
+            <TabsList className="mb-4 grid h-10 w-full grid-cols-3 gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800/50">
+              <TabsTrigger value="topic" className="flex items-center justify-center gap-2 rounded-md px-2 font-bold text-xs transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-zinc-900">
                 <PenTool className="h-3 w-3" /> Topic
               </TabsTrigger>
-              <TabsTrigger value="rewrite" className="flex items-center gap-2 rounded-md font-bold text-xs transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:shadow-sm">
+              <TabsTrigger value="rewrite" className="flex items-center justify-center gap-2 rounded-md px-2 font-bold text-xs transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-zinc-900">
                 <RefreshCw className="h-3 w-3" /> Rewrite
               </TabsTrigger>
-              <TabsTrigger value="youtube" className="flex items-center gap-2 rounded-md font-bold text-xs text-red-600 transition-all hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 data-[state=active]:bg-red-50 data-[state=active]:text-red-700 data-[state=active]:shadow-sm dark:data-[state=active]:bg-red-950/40 dark:data-[state=active]:text-red-300">
+              <TabsTrigger value="youtube" className="flex items-center justify-center gap-2 rounded-md px-2 font-bold text-xs text-red-600 transition-all hover:text-red-700 data-[state=active]:bg-red-50 data-[state=active]:text-red-700 data-[state=active]:shadow-sm dark:text-red-400 dark:hover:text-red-300 dark:data-[state=active]:bg-red-950/40 dark:data-[state=active]:text-red-300">
                 <Video className="h-3 w-3" /> YouTube
               </TabsTrigger>
             </TabsList>

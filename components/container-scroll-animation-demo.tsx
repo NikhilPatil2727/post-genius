@@ -34,7 +34,7 @@ export default function HeroScrollDemo() {
             fill
             priority
             sizes="(max-width: 768px) 92vw, 1100px"
-            className="object-contain object-center"
+            className="object-cover object-center"
             draggable={false}
           />
         </div>

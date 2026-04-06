@@ -176,7 +176,7 @@ export function PricingSection({ pricing, primaryHref }: PricingSectionProps) {
               {plan.name === "Free" ? (
                 <Link
                   href={primaryHref}
-                  className="relative z-10 mt-auto inline-flex w-full items-center justify-center rounded-full border border-[#88a5ff] bg-white/70 px-6 py-4 text-lg font-semibold text-[#2947a8] transition-all duration-200 hover:bg-white dark:border-[#6c87d9] dark:bg-transparent dark:text-white dark:hover:bg-[#7b98ff]/10"
+                  className="relative z-10 mt-auto inline-flex w-full cursor-pointer items-center justify-center rounded-full border border-[#88a5ff] bg-white/70 px-6 py-4 text-lg font-semibold text-[#2947a8] transition-all duration-200 hover:bg-white dark:border-[#6c87d9] dark:bg-transparent dark:text-white dark:hover:bg-[#7b98ff]/10"
                 >
                   Get Started
                 </Link>
@@ -185,7 +185,7 @@ export function PricingSection({ pricing, primaryHref }: PricingSectionProps) {
                   type="button"
                   onClick={() => handleUnavailablePlan(plan.name)}
                   className={[
-                    "relative z-10 mt-auto inline-flex w-full items-center justify-center rounded-full border px-6 py-4 text-lg font-semibold transition-all duration-200",
+                    "relative z-10 mt-auto inline-flex w-full cursor-pointer items-center justify-center rounded-full border px-6 py-4 text-lg font-semibold transition-all duration-200",
                     plan.featured
                       ? "border-[#9db6ff]/55 bg-[linear-gradient(180deg,#9bb6ff_0%,#6f8dff_100%)] text-[#06111f] shadow-[0_0_0_2px_rgba(157,182,255,0.14),0_12px_36px_rgba(83,112,220,0.28)] hover:brightness-105"
                       : "border-[#88a5ff] bg-white/70 text-[#2947a8] hover:bg-white dark:border-[#6c87d9] dark:bg-transparent dark:text-white dark:hover:bg-[#7b98ff]/10",

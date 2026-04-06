@@ -244,7 +244,7 @@ export default async function HomePage() {
             <HomeHeroTypewriter />
           </div>
 
-          <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-slate-600 dark:text-[#a0a9bd] sm:text-base">
+          <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-slate-800 dark:text-[#d7def0] sm:text-base">
             Generate content for Instagram, Twitter, LinkedIn, and Peerlist in one click.
           </p>
 
