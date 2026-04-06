@@ -15,43 +15,37 @@ const people: Person[] = [
     id: 1,
     name: "Aarav Shah",
     designation: "Founder",
-    image:
-      "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=600&q=80",
+    image: "https://i.pravatar.cc/160?img=12",
   },
   {
     id: 2,
     name: "Mira Sen",
     designation: "Creator",
-    image:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=600&q=80",
+    image: "https://i.pravatar.cc/160?img=32",
   },
   {
     id: 3,
     name: "Rohan Malik",
     designation: "Marketing Lead",
-    image:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=600&q=80",
+    image: "https://i.pravatar.cc/160?img=15",
   },
   {
     id: 4,
     name: "Emily Davis",
     designation: "UX Designer",
-    image:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=600&q=80",
+    image: "https://i.pravatar.cc/160?img=47",
   },
   {
     id: 5,
     name: "Tyler Durden",
     designation: "Indie Hacker",
-    image:
-      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=600&q=80",
+    image: "https://i.pravatar.cc/160?img=59",
   },
   {
     id: 6,
     name: "Dora",
     designation: "Growth Operator",
-    image:
-      "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?auto=format&fit=crop&w=600&q=80",
+    image: "https://i.pravatar.cc/160?img=44",
   },
 ];
 

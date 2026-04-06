@@ -5,45 +5,39 @@ import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
 const people = [
   {
     id: 1,
-    name: "John Doe",
-    designation: "Software Engineer",
-    image:
-      "https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3387&q=80",
+    name: "Suyash Patil",
+    designation: ".NET Developer",
+    image: "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=Nova",
   },
   {
     id: 2,
-    name: "Robert Johnson",
-    designation: "Product Manager",
-    image:
-      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXZhdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60",
+    name: "ROHAN T",
+    designation: "software engineer",
+    image: "https://api.dicebear.com/9.x/shapes/svg?seed=Pixel",
   },
   {
     id: 3,
-    name: "Jane Smith",
-    designation: "Data Scientist",
-    image:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8YXZhdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60",
+    name: "Nilesh Kadam",
+    designation: "frontend developer",
+    image: "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=Orbit",
   },
   {
     id: 4,
-    name: "Emily Davis",
-    designation: "UX Designer",
-    image:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGF2YXRhcnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60",
+    name: "Abhishek Mule",
+    designation: "software engineer",
+    image: "https://api.dicebear.com/9.x/shapes/svg?seed=Comet",
   },
   {
     id: 5,
-    name: "Tyler Durden",
-    designation: "Soap Developer",
-    image:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3540&q=80",
+    name: "Siddhanth Keste",
+    designation: "software engineer",
+    image: "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=Flux",
   },
   {
     id: 6,
-    name: "Dora",
-    designation: "The Explorer",
-    image:
-      "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3534&q=80",
+    name: "Sachin Jalakoti",
+    designation: "AI engineer",
+    image: "https://api.dicebear.com/9.x/shapes/svg?seed=Prism",
   },
 ];
 
