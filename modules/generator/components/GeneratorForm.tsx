@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 
 import { CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button as StatefulButton } from "@/components/ui/stateful-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, PenTool, RefreshCw, Sparkles, Target, Zap } from "lucide-react";
+import { PenTool, RefreshCw, Video } from "lucide-react";
 import type { ContentRequest } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -34,27 +34,19 @@ export default function GeneratorForm({
   loading,
   initialData,
 }: GeneratorFormProps) {
-  const [mode, setMode] = useState<"topic" | "rewrite">("topic");
-  const [topic, setTopic] = useState("");
-  const [text, setText] = useState("");
-  const [tone, setTone] = useState("professional");
-  const [audience, setAudience] = useState("general");
-
-  useEffect(() => {
-    if (initialData) {
-      if (initialData.mode) setMode(initialData.mode);
-      if (initialData.topic) setTopic(initialData.topic);
-      if (initialData.text) setText(initialData.text);
-      if (initialData.tone) setTone(initialData.tone);
-      if (initialData.audience) setAudience(initialData.audience);
-    }
-  }, [initialData]);
+  const [mode, setMode] = useState<"topic" | "rewrite" | "youtube">(initialData?.mode ?? "topic");
+  const [topic, setTopic] = useState(initialData?.topic ?? "");
+  const [text, setText] = useState(initialData?.text ?? "");
+  const [youtubeUrl, setYoutubeUrl] = useState(initialData?.youtubeUrl ?? "");
+  const [tone, setTone] = useState(initialData?.tone ?? "professional");
+  const [audience, setAudience] = useState(initialData?.audience ?? "general");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const data: ContentRequest = { mode, tone, audience };
     if (mode === "topic") data.topic = topic;
-    else data.text = text;
+    else if (mode === "rewrite") data.text = text;
+    else data.youtubeUrl = youtubeUrl;
     onSubmit(data);
   };
 
@@ -75,15 +67,18 @@ export default function GeneratorForm({
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 form-scrollbar">
           <Tabs
             value={mode}
-            onValueChange={(v) => setMode(v as "topic" | "rewrite")}
+            onValueChange={(v) => setMode(v as "topic" | "rewrite" | "youtube")}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-2 w-full h-10 p-1 bg-zinc-100 dark:bg-zinc-800/50 rounded-lg mb-4">
-              <TabsTrigger value="topic" className="flex items-center gap-2 rounded-md font-bold text-xs transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:shadow-sm">
+            <TabsList className="mb-4 grid h-10 w-full grid-cols-3 gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800/50">
+              <TabsTrigger value="topic" className="flex items-center justify-center gap-2 rounded-md px-2 font-bold text-xs transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-zinc-900">
                 <PenTool className="h-3 w-3" /> Topic
               </TabsTrigger>
-              <TabsTrigger value="rewrite" className="flex items-center gap-2 rounded-md font-bold text-xs transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:shadow-sm">
+              <TabsTrigger value="rewrite" className="flex items-center justify-center gap-2 rounded-md px-2 font-bold text-xs transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-zinc-900">
                 <RefreshCw className="h-3 w-3" /> Rewrite
+              </TabsTrigger>
+              <TabsTrigger value="youtube" className="flex items-center justify-center gap-2 rounded-md px-2 font-bold text-xs text-red-600 transition-all hover:text-red-700 data-[state=active]:bg-red-50 data-[state=active]:text-red-700 data-[state=active]:shadow-sm dark:text-red-400 dark:hover:text-red-300 dark:data-[state=active]:bg-red-950/40 dark:data-[state=active]:text-red-300">
+                <Video className="h-3 w-3" /> YouTube
               </TabsTrigger>
             </TabsList>
 
@@ -118,6 +113,23 @@ export default function GeneratorForm({
                   required={mode === 'rewrite'}
                   disabled={loading}
                   className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus-visible:ring-primary shadow-inner resize-none leading-relaxed p-3"
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="youtube" className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-300">
+              <div className="space-y-2">
+                <Label htmlFor="youtubeUrl" className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                  YouTube Link
+                </Label>
+                <Input
+                  id="youtubeUrl"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  value={youtubeUrl}
+                  onChange={(e) => setYoutubeUrl(e.target.value)}
+                  required={mode === 'youtube'}
+                  disabled={loading}
+                  className="h-10 text-sm bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 rounded-lg focus-visible:ring-primary shadow-inner"
                 />
               </div>
             </TabsContent>
@@ -164,11 +176,11 @@ export default function GeneratorForm({
 
         {/* Bottom Generate button - flex-shrink: 0, padding 14px 18px, border-top */}
         <div className="flex-shrink-0 px-6 py-4 border-t border-border/40 bg-zinc-50/50 dark:bg-zinc-950/20 z-10 w-full transition-all">
-          <Button
+          <StatefulButton
             type="submit"
             className={cn(
-              "w-full h-9 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all active:scale-[0.97] group relative overflow-hidden",
-              "bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900 hover:opacity-90 cursor-pointer shadow-sm",
+              "w-full min-w-0 h-9 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all active:scale-[0.97] group relative overflow-hidden",
+              "bg-zinc-900 px-4 py-2 text-zinc-100 hover:opacity-90 hover:ring-0 dark:bg-zinc-100 dark:text-zinc-900 dark:ring-offset-zinc-950",
               loading ? "opacity-70 cursor-wait" : ""
             )}
             disabled={loading}
@@ -187,7 +199,7 @@ export default function GeneratorForm({
                 <span>Generate Content</span>
               )}
             </div>
-          </Button>
+          </StatefulButton>
         </div>
       </form>
       <style dangerouslySetInnerHTML={{

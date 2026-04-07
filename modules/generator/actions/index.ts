@@ -6,7 +6,12 @@ import { ContentRequest } from '@/types';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { Platform } from '@/lib/generated/prisma/client';
+import { Platform, Prisma } from '@/lib/generated/prisma/client';
+import { toUserFriendlyError } from '@/lib/error-utils';
+import {
+  consumeDailyPostGenerationLimit,
+  FREE_DAILY_LIMIT_EXCEEDED_MESSAGE,
+} from '@/lib/rate-limit';
 
 /**
  * A streaming Server Action for content generation.
@@ -14,10 +19,29 @@ import { Platform } from '@/lib/generated/prisma/client';
  * via a ReadableStream, optimized for high-speed content delivery.
  */
 export async function generateStreamAction(data: ContentRequest) {
-  const { mode, topic, text, tone, audience, apiKey } = data;
+  const { mode, topic, text, tone, audience } = data;
 
-  if (!apiKey) {
-    throw new Error('Gemini API key is required');
+  if (mode === 'youtube') {
+    throw new Error('YouTube generation uses a dedicated server action.');
+  }
+
+  const { userId: clerkId } = await auth();
+  if (!clerkId) {
+    throw new Error('Please sign in to generate content.');
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { clerkId },
+    select: { id: true },
+  });
+
+  if (!user) {
+    throw new Error('Your account is not ready yet. Please reload the homepage and try again.');
+  }
+
+  const rateLimit = await consumeDailyPostGenerationLimit(user.id);
+  if (!rateLimit.allowed) {
+    throw new Error(FREE_DAILY_LIMIT_EXCEEDED_MESSAGE);
   }
 
   const { readable, writable } = new TransformStream();
@@ -27,7 +51,7 @@ export async function generateStreamAction(data: ContentRequest) {
   // Execute streaming in a secondary context to prevent blocking
   (async () => {
     try {
-      const generator = streamGenerateContent(mode, apiKey, topic, text, tone, audience);
+      const generator = streamGenerateContent(mode, topic, text, tone, audience);
       for await (const chunk of generator) {
         if (chunk) {
           await writer.write(encoder.encode(chunk));
@@ -35,7 +59,10 @@ export async function generateStreamAction(data: ContentRequest) {
       }
     } catch (error) {
       console.error('Server Action Streaming Error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown generation error';
+      const errorMessage = toUserFriendlyError(
+        error,
+        'We could not generate your content right now. Please try again.'
+      );
       await writer.write(encoder.encode(`[[ERROR]] ${errorMessage}`));
     } finally {
       await writer.close();
@@ -59,10 +86,10 @@ export async function savePostAction(data: {
 }) {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
-    return { success: false, error: 'Unauthorized' };
+    return { success: false, error: 'Please sign in to save your post.' };
   }
   try {
-    // 2. Create the post and its variants in a single transaction
+    // Create the post and its variants in a single transaction
     const post = await prisma.post.create({
       data: {
         user: { connect: { clerkId } },
@@ -81,11 +108,18 @@ export async function savePostAction(data: {
         variants: true,
       },
     });
-    // Revalidate dashboard to show the new post
-    revalidatePath('/dashboard');
+    revalidatePath('/admin/generate');
+    revalidatePath('/admin');
     
     return { success: true, post };
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return {
+        success: false,
+        error: 'Your account is not ready yet. Please reload the homepage and try again.',
+      };
+    }
+
     console.error('Error saving post:', error);
     return { success: false, error: 'Failed to save generated content' };
   }
@@ -97,7 +131,7 @@ export async function savePostAction(data: {
 export async function getUserPostsAction() {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
-    return { success: false, error: 'Unauthorized' };
+    return { success: false, error: 'Please sign in to view your posts.' };
   }
   try {
     const posts = await prisma.post.findMany({
@@ -134,7 +168,7 @@ export async function getUserPostsAction() {
  */
 export async function deletePostAction(postId: string) {
   const { userId: clerkId } = await auth();
-  if (!clerkId) return { success: false, error: 'Unauthorized' };
+  if (!clerkId) return { success: false, error: 'Please sign in to delete this post.' };
   try {
     // Verify ownership and delete in one go
     const deleteResult = await prisma.post.deleteMany({
@@ -148,7 +182,8 @@ export async function deletePostAction(postId: string) {
       return { success: false, error: 'Post not found or access denied' };
     }
 
-    revalidatePath('/dashboard');
+    revalidatePath('/admin/generate');
+    revalidatePath('/admin');
     return { success: true };
   } catch (error) {
     console.error('Error deleting post:', error);
@@ -161,7 +196,7 @@ export async function deletePostAction(postId: string) {
  */
 export async function getPostByIdAction(postId: string) {
   const { userId: clerkId } = await auth();
-  if (!clerkId) return { success: false, error: 'Unauthorized' };
+  if (!clerkId) return { success: false, error: 'Please sign in to open this post.' };
   try {
     const post = await prisma.post.findFirst({
       where: { 

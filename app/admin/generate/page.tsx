@@ -3,13 +3,22 @@
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import GeneratorForm from '@/modules/generator/components/GeneratorForm';
 import { ContentDisplay } from '@/modules/generator/components/ContentDisplay';
-import { Key, AlertCircle, X } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import type { ContentResponse, ContentRequest } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateStreamAction, savePostAction, getPostByIdAction } from '@/modules/generator/actions';
+import { generateYouTubePostAction } from '@/modules/generator/actions/youtube';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { toUserFriendlyError } from '@/lib/error-utils';
+import { toast } from 'sonner';
+
+const CONTENT_PLATFORMS = ['linkedin', 'twitter', 'instagram', 'peerlist'] as const;
+type ContentPlatformKey = (typeof CONTENT_PLATFORMS)[number];
+const FREE_LIMIT_MESSAGE = 'Your free limit has been exceeded. Please try again later.';
+
+const isYouTubeUrl = (value?: string | null) =>
+  Boolean(value && /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)/i.test(value));
 
 function GeneratePageContent() {
   const [loading, setLoading] = useState(false);
@@ -21,14 +30,12 @@ function GeneratePageContent() {
   });
   const [hasGenerated, setHasGenerated] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [apiKey, setApiKey] = useState<string>('');
-  const [showApiKeyError, setShowApiKeyError] = useState(false);
   const [initialData, setInitialData] = useState<Partial<ContentRequest>>({});
   
   const router = useRouter();
   const searchParams = useSearchParams();
   const postId = searchParams.get('id');
+  const generatorFormKey = JSON.stringify(initialData);
 
   // Load post if ID is present in URL
   const loadPost = useCallback(async (id: string) => {
@@ -37,12 +44,14 @@ function GeneratePageContent() {
       const result = await getPostByIdAction(id);
       if (result.success && result.post) {
         const { topic, sourceText, tone, audience, variants } = result.post;
+        const isYoutubeSource = !topic && isYouTubeUrl(sourceText);
         
         // Update form data
         setInitialData({
-          mode: topic ? 'topic' : 'rewrite',
+          mode: topic ? 'topic' : isYoutubeSource ? 'youtube' : 'rewrite',
           topic: topic || '',
-          text: sourceText || '',
+          text: isYoutubeSource ? '' : sourceText || '',
+          youtubeUrl: isYoutubeSource ? sourceText || '' : '',
           tone: tone || 'professional',
           audience: audience || 'general'
         });
@@ -54,10 +63,10 @@ function GeneratePageContent() {
           peerlist: '',
         };
         
-        variants.forEach((v: any) => {
-          const platformKey = v.platform.toLowerCase() as keyof ContentResponse;
-          if (platformKey in newContent) {
-            (newContent as any)[platformKey] = v.content;
+        variants.forEach((v: { platform: string; content: string }) => {
+          const platformKey = v.platform.toLowerCase() as ContentPlatformKey;
+          if (CONTENT_PLATFORMS.includes(platformKey)) {
+            newContent[platformKey] = v.content;
           }
         });
         
@@ -65,11 +74,11 @@ function GeneratePageContent() {
         setHasGenerated(true);
         setError(null);
       } else {
-        setError(result.error || 'Failed to load post');
+        setError(result.error || 'We could not load this post.');
       }
     } catch (err) {
       console.error("Failed to load post:", err);
-      setError('An error occurred while loading the post');
+      setError(toUserFriendlyError(err, 'We could not load this post.'));
     } finally {
       setLoading(false);
     }
@@ -89,33 +98,16 @@ function GeneratePageContent() {
 
   useEffect(() => {
     if (postId) {
+      clearPage();
       loadPost(postId);
     } else {
       clearPage();
     }
   }, [postId, loadPost, clearPage]);
 
-  // Load API key from localStorage
-  useEffect(() => {
-    const savedKey = localStorage.getItem('gemini_api_key');
-    if (savedKey) setApiKey(savedKey);
-  }, []);
-
-  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newKey = e.target.value;
-    setApiKey(newKey);
-    localStorage.setItem('gemini_api_key', newKey);
-  };
-
   const handleGenerate = async (data: ContentRequest) => {
-    if (!apiKey || apiKey.trim() === '') {
-      setShowApiKeyError(true);
-      return;
-    }
-
     setLoading(true);
     setError(null);
-    setShowApiKeyError(false);
     setHasGenerated(true);
 
     // Reset content for new generation
@@ -127,13 +119,6 @@ function GeneratePageContent() {
     });
 
     try {
-      // Call the Server Action directly
-      const stream = await generateStreamAction({ ...data, apiKey });
-
-      const reader = stream.getReader();
-      const decoder = new TextDecoder();
-
-      let accumulatedText = '';
       const finalContent: ContentResponse = {
         linkedin: '',
         twitter: '',
@@ -141,45 +126,73 @@ function GeneratePageContent() {
         peerlist: '',
       };
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      if (data.mode === 'youtube') {
+        const result = await generateYouTubePostAction({
+          youtubeUrl: data.youtubeUrl,
+          tone: data.tone,
+          audience: data.audience,
+        });
 
-        const chunk = decoder.decode(value, { stream: true });
-        accumulatedText += chunk;
-
-        // Check for error marker from server action
-        if (accumulatedText.includes('[[ERROR]]')) {
-          throw new Error(accumulatedText.split('[[ERROR]]')[1].trim());
+        if (!result.success) {
+          throw new Error(result.error || 'We could not process this YouTube video.');
         }
 
-        // Extract content between markers using Regex
-        const contentMap: Partial<ContentResponse> = {};
+        Object.assign(finalContent, result.content);
+        setContent(result.content);
+      } else {
+        // Call the Server Action directly
+        const stream = await generateStreamAction(data);
 
-        const linkedinMatch = accumulatedText.match(/\[\[LINKEDIN\]\]([\s\S]*?)(?=\[\[|$)/);
-        const twitterMatch = accumulatedText.match(/\[\[TWITTER\]\]([\s\S]*?)(?=\[\[|$)/);
-        const instagramMatch = accumulatedText.match(/\[\[INSTAGRAM\]\]([\s\S]*?)(?=\[\[|$)/);
-        const peerlistMatch = accumulatedText.match(/\[\[PEERLIST\]\]([\s\S]*?)(?=\[\[|$)/);
+        const reader = stream.getReader();
+        const decoder = new TextDecoder();
 
-        if (linkedinMatch) {
-          contentMap.linkedin = linkedinMatch[1].trim();
-          finalContent.linkedin = contentMap.linkedin;
-        }
-        if (twitterMatch) {
-          contentMap.twitter = twitterMatch[1].trim();
-          finalContent.twitter = contentMap.twitter;
-        }
-        if (instagramMatch) {
-          contentMap.instagram = instagramMatch[1].trim();
-          finalContent.instagram = contentMap.instagram;
-        }
-        if (peerlistMatch) {
-          contentMap.peerlist = peerlistMatch[1].trim();
-          finalContent.peerlist = contentMap.peerlist;
-        }
+        let accumulatedText = '';
 
-        if (Object.keys(contentMap).length > 0) {
-          setContent(prev => ({ ...prev, ...contentMap }));
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          accumulatedText += chunk;
+
+          // Check for error marker from server action
+          if (accumulatedText.includes('[[ERROR]]')) {
+            throw new Error(
+              toUserFriendlyError(
+                accumulatedText.split('[[ERROR]]')[1].trim(),
+                'We could not generate your content right now. Please try again.'
+              )
+            );
+          }
+
+          // Extract content between markers using Regex
+          const contentMap: Partial<ContentResponse> = {};
+
+          const linkedinMatch = accumulatedText.match(/\[\[LINKEDIN\]\]([\s\S]*?)(?=\[\[|$)/);
+          const twitterMatch = accumulatedText.match(/\[\[TWITTER\]\]([\s\S]*?)(?=\[\[|$)/);
+          const instagramMatch = accumulatedText.match(/\[\[INSTAGRAM\]\]([\s\S]*?)(?=\[\[|$)/);
+          const peerlistMatch = accumulatedText.match(/\[\[PEERLIST\]\]([\s\S]*?)(?=\[\[|$)/);
+
+          if (linkedinMatch) {
+            contentMap.linkedin = linkedinMatch[1].trim();
+            finalContent.linkedin = contentMap.linkedin;
+          }
+          if (twitterMatch) {
+            contentMap.twitter = twitterMatch[1].trim();
+            finalContent.twitter = contentMap.twitter;
+          }
+          if (instagramMatch) {
+            contentMap.instagram = instagramMatch[1].trim();
+            finalContent.instagram = contentMap.instagram;
+          }
+          if (peerlistMatch) {
+            contentMap.peerlist = peerlistMatch[1].trim();
+            finalContent.peerlist = contentMap.peerlist;
+          }
+
+          if (Object.keys(contentMap).length > 0) {
+            setContent(prev => ({ ...prev, ...contentMap }));
+          }
         }
       }
 
@@ -193,8 +206,8 @@ function GeneratePageContent() {
 
       if (variants.length > 0) {
         const result = await savePostAction({
-          topic: data.topic,
-          sourceText: data.text,
+          topic: data.mode === 'topic' ? data.topic : undefined,
+          sourceText: data.mode === 'youtube' ? data.youtubeUrl : data.text,
           tone: data.tone,
           audience: data.audience,
           variants
@@ -203,12 +216,28 @@ function GeneratePageContent() {
         if (result.success && result.post) {
           // Dispatch event with the new post data for the sidebar to refresh optimistically
           window.dispatchEvent(new CustomEvent('post-saved', { detail: result.post }));
+          router.replace(`/admin/generate?id=${result.post.id}`);
+          router.refresh();
+        } else if (!result.success) {
+          setError(result.error || 'Your content was generated, but we could not save it.');
         }
+      } else {
+        setError('No content was generated. Please try a clearer topic or rewrite input.');
       }
 
     } catch (err) {
       console.error('Generation process error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred during generation');
+      const message = toUserFriendlyError(
+        err,
+        'We could not generate your content right now. Please try again.'
+      );
+
+      if (message === FREE_LIMIT_MESSAGE) {
+        toast.error(message);
+        setError(null);
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -242,18 +271,6 @@ function GeneratePageContent() {
           </div>
 
           <div className="flex items-center gap-3 w-full lg:w-auto">
-            <div className="relative w-full lg:w-72 group">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none transition-colors group-focus-within:text-primary">
-                <Key className="h-4 w-4 text-zinc-400" />
-              </div>
-              <Input
-                type="password"
-                placeholder="Gemini API Key..."
-                value={apiKey}
-                onChange={handleApiKeyChange}
-                className="pl-9 h-10 bg-white dark:bg-zinc-950/50 border-zinc-200 dark:border-zinc-800 rounded-xl focus-visible:ring-primary shadow-sm text-sm transition-all focus-visible:shadow-md"
-              />
-            </div>
             {hasGenerated && !loading && (
               <Button 
                 variant="ghost" 
@@ -268,34 +285,6 @@ function GeneratePageContent() {
         </div>
       </motion.div>
 
-      <AnimatePresence>
-        {showApiKeyError && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/50 p-6 rounded-2xl flex items-start gap-4 shadow-sm mb-6">
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg text-amber-600">
-                <AlertCircle className="h-6 w-6" />
-              </div>
-              <div className="flex-1">
-                <h4 className="text-base font-bold text-amber-900 dark:text-amber-100 mb-1">
-                  Gemini API Key Required
-                </h4>
-                <p className="text-sm text-amber-700 dark:text-amber-300 leading-relaxed">
-                  To stream high-quality content, we need your free API key. Get it in 2 seconds at <a href="https://aistudio.google.com/" target="_blank" rel="noreferrer" className="underline font-bold decoration-amber-500/50 hover:decoration-amber-500">Google AI Studio</a>.
-                </p>
-              </div>
-              <Button variant="ghost" size="icon" onClick={() => setShowApiKeyError(false)} className="text-amber-500 shrink-0">
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -303,7 +292,7 @@ function GeneratePageContent() {
           transition={{ delay: 0.1 }}
           className="lg:col-span-4 lg:sticky lg:top-8"
         >
-          <GeneratorForm onSubmit={handleGenerate} loading={loading} initialData={initialData} />
+          <GeneratorForm key={generatorFormKey} onSubmit={handleGenerate} loading={loading} initialData={initialData} />
 
           <AnimatePresence>
             {error && (
@@ -317,7 +306,7 @@ function GeneratePageContent() {
                   <AlertCircle className="h-5 w-5 text-red-600" />
                   <p className="text-base font-bold text-red-600">Action Failed</p>
                 </div>
-                <p className="text-sm text-red-500/90 dark:text-red-400 mb-4 font-mono break-words leading-relaxed">
+                <p className="text-sm text-red-500/90 dark:text-red-400 mb-4 break-words leading-relaxed">
                   {error}
                 </p>
                 <Button
@@ -342,47 +331,56 @@ function GeneratePageContent() {
           {hasGenerated ? (
             <ContentDisplay content={content} isStreaming={loading} />
           ) : (
-            <div className="h-full min-h-[500px] flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] bg-zinc-50/30 dark:bg-zinc-950/20 p-12 text-center group relative overflow-hidden">
+            <div className="min-h-[500px] rounded-[2rem] border border-zinc-200/70 bg-white/80 p-8 shadow-sm dark:border-zinc-800/70 dark:bg-zinc-950/30">
               {loading ? (
-                <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
-                    <div className="h-16 w-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-                  </div>
-                  <div className="space-y-3">
-                    <h3 className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 font-serif">Retrieving Post</h3>
-                    <p className="text-zinc-500 dark:text-zinc-400 text-[10px] font-black tracking-[0.3em] uppercase opacity-70">Syncing with history...</p>
+                <div className="flex h-full min-h-[420px] flex-col items-center justify-center gap-5">
+                  <div className="h-12 w-12 rounded-full border-2 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-zinc-100 animate-spin" />
+                  <div className="space-y-2 text-center">
+                    <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">Preparing drafts</h3>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">Generating content for your selected platforms.</p>
                   </div>
                 </div>
               ) : (
-                <>
-                  <div className="space-y-8 max-w-md mx-auto text-center">
-                    <div className="space-y-4">
-                      <h3 className="text-4xl md:text-6xl font-extrabold tracking-tighter text-zinc-900 dark:text-zinc-50 font-serif">
-                        Ready to Create
-                      </h3>
-                      <div className="h-1 w-16 bg-zinc-900 dark:bg-zinc-50 mx-auto rounded-full" />
+                <div className="flex h-full min-h-[420px] flex-col justify-between">
+                  <div className="max-w-2xl space-y-4">
+                    <div className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
+                      Editorial workspace
                     </div>
-                    <p className="text-zinc-500 dark:text-zinc-400 text-lg leading-relaxed font-medium">
-                      Your platform-optimized narratives will appear here. Start by defining your topic or pasting a draft on the left.
-                    </p>
+                    <div className="space-y-3">
+                      <h3 className="text-2xl font-medium tracking-tight text-zinc-900 dark:text-zinc-100">
+                        Start with one clear idea
+                      </h3>
+                      <p className="max-w-xl text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                        Add a topic or paste a draft on the left. Your generated content will appear here in a clean review area where you can edit, check length, and copy each platform version.
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="mt-12 flex gap-8">
-                    <div className="flex flex-col items-center gap-2 group/platform cursor-default">
-                      <div className="h-1 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 group-hover/platform:bg-blue-500 transition-all duration-300" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 group-hover/platform:text-zinc-900 dark:group-hover/platform:text-zinc-100 transition-colors">LinkedIn</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-2 group/platform cursor-default">
-                      <div className="h-1 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 group-hover/platform:bg-zinc-900 dark:group-hover/platform:bg-white transition-all duration-300" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 group-hover/platform:text-zinc-900 dark:group-hover/platform:text-zinc-100 transition-colors">X / Twitter</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-2 group/platform cursor-default">
-                      <div className="h-1 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 group-hover/platform:bg-pink-500 transition-all duration-300" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 group-hover/platform:text-zinc-900 dark:group-hover/platform:text-zinc-100 transition-colors">Instagram</span>
-                    </div>
+                  <div className="grid gap-4 pt-8 md:grid-cols-3">
+                    {[
+                      {
+                        title: "Create",
+                        description: "Generate first drafts for LinkedIn, X, Instagram, and Peerlist from one input.",
+                      },
+                      {
+                        title: "Review",
+                        description: "Read each version in a focused layout designed for quick checking and revision.",
+                      },
+                      {
+                        title: "Refine",
+                        description: "Use the inline editor to adjust tone, structure, and formatting before you publish.",
+                      },
+                    ].map((item) => (
+                      <div
+                        key={item.title}
+                        className="rounded-2xl border border-zinc-200/70 bg-zinc-50/70 p-5 dark:border-zinc-800/70 dark:bg-zinc-900/40"
+                      >
+                        <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{item.title}</h4>
+                        <p className="mt-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">{item.description}</p>
+                      </div>
+                    ))}
                   </div>
-                </>
+                </div>
               )}
             </div>
           )}

@@ -32,6 +32,7 @@ model User {
 
   // Relations: Deleting a User will delete all their generated posts
   posts     Post[]
+  rateLimitCounters RateLimitCounter[]
 }
 
 model Post {
@@ -62,6 +63,23 @@ model PostVariant {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model RateLimitCounter {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key             String
+  windowStart     DateTime
+  windowEnd       DateTime
+  currentBucket   Int
+  previousBucket  Int      @default(0)
+  lastRequestAt   DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, key, windowStart, windowEnd])
+  @@index([userId, key, windowEnd])
 }
 
 enum Platform {

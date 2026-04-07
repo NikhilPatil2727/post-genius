@@ -1,6 +1,5 @@
 "use client";
 import {
-  Wand2,
   Trash2,
   Clock,
   RotateCw,
@@ -20,13 +19,23 @@ import {
 } from "@/components/ui/sidebar";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { getUserPostsAction, deletePostAction } from "@/modules/generator/actions";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { toUserFriendlyError } from "@/lib/error-utils";
+import { cn } from "@/lib/utils";
+import { SparklesText } from "@/components/ui/sparkles-text";
 
-// Main navigation items
+type SidebarPost = {
+  id: string;
+  topic: string | null;
+  sourceText: string | null;
+  createdAt: string | Date;
+  variants?: Array<{ platform: string }>;
+};
+
 const mainNavItems = [
   {
     title: "Generate",
@@ -36,7 +45,9 @@ const mainNavItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const [posts, setPosts] = useState<any[]>([]);
+  const searchParams = useSearchParams();
+  const currentPostId = searchParams.get("id");
+  const [posts, setPosts] = useState<SidebarPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchPosts = useCallback(async () => {
@@ -45,9 +56,12 @@ export function AppSidebar() {
       const result = await getUserPostsAction();
       if (result.success && result.posts) {
         setPosts(result.posts);
+      } else if (!result.success) {
+        toast.error(result.error || "We could not load your recent posts.");
       }
     } catch (error) {
       console.error("Failed to fetch posts:", error);
+      toast.error(toUserFriendlyError(error, "We could not load your recent posts."));
     } finally {
       setLoading(false);
     }
@@ -56,26 +70,23 @@ export function AppSidebar() {
   useEffect(() => {
     fetchPosts();
 
-    // Listen for custom event when a new post is saved
-    const handlePostSaved = (event: any) => {
-      const newPost = event.detail;
+    const handlePostSaved = (event: Event) => {
+      const newPost = (event as CustomEvent<SidebarPost | undefined>).detail;
       if (newPost) {
-        // Optimistically add the new post to the top of history
         setPosts(prev => {
           const exists = prev.some(p => p.id === newPost.id);
           if (exists) return prev;
           return [newPost, ...prev];
         });
       } else {
-        // Fallback if no detail provided
         fetchPosts();
       }
     };
 
-    window.addEventListener('post-saved', handlePostSaved as any);
+    window.addEventListener('post-saved', handlePostSaved);
 
     return () => {
-      window.removeEventListener('post-saved', handlePostSaved as any);
+      window.removeEventListener('post-saved', handlePostSaved);
     };
   }, [fetchPosts]);
 
@@ -91,25 +102,29 @@ export function AppSidebar() {
         toast.error(result.error || "Failed to delete post");
       }
     } catch (error) {
-      toast.error("An error occurred");
+      toast.error(toUserFriendlyError(error, "We could not delete this post."));
     }
   };
 
   return (
-    <Sidebar>
+    <Sidebar className="[&_[data-sidebar=sidebar]]:bg-background [&_[data-sidebar=sidebar]]:text-foreground [&_[data-slot=sidebar-gap]]:bg-transparent">
       <SidebarHeader>
         <Link href={"/"} className="flex flex-col gap-0 items-start p-4 hover:opacity-80 transition-opacity">
-          <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white leading-none">
+          <SparklesText
+            sparklesCount={7}
+            colors={{ first: "#2563eb", second: "#6f8dff" }}
+            className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white leading-none"
+          >
             Post<span className="text-blue-600">Bloom</span>
-          </h1>
+          </SparklesText>
           <span className="text-[8px] uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 font-black mt-1.5">
             Editorial
           </span>
         </Link>
-        <SidebarSeparator />
+        <SidebarSeparator className="bg-border" />
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="admin-sidebar-scroll">
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 text-xs font-bold uppercase tracking-widest text-zinc-400 mb-2">Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -120,7 +135,11 @@ export function AppSidebar() {
                     asChild
                     size={"lg"}
                     isActive={pathname === item.url}
-                    className={`rounded-xl transition-all ${pathname === item.url ? 'bg-primary/10 text-primary shadow-sm' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}
+                    className={`rounded-xl transition-all ${
+                      pathname === item.url
+                        ? 'bg-card text-foreground shadow-sm'
+                        : 'hover:bg-card/80'
+                    }`}
                   >
                     <Link href={item.url}>
                       <span className="font-bold text-[15px]">
@@ -134,20 +153,20 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarSeparator className="my-2" />
+        <SidebarSeparator className="my-2 bg-border" />
 
         <SidebarGroup className="flex-1 flex flex-col">
           <SidebarGroupLabel className="px-4 flex justify-between items-center text-xs font-bold uppercase tracking-widest text-zinc-400 mb-3">
             <span>Recent Creations</span>
             <button
               onClick={fetchPosts}
-              className="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors group"
+              className="p-1.5 hover:bg-card/80 rounded-lg transition-colors group"
               title="Refresh History"
             >
               <RotateCw className={`size-3.5 text-zinc-400 group-hover:text-primary transition-all ${loading ? 'animate-spin' : ''}`} />
             </button>
           </SidebarGroupLabel>
-          <SidebarGroupContent className="flex-1 overflow-hidden">
+          <SidebarGroupContent className="min-h-0 flex-1 overflow-hidden">
             <SidebarMenu className="px-2 space-y-1">
               {loading && posts.length === 0 ? (
                 <div className="px-4 py-8 flex flex-col items-center gap-3 opacity-50">
@@ -155,23 +174,32 @@ export function AppSidebar() {
                   <span className="text-[10px] font-bold tracking-widest uppercase">Loading Posts...</span>
                 </div>
               ) : posts.length === 0 ? (
-                <div className="px-6 py-12 text-center rounded-2xl border-2 border-dashed border-zinc-100 dark:border-zinc-800/50">
+                <div className="px-6 py-12 text-center rounded-2xl border-2 border-dashed border-border">
                   <FileText className="size-8 text-zinc-200 dark:text-zinc-800 mx-auto mb-3" />
                   <p className="text-[11px] font-bold text-zinc-400 leading-tight">
                     No posts yet.<br />Your history will appear here.
                   </p>
                 </div>
               ) : (
-                <div className="space-y-1 max-h-[calc(100vh-320px)] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-200 dark:scroll-thumb-zinc-800">
+                <div className="min-w-0 space-y-1 pr-1">
                   {posts.map((post) => (
                     <SidebarMenuItem key={post.id} className="group relative list-none">
                       <SidebarMenuButton
                         asChild
-                        className="pr-10 h-auto py-3 rounded-xl border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 hover:bg-white dark:hover:bg-zinc-900 transition-all shadow-none hover:shadow-sm"
+                        isActive={currentPostId === post.id}
+                        className={cn(
+                          "pr-10 h-auto py-3 rounded-xl border border-transparent transition-all shadow-none hover:shadow-sm",
+                          currentPostId === post.id 
+                            ? "bg-card border-border text-foreground shadow-sm" 
+                            : "hover:border-border hover:bg-card/80"
+                        )}
                       >
-                        <Link href={`/admin/generate?id=${post.id}`}>
+                        <Link href={`/admin/generate?id=${post.id}`} scroll={false}>
                           <div className="flex flex-col items-start gap-1 w-full truncate">
-                            <span className="truncate w-full font-bold text-[13px] text-zinc-700 dark:text-zinc-200">
+                            <span className={cn(
+                              "truncate w-full font-bold text-[13px]",
+                              currentPostId === post.id ? "text-primary" : "text-zinc-700 dark:text-zinc-200"
+                            )}>
                               {post.topic || (post.sourceText ? post.sourceText.slice(0, 40) : "Draft Creation")}
                             </span>
                             <div className="flex items-center gap-2">
@@ -180,8 +208,8 @@ export function AppSidebar() {
                                 {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
                               </span>
                               <div className="flex gap-1">
-                                {post.variants?.map((v: any, i: number) => (
-                                  <div key={i} className="h-1 w-1 rounded-full bg-primary/40" />
+                                {post.variants?.map((variant, index) => (
+                                  <div key={`${post.id}-${variant.platform}-${index}`} className="h-1 w-1 rounded-full bg-muted-foreground/60" />
                                 ))}
                               </div>
                             </div>
@@ -202,6 +230,37 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+          .dark .admin-sidebar-scroll {
+            scrollbar-color: rgba(107, 114, 128, 0.7) rgba(24, 24, 27, 0.95);
+          }
+
+          .dark .admin-sidebar-scroll::-webkit-scrollbar {
+            width: 10px;
+          }
+
+          .dark .admin-sidebar-scroll::-webkit-scrollbar-track {
+            background: rgba(24, 24, 27, 0.95);
+          }
+
+          .dark .admin-sidebar-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(113, 113, 122, 0.9), rgba(82, 82, 91, 0.95));
+            border-radius: 9999px;
+            border: 2px solid rgba(24, 24, 27, 0.95);
+          }
+
+          .dark .admin-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, rgba(161, 161, 170, 0.95), rgba(113, 113, 122, 1));
+          }
+
+          .dark .admin-sidebar-scroll::-webkit-scrollbar-corner {
+            background: rgba(24, 24, 27, 0.95);
+          }
+        `,
+        }}
+      />
     </Sidebar>
   );
 }

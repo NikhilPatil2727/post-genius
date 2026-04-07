@@ -1,17 +1,29 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Copy, Check, Info, LayoutPanelLeft, Download, Pencil, Save, X,
-  Bold, Italic, Strikethrough, Underline, List, ListOrdered, Eraser 
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Bold,
+  Eraser,
+  Heart,
+  Italic,
+  List,
+  ListOrdered,
+  MessageCircle,
+  Repeat2,
+  Send,
+  SmilePlus,
+  Strikethrough,
+  Underline,
 } from 'lucide-react';
+import { FaInstagram, FaLinkedin, FaXTwitter } from 'react-icons/fa6';
+import { SiPeerlist } from 'react-icons/si';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { FormattedText } from './FormattedText';
 import type { ContentResponse, Platform } from '@/types';
-import { FaLinkedin, FaXTwitter, FaInstagram } from "react-icons/fa6";
-import { SiPeerlist } from "react-icons/si";
-import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface ContentDisplayProps {
@@ -19,248 +31,183 @@ interface ContentDisplayProps {
   isStreaming?: boolean;
 }
 
-const PLATFORM_CONFIG: Record<string, {
-  name: string;
-  icon: React.ReactNode;
-  color: string;
-  brand: string;
-  bg: string;
-  border: string;
-  accent: string;
-  characterLimit?: number;
-}> = {
+const PLATFORM_CONFIG: Record<
+  Platform,
+  {
+    name: string;
+    icon: React.ReactNode;
+    characterLimit?: number;
+    brandClass: string;
+    softClass: string;
+  }
+> = {
   linkedin: {
     name: 'LinkedIn',
-    icon: <FaLinkedin className="h-4 w-4" />,
-    color: "text-[#0077B5]",
-    brand: "#0077B5",
-    bg: "bg-[#0077B5]/10 dark:bg-[#0077B5]/20",
-    border: "border-[#0077B5]/30 dark:border-[#0077B5]/40",
-    accent: "bg-[#0077B5]",
-    characterLimit: 3000
+    icon: <FaLinkedin className="h-4 w-4 text-[#0A66C2]" />,
+    characterLimit: 3000,
+    brandClass: 'border-[#0A66C2]/20 bg-[#0A66C2]/10 text-[#0A66C2]',
+    softClass: 'from-[#0A66C2]/6 to-[#0A66C2]/0 dark:from-[#0A66C2]/15 dark:to-transparent',
   },
   twitter: {
-    name: 'Twitter',
-    icon: <FaXTwitter className="h-4 w-4" />,
-    color: "text-slate-900 dark:text-slate-100",
-    brand: "#000000",
-    bg: "bg-black/5 dark:bg-white/10",
-    border: "border-black/20 dark:border-white/20",
-    accent: "bg-black dark:bg-white",
-    characterLimit: 280
+    name: 'X',
+    icon: <FaXTwitter className="h-4 w-4 text-[#111111] dark:text-white" />,
+    characterLimit: 280,
+    brandClass: 'border-zinc-400/30 bg-zinc-500/10 text-zinc-700 dark:text-zinc-200',
+    softClass: 'from-zinc-500/8 to-transparent dark:from-zinc-400/15 dark:to-transparent',
   },
   instagram: {
     name: 'Instagram',
-    icon: <FaInstagram className="h-4 w-4" />,
-    color: "text-[#E4405F]",
-    brand: "#E4405F",
-    bg: "bg-pink-50/50 dark:bg-pink-900/10",
-    border: "border-pink-200/50 dark:border-pink-800/50",
-    accent: "bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888]",
-    characterLimit: 2200
+    icon: <FaInstagram className="h-4 w-4 text-[#E4405F]" />,
+    characterLimit: 2200,
+    brandClass: 'border-[#E4405F]/20 bg-[#E4405F]/10 text-[#E4405F]',
+    softClass: 'from-[#F77737]/10 via-[#E4405F]/8 to-[#833AB4]/5 dark:from-[#F77737]/20 dark:via-[#E4405F]/15 dark:to-[#833AB4]/10',
   },
   peerlist: {
     name: 'Peerlist',
-    icon: <SiPeerlist className="h-4 w-4" />,
-    color: "text-[#00AA45]",
-    brand: "#00AA45",
-    bg: "bg-[#00AA45]/10 dark:bg-[#00AA45]/20",
-    border: "border-[#00AA45]/30 dark:border-[#00AA45]/40",
-    accent: "bg-[#00AA45]",
+    icon: <SiPeerlist className="h-4 w-4 text-[#00AA45]" />,
     characterLimit: 2000,
+    brandClass: 'border-[#00AA45]/20 bg-[#00AA45]/10 text-[#00AA45]',
+    softClass: 'from-[#00AA45]/8 to-transparent dark:from-[#00AA45]/18 dark:to-transparent',
   },
 };
 
-// --- UTILITIES ---
-
-const stripMarkdown = (text: string): string => {
-  return text
-    .replace(/\*\*([\s\S]*?)\*\*/g, '$1')   // bold
-    .replace(/\*([\s\S]*?)\*/g, '$1')        // italic  
-    .replace(/~~([\s\S]*?)~~/g, '$1')        // strikethrough
-    .replace(/<u>([\s\S]*?)<\/u>/gi, '$1')   // underline html tag
-    .replace(/^#{1,3}\s/gm, '')            // headings
-    .replace(/^[\*\-]\s+/gm, '')           // bullet * or - prefix
-    .replace(/^\d+\.\s/gm, '')             // numbered list prefix
-    .replace(/^•\s/gm, '')                 // bullet • prefix
-    .replace(/<[^>]+>/g, '')               // any remaining html tags
-    .replace(/\n{3,}/g, '\n\n')            // collapse excess blank lines
+const stripMarkdown = (text: string): string =>
+  text
+    .replace(/\*\*([\s\S]*?)\*\*/g, '$1')
+    .replace(/\*([\s\S]*?)\*/g, '$1')
+    .replace(/~~([\s\S]*?)~~/g, '$1')
+    .replace(/<u>([\s\S]*?)<\/u>/gi, '$1')
+    .replace(/^#{1,3}\s/gm, '')
+    .replace(/^[\*\-]\s+/gm, '')
+    .replace(/^\d+\.\s/gm, '')
+    .replace(/^•\s/gm, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\n{3,}/g, '\n\n')
     .trim();
-};
 
-const markdownToHtml = (markdown: string): string => {
-  let html = markdown
-    // Bold: **text** or __text__
+const markdownToHtml = (markdown: string): string =>
+  markdown
     .replace(/\*\*([\s\S]*?)\*\*/g, '<strong>$1</strong>')
     .replace(/__([\s\S]*?)__/g, '<strong>$1</strong>')
-    // Italic: *text* or _text_
     .replace(/\*([\s\S]*?)\*/g, '<em>$1</em>')
     .replace(/_([\s\S]*?)_/g, '<em>$1</em>')
-    // Strikethrough: ~~text~~
     .replace(/~~([\s\S]*?)~~/g, '<del>$1</del>')
-    // Underline: <u>text</u>
     .replace(/<u>([\s\S]*?)<\/u>/gi, '<u>$1</u>')
-    // Links: [text](url) -> text
     .replace(/\[([\s\S]*?)\]\(.*?\)/g, '$1')
-    // Images: ![alt](url) -> ""
     .replace(/!\[.*?\]\(.*?\)/g, '')
-    // Headings: # text -> text
-    .replace(/^#{1,6}\s+/gm, '') 
-    // Lists: * or - or • -> •
-    .replace(/^\s*[-*•]\s+/gm, '• ') 
-    // Line breaks
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^\s*[-*•]\s+/gm, '• ')
     .replace(/\n/g, '<br>');
-  
-  return html;
-};
 
-const htmlToMarkdown = (html: string): string => {
-  let text = html;
-  // Convert tags to markdown symbols
-  text = text.replace(/<strong>([\s\S]*?)<\/strong>/gi, '**$1**');
-  text = text.replace(/<b>([\s\S]*?)<\/b>/gi, '**$1**');
-  text = text.replace(/<em>([\s\S]*?)<\/em>/gi, '*$1*');
-  text = text.replace(/<i>([\s\S]*?)<\/i>/gi, '*$1*');
-  text = text.replace(/<del>([\s\S]*?)<\/del>/gi, '~~$1~~');
-  text = text.replace(/<s>([\s\S]*?)<\/s>/gi, '~~$1~~');
-  text = text.replace(/<strike>([\s\S]*?)<\/strike>/gi, '~~$1~~');
-  text = text.replace(/<u>([\s\S]*?)<\/u>/gi, '<u>$1</u>');
-  
-  // Handle list items
-  text = text.replace(/<li>([\s\S]*?)<\/li>/gi, '• $1\n');
-  text = text.replace(/<\/li>/gi, '');
-  text = text.replace(/<ul>/gi, '');
-  text = text.replace(/<\/ul>/gi, '\n');
-  text = text.replace(/<ol>/gi, '');
-  text = text.replace(/<\/ol>/gi, '\n');
-  
-  // Handle block elements and breaks
-  text = text.replace(/<br\s*\/?>/gi, '\n');
-  text = text.replace(/<p>([\s\S]*?)<\/p>/gi, '$1\n');
-  text = text.replace(/<\/div><div>/gi, '\n');
-  text = text.replace(/<div>/gi, '');
-  text = text.replace(/<\/div>/gi, '\n');
-  
-  // Strip remaining tags
-  text = text.replace(/<[^>]*>/g, '');
-  
-  return text.trim();
-};
+const htmlToMarkdown = (html: string): string =>
+  html
+    .replace(/<strong>([\s\S]*?)<\/strong>/gi, '**$1**')
+    .replace(/<b>([\s\S]*?)<\/b>/gi, '**$1**')
+    .replace(/<em>([\s\S]*?)<\/em>/gi, '*$1*')
+    .replace(/<i>([\s\S]*?)<\/i>/gi, '*$1*')
+    .replace(/<del>([\s\S]*?)<\/del>/gi, '~~$1~~')
+    .replace(/<s>([\s\S]*?)<\/s>/gi, '~~$1~~')
+    .replace(/<strike>([\s\S]*?)<\/strike>/gi, '~~$1~~')
+    .replace(/<u>([\s\S]*?)<\/u>/gi, '<u>$1</u>')
+    .replace(/<li>([\s\S]*?)<\/li>/gi, '• $1\n')
+    .replace(/<\/li>/gi, '')
+    .replace(/<ul>/gi, '')
+    .replace(/<\/ul>/gi, '\n')
+    .replace(/<ol>/gi, '')
+    .replace(/<\/ol>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<p>([\s\S]*?)<\/p>/gi, '$1\n')
+    .replace(/<\/div><div>/gi, '\n')
+    .replace(/<div>/gi, '')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<[^>]*>/g, '')
+    .trim();
 
-// --- HOOKS ---
-
-function useTypingEffect(rawContent: string, isActive: boolean, isStreaming: boolean) {
-  const [displayedContent, setDisplayedContent] = useState('');
-  const bufferRef = useRef('');
-  const lastRawRef = useRef('');
+function useTypingEffect(rawContent: string, isStreaming: boolean) {
+  const [displayedContent, setDisplayedContent] = useState(rawContent);
+  const targetRef = useRef(rawContent);
   const frameRef = useRef<number | null>(null);
-  const isActiveRef = useRef(isActive);
-  const hasStartedRef = useRef(false);
 
   useEffect(() => {
-    isActiveRef.current = isActive;
-  }, [isActive]);
+    targetRef.current = rawContent;
 
-  useEffect(() => {
-    if (rawContent.length > lastRawRef.current.length) {
-      const newChars = rawContent.slice(lastRawRef.current.length);
-      bufferRef.current += newChars;
-      lastRawRef.current = rawContent;
+    if (!isStreaming) {
+      const id = requestAnimationFrame(() => setDisplayedContent(rawContent));
+      return () => cancelAnimationFrame(id);
     }
 
-    if (!isActive && !isStreaming && !hasStartedRef.current) {
-      setDisplayedContent(rawContent);
-      return;
+    if (frameRef.current) {
+      cancelAnimationFrame(frameRef.current);
     }
 
-    if (!frameRef.current && bufferRef.current.length > 0) {
-      hasStartedRef.current = true;
-      const animate = () => {
-        if (bufferRef.current.length > 0) {
-          const charsPerFrame = isActiveRef.current ? 2 : 32;
-          const chunk = bufferRef.current.slice(0, charsPerFrame);
-          bufferRef.current = bufferRef.current.slice(charsPerFrame);
-          setDisplayedContent(prev => prev + chunk);
-          frameRef.current = requestAnimationFrame(animate);
-        } else {
-          frameRef.current = null;
+    const tick = () => {
+      setDisplayedContent((prev) => {
+        if (prev.length >= targetRef.current.length) {
+          return prev;
         }
-      };
-      frameRef.current = requestAnimationFrame(animate);
-    }
-  }, [rawContent, isActive, isStreaming]);
-
-  useEffect(() => {
-    return () => {
-      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+        const nextLength = Math.min(prev.length + 2, targetRef.current.length);
+        return targetRef.current.slice(0, nextLength);
+      });
+      frameRef.current = requestAnimationFrame(tick);
     };
-  }, []);
 
-  const prevStreamingRef = useRef(isStreaming);
-  useEffect(() => {
-    if (isStreaming && !prevStreamingRef.current) {
-      setDisplayedContent('');
-      bufferRef.current = '';
-      lastRawRef.current = '';
-      hasStartedRef.current = false;
+    frameRef.current = requestAnimationFrame(tick);
+
+    return () => {
       if (frameRef.current) {
         cancelAnimationFrame(frameRef.current);
         frameRef.current = null;
       }
-    }
-    prevStreamingRef.current = isStreaming;
-  }, [isStreaming]);
+    };
+  }, [rawContent, isStreaming]);
 
   return displayedContent;
 }
 
-// --- MAIN COMPONENT ---
-
 const EDITABLE_PLATFORMS: Platform[] = ['linkedin', 'twitter', 'instagram', 'peerlist'];
+const EMOJIS = ['😀', '🔥', '✨', '🚀', '💡', '🎉', '👏', '🙌', '💯', '✅', '😍', '🤝'];
 
-export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
+export function ContentDisplay({ content, isStreaming = false }: ContentDisplayProps) {
+  const { user } = useUser();
+  const isHydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const [copied, setCopied] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('linkedin');
-  const [editingPlatform, setEditingPlatform] = useState<string | null>(null);
-  const [editedContent, setEditedContent] = useState<Record<string, string>>({});
-  const streamingPlatformRef = useRef<Platform | null>(null);
-  const hasAutoSwitchedRef = useRef(false);
+  const [activeTab, setActiveTab] = useState<Platform>('linkedin');
+  const [editingPlatform, setEditingPlatform] = useState<Platform | null>(null);
+  const [editedContent, setEditedContent] = useState<Partial<Record<Platform, string>>>({});
+  const [expandedPosts, setExpandedPosts] = useState<Partial<Record<Platform, boolean>>>({});
   const editableRef = useRef<HTMLDivElement | null>(null);
+  const selectionRef = useRef<Range | null>(null);
 
   const platformIds: Platform[] = ['linkedin', 'twitter', 'instagram', 'peerlist'];
-
-  const currentlyStreaming = isStreaming
-    ? [...platformIds].reverse().find(id => (content[id]?.length ?? 0) > 0) ?? null
+  const streamingPlatform = isStreaming
+    ? [...platformIds].reverse().find((id) => (content[id]?.length ?? 0) > 0) ?? null
     : null;
 
-  if (currentlyStreaming) {
-    const currentIdx = platformIds.indexOf(currentlyStreaming);
-    const prevIdx = platformIds.indexOf(streamingPlatformRef.current ?? 'linkedin');
-    if (currentIdx >= prevIdx) {
-      streamingPlatformRef.current = currentlyStreaming;
-    }
-  }
-  if (!isStreaming) streamingPlatformRef.current = null;
-
-  const streamingPlatform = isStreaming ? streamingPlatformRef.current : null;
-
-  const completedPlatforms = platformIds.filter(id => {
+  const completedPlatforms = platformIds.filter((id) => {
     const hasContent = (content[id]?.length ?? 0) > 0;
     if (!isStreaming) return hasContent;
     if (!streamingPlatform) return false;
     return hasContent && id !== streamingPlatform && platformIds.indexOf(id) < platformIds.indexOf(streamingPlatform);
   });
 
-  const displayedContents: Record<string, string> = {
-    linkedin: useTypingEffect(content.linkedin || "", streamingPlatform === 'linkedin', !!isStreaming),
-    twitter: useTypingEffect(content.twitter || "", streamingPlatform === 'twitter', !!isStreaming),
-    instagram: useTypingEffect(content.instagram || "", streamingPlatform === 'instagram', !!isStreaming),
-    peerlist: useTypingEffect(content.peerlist || "", streamingPlatform === 'peerlist', !!isStreaming)
+  const typedContent = {
+    linkedin: useTypingEffect(content.linkedin || '', isStreaming && activeTab === 'linkedin'),
+    twitter: useTypingEffect(content.twitter || '', isStreaming && activeTab === 'twitter'),
+    instagram: useTypingEffect(content.instagram || '', isStreaming && activeTab === 'instagram'),
+    peerlist: useTypingEffect(content.peerlist || '', isStreaming && activeTab === 'peerlist'),
   };
 
+  const activeConfig = PLATFORM_CONFIG[activeTab];
+  const activeContent = editedContent[activeTab] ?? typedContent[activeTab] ?? '';
+  const isEditing = editingPlatform === activeTab;
+  const isEditable = EDITABLE_PLATFORMS.includes(activeTab);
+
   const copyToClipboard = async (text: string, id: string) => {
-    const cleanText = stripMarkdown(text);
-    await navigator.clipboard.writeText(cleanText);
+    await navigator.clipboard.writeText(stripMarkdown(text));
     setCopied(id);
     setTimeout(() => setCopied(null), 2000);
   };
@@ -268,59 +215,27 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
   const copyAll = async () => {
     const allContent = platformIds
       .map((id) => {
-        const config = PLATFORM_CONFIG[id];
-        return content[id] ? `--- ${config.name.toUpperCase()} ---\n${content[id]}\n` : "";
+        const value = editedContent[id] ?? content[id];
+        return value ? `--- ${PLATFORM_CONFIG[id].name.toUpperCase()} ---\n${value}\n` : '';
       })
       .filter(Boolean)
       .join('\n');
+
     await navigator.clipboard.writeText(stripMarkdown(allContent));
     setCopied('all');
     setTimeout(() => setCopied(null), 2000);
   };
 
-  useEffect(() => {
-    if (isStreaming && streamingPlatform && !hasAutoSwitchedRef.current) {
-      setActiveTab(streamingPlatform);
-      hasAutoSwitchedRef.current = true;
-    }
-    if (!isStreaming) {
-      hasAutoSwitchedRef.current = false;
-    }
-  }, [streamingPlatform, isStreaming]);
-
-  // Cancel editing when streaming starts
-  useEffect(() => {
-    if (isStreaming) {
-      setEditingPlatform(null);
-      setEditedContent({});
-    }
-  }, [isStreaming]);
-
-  const getActiveContent = () => {
-    // only use editedContent if it exists (user saved something)
-    if (editedContent[activeTab] !== undefined) {
-      return editedContent[activeTab];
-    }
-    // fall back to original AI content from prop
-    return String(content[activeTab as keyof ContentResponse] || '');
-  };
-
   const startEditing = () => {
-    // always start from original AI content, not editedContent
-    const originalContent = String(
-      content[activeTab as keyof ContentResponse] || ''
-    );
-    
+    const originalContent = editedContent[activeTab] ?? String(content[activeTab] || '');
     setEditingPlatform(activeTab);
-    
-    // seed editedContent with markdown (for character counter sync)
-    setEditedContent(prev => ({ ...prev, [activeTab]: originalContent }));
+    setEditedContent((prev) => ({ ...prev, [activeTab]: originalContent }));
 
     setTimeout(() => {
-      // convert markdown to HTML so bold shows as bold in editor
       if (editableRef.current) {
         editableRef.current.innerHTML = markdownToHtml(originalContent);
         editableRef.current.focus();
+        saveSelection();
       }
     }, 0);
   };
@@ -328,28 +243,77 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
   const saveEdit = () => {
     if (editableRef.current) {
       const markdown = htmlToMarkdown(editableRef.current.innerHTML);
-      setEditedContent(prev => ({ ...prev, [activeTab]: markdown }));
+      setEditedContent((prev) => ({ ...prev, [activeTab]: markdown }));
     }
     setEditingPlatform(null);
   };
 
   const cancelEdit = () => {
     setEditingPlatform(null);
-    setEditedContent(prev => {
-      const next = { ...prev };
-      delete next[activeTab]; // remove so original content shows
-      return next;
-    });
-    // also clear contenteditable innerHTML
-    if (editableRef.current) editableRef.current.innerHTML = '';
+    if (editableRef.current) {
+      editableRef.current.innerHTML = '';
+    }
   };
 
   const handleEditableInput = () => {
     if (editableRef.current) {
       const markdown = htmlToMarkdown(editableRef.current.innerHTML);
-      // Update live so character counter stays in sync during edit
-      setEditedContent(prev => ({ ...prev, [activeTab]: markdown }));
+      setEditedContent((prev) => ({ ...prev, [activeTab]: markdown }));
+      saveSelection();
     }
+  };
+
+  const saveSelection = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || !editableRef.current) return;
+
+    const range = selection.getRangeAt(0);
+    if (editableRef.current.contains(range.commonAncestorContainer)) {
+      selectionRef.current = range.cloneRange();
+    }
+  };
+
+  const placeCaretAtEnd = (element: HTMLDivElement) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    range.collapse(false);
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    selectionRef.current = range.cloneRange();
+  };
+
+  const insertEmoji = (emoji: string) => {
+    if (!editableRef.current) return;
+
+    editableRef.current.focus();
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+
+    if (selectionRef.current) {
+      selection?.addRange(selectionRef.current);
+    } else {
+      placeCaretAtEnd(editableRef.current);
+    }
+
+    const activeSelection = window.getSelection();
+    if (!activeSelection || activeSelection.rangeCount === 0) return;
+
+    const range = activeSelection.getRangeAt(0);
+    range.deleteContents();
+    const textNode = document.createTextNode(emoji);
+    range.insertNode(textNode);
+
+    range.setStartAfter(textNode);
+    range.collapse(true);
+    activeSelection.removeAllRanges();
+    activeSelection.addRange(range);
+    selectionRef.current = range.cloneRange();
+
+    const markdown = htmlToMarkdown(editableRef.current.innerHTML);
+    setEditedContent((prev) => ({ ...prev, [activeTab]: markdown }));
   };
 
   const applyFormat = (type: 'bold' | 'italic' | 'strike' | 'underline' | 'bullet' | 'numbered' | 'clear') => {
@@ -358,386 +322,439 @@ export function ContentDisplay({ content, isStreaming }: ContentDisplayProps) {
 
     if (!hasSelection && !['bullet', 'numbered', 'clear'].includes(type)) return;
 
-    switch(type) {
-      case 'bold':        document.execCommand('bold'); break;
-      case 'italic':      document.execCommand('italic'); break;
-      case 'strike':      document.execCommand('strikeThrough'); break;
-      case 'underline':   document.execCommand('underline'); break;
-      case 'bullet':      document.execCommand('insertUnorderedList'); break;
-      case 'numbered':    document.execCommand('insertOrderedList'); break;
+    switch (type) {
+      case 'bold':
+        document.execCommand('bold');
+        break;
+      case 'italic':
+        document.execCommand('italic');
+        break;
+      case 'strike':
+        document.execCommand('strikeThrough');
+        break;
+      case 'underline':
+        document.execCommand('underline');
+        break;
+      case 'bullet':
+        document.execCommand('insertUnorderedList');
+        break;
+      case 'numbered':
+        document.execCommand('insertOrderedList');
+        break;
       case 'clear':
         document.execCommand('removeFormat');
-        // Toggle off lists if active
         if (document.queryCommandState('insertUnorderedList')) document.execCommand('insertUnorderedList');
         if (document.queryCommandState('insertOrderedList')) document.execCommand('insertOrderedList');
         break;
     }
-    
-    // Sync innerHTML back to markdown state
+
     if (editableRef.current) {
       const markdown = htmlToMarkdown(editableRef.current.innerHTML);
-      setEditedContent(prev => ({ ...prev, [activeTab]: markdown }));
+      setEditedContent((prev) => ({ ...prev, [activeTab]: markdown }));
     }
   };
 
-  const isEditable = EDITABLE_PLATFORMS.includes(activeTab as Platform);
-  const isEditing = editingPlatform === activeTab;
-
-  const activeConfig = PLATFORM_CONFIG[activeTab];
+  const cleanLength = stripMarkdown(activeContent).length;
+  const limit = activeConfig.characterLimit || 280;
+  const progress = cleanLength / limit;
+  const showPostActions = !isEditing && Boolean(content[activeTab]);
+  const isExpanded = expandedPosts[activeTab] ?? false;
+  const PREVIEW_LIMIT = 360;
+  const strippedActiveContent = stripMarkdown(activeContent);
+  const isLongPost = strippedActiveContent.length > PREVIEW_LIMIT;
+  const previewText = isExpanded || !isLongPost ? activeContent : `${strippedActiveContent.slice(0, PREVIEW_LIMIT).trimEnd()}...`;
+  const fakeLikes = Math.max(12, Math.min(96, Math.round(cleanLength / 14)));
+  const fakeComments = Math.max(2, Math.min(34, Math.round(cleanLength / 80)));
+  const displayName = isHydrated ? user?.fullName || user?.firstName || 'You' : 'You';
+  const userImageUrl = isHydrated ? user?.imageUrl : undefined;
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .content-panel-outer {
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-          height: 100%;
-        }
-        .tabs-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          border-bottom: 0.5px solid rgba(161, 161, 170, 0.4);
-        }
-        .tab-item {
-          padding: 8px 12px;
-          text-align: center;
-          font-size: 11px;
-          font-weight: 700;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          color: rgba(161, 161, 170, 0.8);
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-          margin: 4px;
-        }
-        .tab-item.active {
-          background-color: white;
-          box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
-          color: inherit;
-        }
-        .dark .tab-item.active {
-          background-color: rgba(255, 255, 255, 0.05);
-          box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.3);
-        }
-        .content-area-scroll::-webkit-scrollbar {
-          width: 4px;
-        }
-        .content-area-scroll::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .content-area-scroll::-webkit-scrollbar-thumb {
-          background-color: rgba(161, 161, 170, 0.2);
-          border-radius: 10px;
-        }
-        .editor-container ul { list-style-type: disc; padding-left: 1.25rem; margin: 0.5rem 0; }
-        .editor-container ol { list-style-type: decimal; padding-left: 1.25rem; margin: 0.5rem 0; }
-        .editor-container [contenteditable]:empty:before {
-          content: attr(data-placeholder);
-          color: #94a3b8;
-          pointer-events: none;
-        }
-      `}} />
-      <div className="content-panel-outer w-full bg-white/50 dark:bg-zinc-950/20">
-        {/* Header Row */}
-        <div className="flex-shrink-0 flex items-center justify-between py-3 px-5 border-b border-border/40 bg-zinc-50 dark:bg-zinc-900/40">
-          <div className="flex items-center gap-3">
-            <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-              <LayoutPanelLeft className="h-4 w-4" />
-            </div>
-            <h3 className="text-sm font-bold tracking-tight text-zinc-800 dark:text-zinc-200">Editorial Variants</h3>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+          .content-display {
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f3f4f6;
+            color: #0F0F0F;
+          }
+          .dark .content-display {
+            background: #111111;
+            color: #EDEDED;
+          }
+          .content-tabs {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 0 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            overflow-x: auto;
+          }
+          .dark .content-tabs {
+            border-bottom-color: rgba(255,255,255,0.08);
+          }
+          .content-tab {
+            position: relative;
+            display: inline-flex;
+            cursor: pointer;
+            align-items: center;
+            gap: 8px;
+            height: 38px;
+            padding: 0 12px;
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 999px;
+            background: #FFFFFF;
+            color: #52525B;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+          }
+          .content-tab:focus-visible {
+            outline: none;
+            border-color: rgba(59,130,246,0.45);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.14);
+          }
+          .dark .content-tab {
+            color: #A1A1AA;
+            border-color: rgba(255,255,255,0.12);
+            background: #1A1A1A;
+          }
+          .content-tab.active {
+            color: #0F0F0F;
+            border-color: rgba(37,99,235,0.25);
+            box-shadow: 0 8px 20px rgba(37,99,235,0.12);
+          }
+          .dark .content-tab.active {
+            color: #EDEDED;
+            border-color: rgba(96,165,250,0.35);
+          }
+          .content-tab.active::after {
+            content: none;
+          }
+          .content-tab:hover {
+            transform: translateY(-1px);
+          }
+          .post-shell {
+            border-radius: 0;
+            border: 1px solid #e5e7eb;
+            background: #FFFFFF;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+            overflow: hidden;
+          }
+          .dark .post-shell {
+            border-color: rgba(255,255,255,0.08);
+            background: #18181B;
+            box-shadow: 0 18px 52px rgba(0,0,0,0.35);
+          }
+          .content-scroll::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+          }
+          .content-scroll::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.12);
+            border-radius: 999px;
+          }
+          .action-btn {
+            transition: background-color 0.18s ease, color 0.18s ease;
+          }
+          .action-btn:hover {
+            background: #f3f4f6;
+          }
+          .dark .content-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.12);
+          }
+          .editor-container ul {
+            list-style-type: disc;
+            padding-left: 1.25rem;
+            margin: 0.5rem 0;
+          }
+          .editor-container ol {
+            list-style-type: decimal;
+            padding-left: 1.25rem;
+            margin: 0.5rem 0;
+          }
+          .editor-container [contenteditable]:empty:before {
+            content: attr(data-placeholder);
+            color: #9CA3AF;
+            pointer-events: none;
+          }
+          .stream-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #2563EB;
+            animation: stream-pulse 0.8s ease-in-out infinite;
+          }
+          @keyframes stream-pulse {
+            0%, 100% { opacity: 0.35; }
+            50% { opacity: 1; }
+          }
+        `,
+        }}
+      />
 
-            {isStreaming && (
-              <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-primary/10 border border-primary/20 ml-2">
-                <div className="flex items-center gap-0.5 h-1.5">
-                  <motion.div animate={{ height: [2, 6, 2] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-0.5 bg-primary rounded-full" />
-                  <motion.div animate={{ height: [4, 8, 4] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-0.5 bg-primary rounded-full" />
-                  <motion.div animate={{ height: [2, 6, 2] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-0.5 bg-primary rounded-full" />
-                </div>
-                <span className="text-[9px] font-bold uppercase tracking-widest text-primary">Streaming</span>
-              </div>
-            )}
+      <div className="content-display flex h-full flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-[#f3f4f6] dark:border-[rgba(255,255,255,0.08)] dark:bg-[#1A1A1A]">
+        <div className="flex items-center justify-between px-5 py-4">
+          <div className="flex items-center gap-2">
+            <h3 className="text-[13px] font-medium text-[#0F0F0F] dark:text-[#EDEDED]">Generated drafts</h3>
+            {isStreaming ? <span className="stream-dot" /> : null}
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
+          <button
+            type="button"
             onClick={copyAll}
             disabled={isStreaming || !content.linkedin}
-            className="h-7 text-xs font-bold px-3 gap-1.5 rounded-md shadow-sm"
+            className="rounded-[8px] border border-[rgba(0,0,0,0.12)] px-3 py-1.5 text-[13px] font-medium text-[#0F0F0F] disabled:opacity-50 dark:border-[rgba(255,255,255,0.12)] dark:text-[#EDEDED]"
           >
-            {copied === 'all' ? (
-              <>
-                <Check className="h-3 w-3 text-emerald-500" />
-                <span className="text-emerald-600 dark:text-emerald-400">Copied All</span>
-              </>
-            ) : (
-              <>
-                <Download className="h-3 w-3" />
-                <span>Export All</span>
-              </>
-            )}
-          </Button>
+            {copied === 'all' ? 'Copied all' : 'Export all'}
+          </button>
         </div>
 
-        {/* Tabs Row */}
-        <div className="flex-shrink-0 bg-white dark:bg-zinc-950 sticky top-0 z-10">
-          <div className="tabs-grid">
-            {platformIds.map((id) => {
-              const config = PLATFORM_CONFIG[id];
-              const isCompleted = completedPlatforms.includes(id);
-              const isActive = activeTab === id;
+        <div className="content-tabs content-scroll">
+          {platformIds.map((id) => {
+            const isActive = activeTab === id;
+            const isComplete = completedPlatforms.includes(id);
 
-              return (
-                <div
-                  key={id}
-                  onClick={() => setActiveTab(id)}
-                  className={cn("tab-item flex-1", isActive && "active")}
-                  style={isActive ? { color: config.brand } : {}}
-                >
-                  <span className={cn("transition-colors", isActive && config.color)}>{config.name}</span>
-                  {isCompleted && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-sm ring-2 ring-white dark:ring-zinc-900" />
-                  )}
-                </div>
-              );
-            })}
-          </div>
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setActiveTab(id)}
+                className={cn('content-tab', isActive && 'active')}
+              >
+                <span>{PLATFORM_CONFIG[id].icon}</span>
+                <span>{PLATFORM_CONFIG[id].name}</span>
+                {isComplete ? <span className="h-1 w-1 rounded-full bg-[#22C55E]" /> : null}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto w-full content-area-scroll p-[16px_20px]">
+        <div className="content-scroll flex-1 overflow-y-auto p-5">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 5 }}
+              initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              transition={{ duration: 0.2 }}
-              className="w-full max-w-2xl mx-auto"
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.14 }}
+              className="mx-auto w-full max-w-[480px]"
             >
-              <Card className={cn(
-                "overflow-hidden border border-border/60 shadow-md bg-white dark:bg-zinc-950 rounded-xl relative",
-                "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:z-10",
-                activeTab === 'linkedin' && "before:bg-[#0077B5]",
-                activeTab === 'twitter' && "before:bg-black dark:before:bg-white",
-                activeTab === 'instagram' && "before:bg-gradient-to-b before:from-[#f09433] before:via-[#e6683c] before:to-[#bc1888]",
-                activeTab === 'peerlist' && "before:bg-[#00AA45]"
-              )}>
-                {isStreaming && streamingPlatform === activeTab && (
-                  <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-                    <div className="w-[200%] h-full absolute top-0 -left-full bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.03),transparent)] dark:bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.01),transparent)] animate-[shimmer_3s_infinite]" style={{ transform: 'skewX(-20deg)' }} />
-                  </div>
-                )}
-
-                <CardHeader className="flex flex-row items-center justify-between py-3 px-5 border-b border-border/40 bg-zinc-50/50 dark:bg-zinc-900/10">
-                  <div className="flex items-center gap-2.5">
-                    <div className={cn("p-1.5 rounded-lg", activeConfig.bg, activeConfig.color)}>
-                      {activeConfig.icon}
-                    </div>
-                    <div>
-                      <CardTitle className="text-sm font-bold">{activeConfig.name}</CardTitle>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    {isEditable && !isEditing && !isStreaming && content[activeTab as keyof ContentResponse] && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={startEditing}
-                        className="h-7 px-3 rounded-md font-bold text-xs bg-white dark:bg-zinc-900 border border-border/50 shadow-sm transition-all hover:border-primary/40 hover:text-primary"
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <Pencil className="h-3.5 w-3.5" />
-                          <span>Edit</span>
-                        </div>
-                      </Button>
-                    )}
-
-                    {isEditing && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={cancelEdit}
-                          className="h-7 px-3 rounded-md font-bold text-xs bg-white dark:bg-zinc-900 border border-border/50 shadow-sm transition-all hover:border-red-400 hover:text-red-500"
-                        >
-                          <div className="flex items-center gap-1.5">
-                            <X className="h-3.5 w-3.5" />
-                            <span>Cancel</span>
-                          </div>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={saveEdit}
-                          className="h-7 px-3 rounded-md font-bold text-xs bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-300 dark:border-emerald-700 shadow-sm transition-all text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
-                        >
-                          <div className="flex items-center gap-1.5">
-                            <Save className="h-3.5 w-3.5" />
-                            <span>Save</span>
-                          </div>
-                        </Button>
-                      </>
-                    )}
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(getActiveContent(), activeTab)}
-                      disabled={!(content[activeTab as keyof ContentResponse])}
-                      className="h-8 px-3 rounded-lg font-bold text-xs bg-zinc-100/50 dark:bg-zinc-800/50 hover:bg-zinc-200 dark:hover:bg-zinc-700/50 transition-all border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600"
-                    >
-                      {copied === activeTab ? (
-                        <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                          <Check className="h-3.5 w-3.5" />
-                          <span>Copied</span>
-                        </div>
+              <Card className="post-shell relative flex w-full flex-col rounded-none border-0">
+                <div className={cn('absolute inset-x-0 top-0 h-24 bg-gradient-to-r', activeConfig.softClass)} />
+                <CardHeader className="relative flex shrink-0 flex-row items-center justify-between border-b border-[#e5e7eb] px-4 py-4 dark:border-[rgba(255,255,255,0.08)]">
+                  <div className="flex items-center gap-3">
+                    <span className="relative inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#e5e7eb] bg-white text-base shadow-sm dark:border-white/15 dark:bg-zinc-900">
+                      {userImageUrl ? (
+                        <img src={userImageUrl} alt={displayName} className="h-full w-full object-cover" />
                       ) : (
-                        <div className="flex items-center gap-1.5">
-                          <Copy className="h-3.5 w-3.5" />
-                          <span>Copy</span>
-                        </div>
+                        <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-200">{displayName.charAt(0)}</span>
                       )}
-                    </Button>
+                    </span>
+                    <div className="space-y-0.5">
+                      <CardTitle className="text-[14px] font-semibold text-[#111827] dark:text-[#EDEDED]">{displayName}</CardTitle>
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{activeConfig.name} Member · now</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <span className={cn('rounded-full border px-2 py-1 text-[11px] font-semibold', activeConfig.brandClass)} aria-hidden>
+                      {activeConfig.icon}
+                    </span>
+                    {isEditable && !isEditing && content[activeTab] ? (
+                      <button
+                        type="button"
+                        onClick={startEditing}
+                        className="cursor-pointer rounded-[8px] border border-[rgba(0,0,0,0.12)] px-3 py-1.5 text-[13px] font-medium text-[#0F0F0F] dark:border-[rgba(255,255,255,0.12)] dark:text-[#EDEDED]"
+                      >
+                        Edit
+                      </button>
+                    ) : null}
+
+                    {isEditing ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={cancelEdit}
+                          className="cursor-pointer px-2 py-1.5 text-[13px] font-medium text-[#6B7280] dark:text-[#A3A3A3]"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={saveEdit}
+                          className="cursor-pointer px-2 py-1.5 text-[13px] font-medium text-[#2563EB]"
+                        >
+                          Save
+                        </button>
+                      </>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(activeContent, activeTab)}
+                      disabled={!content[activeTab]}
+                      className="cursor-pointer rounded-[8px] border border-[rgba(0,0,0,0.12)] px-3 py-1.5 text-[13px] font-medium text-[#0F0F0F] disabled:opacity-50 dark:border-[rgba(255,255,255,0.12)] dark:text-[#EDEDED]"
+                    >
+                      {copied === activeTab ? 'Copied' : 'Copy'}
+                    </button>
                   </div>
                 </CardHeader>
 
-                <CardContent className="p-0 editor-container">
-                  {/* Formatting Toolbar */}
-                  {isEditing && (
-                    <div className="px-2 py-1.5 mb-2 mt-3 mx-6 flex items-center gap-0.5 bg-zinc-100 dark:bg-zinc-800/60 rounded-lg border border-border/40 shadow-sm w-fit transition-all animate-in fade-in slide-in-from-top-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-zinc-700 shadow-none" onClick={() => applyFormat('bold')}><Bold className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-zinc-700 shadow-none" onClick={() => applyFormat('italic')}><Italic className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-zinc-700 shadow-none" onClick={() => applyFormat('strike')}><Strikethrough className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-zinc-700 shadow-none" onClick={() => applyFormat('underline')}><Underline className="h-3.5 w-3.5" /></Button>
-                      <div className="w-[1px] h-4 bg-border/60 mx-1" />
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-zinc-700 shadow-none" onClick={() => applyFormat('bullet')}><List className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-zinc-700 shadow-none" onClick={() => applyFormat('numbered')}><ListOrdered className="h-3.5 w-3.5" /></Button>
-                      <div className="w-[1px] h-4 bg-border/60 mx-1" />
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-zinc-700 shadow-none" onClick={() => applyFormat('clear')}><Eraser className="h-3.5 w-3.5" /></Button>
+                <CardContent className="editor-container flex flex-col px-4 pb-4 pt-3">
+                  <div className="pr-1">
+                  {isEditing ? (
+                    <>
+                      <div className="mb-3 flex items-center gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onMouseDown={saveSelection} onClick={() => applyFormat('bold')}>
+                          <Bold className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onMouseDown={saveSelection} onClick={() => applyFormat('italic')}>
+                          <Italic className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onMouseDown={saveSelection} onClick={() => applyFormat('strike')}>
+                          <Strikethrough className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onMouseDown={saveSelection} onClick={() => applyFormat('underline')}>
+                          <Underline className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onMouseDown={saveSelection} onClick={() => applyFormat('bullet')}>
+                          <List className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onMouseDown={saveSelection} onClick={() => applyFormat('numbered')}>
+                          <ListOrdered className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]" onMouseDown={saveSelection} onClick={() => applyFormat('clear')}>
+                          <Eraser className="h-3.5 w-3.5" />
+                        </Button>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 cursor-pointer rounded-[6px] p-0 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.08)]"
+                              onMouseDown={saveSelection}
+                            >
+                              <SmilePlus className="h-3.5 w-3.5" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            align="start"
+                            className="w-auto rounded-[12px] border border-[#e5e7eb] bg-white p-2 shadow-lg dark:border-[rgba(255,255,255,0.08)] dark:bg-[#18181B]"
+                            onOpenAutoFocus={(event) => event.preventDefault()}
+                          >
+                            <div className="grid grid-cols-4 gap-1">
+                              {EMOJIS.map((emoji) => (
+                                <button
+                                  key={emoji}
+                                  type="button"
+                                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-[8px] text-lg transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                  onMouseDown={(event) => event.preventDefault()}
+                                  onClick={() => insertEmoji(emoji)}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      <div
+                        ref={editableRef}
+                        contentEditable
+                        suppressContentEditableWarning
+                        onInput={handleEditableInput}
+                        onKeyUp={saveSelection}
+                        onMouseUp={saveSelection}
+                        data-placeholder={`Edit your ${activeConfig.name} draft...`}
+                        className="min-h-[220px] rounded-[12px] border border-[#d1d5db] bg-white px-[14px] py-3 text-sm font-normal leading-relaxed text-[#111827] outline-none transition-all duration-200 focus:border-[#60a5fa] focus:ring-2 focus:ring-[#bfdbfe] dark:border-[rgba(255,255,255,0.12)] dark:text-[#EDEDED] md:min-h-full"
+                      />
+                    </>
+                  ) : content[activeTab] ? (
+                    <div>
+                      <FormattedText
+                        text={previewText}
+                        className="text-[15px] font-normal leading-7 text-[#111827] dark:text-[#EDEDED]"
+                      />
+                      {isLongPost ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedPosts((prev) => ({ ...prev, [activeTab]: !isExpanded }))
+                          }
+                          className="mt-1 cursor-pointer text-[12px] font-semibold text-zinc-500 transition-colors duration-200 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+                        >
+                          {isExpanded ? 'See less' : 'See more'}
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="py-10 text-center text-[12px] font-normal text-[#9CA3AF]">
+                      {isStreaming && streamingPlatform !== activeTab ? 'Generating…' : 'Share your thoughts...'}
                     </div>
                   )}
 
-                  <div className="p-5 md:p-6 pt-2 relative">
-                    {content[activeTab as keyof ContentResponse] ? (
-                      <div className="relative z-10 transition-all">
-                        {/* Mock Platform Header */}
-                        <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-zinc-100 dark:border-zinc-800/50">
-                          <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm", activeConfig.accent)}>P</div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-1">
-                              <span className="font-bold text-xs">PostBloom Editorial</span>
-                              <div className="h-2.5 w-2.5 rounded-full bg-blue-500 flex items-center justify-center">
-                                <Check className="h-1.5 w-1.5 text-white" />
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
-                              <span>Just now</span>
-                              <span>•</span>
-                              {activeConfig.icon}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Text / Formatted Content */}
-                        {isEditing ? (
-                          <div className="relative">
-                            <div className="absolute -inset-1 rounded-lg bg-primary/5 dark:bg-primary/10 pointer-events-none" />
-                            <div
-                              ref={editableRef}
-                              contentEditable
-                              suppressContentEditableWarning
-                              onInput={handleEditableInput}
-                              data-placeholder={`Compose your ${activeConfig.name} post...`}
-                              className="relative w-full min-h-[120px] text-sm md:text-base leading-relaxed text-zinc-800 dark:text-zinc-200 font-sans tracking-tight bg-transparent border border-primary/30 dark:border-primary/40 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all overflow-y-auto"
-                            />
-                            <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
-                              <Pencil className="h-3 w-3" />
-                              <span>Editing {activeConfig.name} content visually — tags will be saved correctly</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <FormattedText
-                              text={getActiveContent()}
-                              className="text-sm md:text-base leading-relaxed text-zinc-800 dark:text-zinc-200 font-sans tracking-tight"
-                            />
-                            {isStreaming && streamingPlatform === activeTab && (
-                              <motion.span
-                                animate={{ opacity: [0, 1, 0] }}
-                                transition={{ repeat: Infinity, duration: 0.8 }}
-                                className={cn("inline-block w-1 h-4 ml-1 translate-y-0.5 rounded-full", activeConfig.accent)}
-                              />
-                            )}
-                          </>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="py-12 flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 gap-4">
-                        {isStreaming ? (
-                          <div className="flex flex-col items-center gap-3">
-                            <span className="text-xs font-medium font-mono animate-pulse">Generating {activeConfig.name} content...</span>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center gap-2 opacity-50">
-                            {activeConfig.icon}
-                            <p className="text-xs font-medium">No content generated yet</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
 
-                  {/* Character Audit Bar */}
-                  {activeConfig.characterLimit && (content[activeTab as keyof ContentResponse]) && (() => {
-                    const auditText = getActiveContent();
-                    const cleanLen = stripMarkdown(auditText).length;
-                    const limit = activeConfig.characterLimit || 280;
-                    return (
-                      <div className="px-[14px] py-[8px] bg-zinc-50/80 dark:bg-zinc-900/60 border-t border-border/40 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-muted-foreground hidden sm:block">Length Audit</span>
-                          {cleanLen <= limit ? (
-                            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-[9px] font-bold">
-                              <Check className="h-2.5 w-2.5" />
-                              <span>Good</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1 text-red-600 dark:text-red-400 text-[9px] font-bold">
-                              <Info className="h-2.5 w-2.5" />
-                              <span>Over Limit</span>
-                            </div>
-                          )}
-                        </div>
+                  {showPostActions ? (
+                    <>
+                    <div className="mt-4 flex items-center justify-between border-t border-[#e5e7eb] pt-3 text-[12px] text-zinc-500 dark:border-[rgba(255,255,255,0.08)] dark:text-zinc-400">
+                      <span>{fakeLikes} likes</span>
+                      <span>{fakeComments} comments · 1 repost</span>
+                    </div>
+                    <div className="mt-2 grid grid-cols-4 gap-2 border-t border-[#e5e7eb] pt-2 dark:border-[rgba(255,255,255,0.08)]">
+                      <button
+                        type="button"
+                        className="action-btn inline-flex cursor-pointer items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                      >
+                        <Heart className="h-3.5 w-3.5" />
+                        <span>Like</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="action-btn inline-flex cursor-pointer items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        <span>Comment</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="action-btn inline-flex cursor-pointer items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                      >
+                        <Repeat2 className="h-3.5 w-3.5" />
+                        <span>Repost</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="action-btn inline-flex cursor-pointer items-center justify-center gap-1 rounded-md py-1.5 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                        <span>Send</span>
+                      </button>
+                    </div>
+                    </>
+                  ) : null}
 
-                        <div className="flex items-center gap-3">
-                          <div className="flex gap-0.5 h-1 w-20 sm:w-24">
-                            {[...Array(10)].map((_, i) => {
-                              const progress = (cleanLen / limit) * 10;
-                              let bgColor = "bg-zinc-200 dark:bg-zinc-800";
-                              if (i < progress) {
-                                if (progress > 10) bgColor = "bg-red-500";
-                                else if (progress > 8) bgColor = "bg-amber-500";
-                                else bgColor = i === 9 ? "bg-amber-500" : "bg-emerald-500";
-                              }
-                              return <div key={i} className={cn("flex-1 rounded-full", bgColor)} />;
-                            })}
-                          </div>
-                          <span className={cn("text-[10px] font-mono font-bold", cleanLen > limit ? "text-red-500" : "text-zinc-600 dark:text-zinc-400")}>
-                            {cleanLen} <span className="opacity-50">/</span> {limit}
-                          </span>
-                        </div>
+                  {activeConfig.characterLimit && content[activeTab] ? (
+                    <div className="mt-3 flex items-center justify-between gap-4 border-t border-[rgba(0,0,0,0.08)] pt-3 dark:border-[rgba(255,255,255,0.08)]">
+                      <span className="text-[12px] font-normal text-[#6B7280] dark:text-[#9CA3AF]" style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
+                        {cleanLength} / {limit}
+                      </span>
+                      <div className="flex flex-1 justify-end gap-[2px]">
+                        {[...Array(10)].map((_, index) => {
+                          let segmentClass = 'bg-[rgba(0,0,0,0.08)] dark:bg-[rgba(255,255,255,0.08)]';
+                          if (index < Math.ceil(Math.min(progress, 1) * 10)) {
+                            if (progress > 1) segmentClass = 'bg-[#EF4444]';
+                            else if (progress >= 0.8) segmentClass = 'bg-[#F59E0B]';
+                            else segmentClass = 'bg-[#22C55E]';
+                          }
+                          return <div key={index} className={cn('h-[2px] w-4 rounded-[2px]', segmentClass)} />;
+                        })}
                       </div>
-                    );
-                  })()}
+                    </div>
+                  ) : null}
                 </CardContent>
               </Card>
             </motion.div>

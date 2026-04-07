@@ -1,104 +1,88 @@
-import Link from 'next/link';
-import { Sparkles, Github, Twitter, Linkedin, Globe, Cpu } from 'lucide-react';
+import Link from "next/link";
+import { Instagram, Linkedin, Twitter } from "lucide-react";
+import { SparklesText } from "@/components/ui/sparkles-text";
+
+const footerSections = [
+  {
+    title: "Product",
+    links: [
+      { name: "Features", href: "/#features" },
+      { name: "Generator", href: "/admin/generate" },
+      { name: "Pricing", href: "/#pricing" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { name: "About", href: "/learn-more" },
+      { name: "Contact", href: "/learn-more" },
+      { name: "Careers", href: "/learn-more" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { name: "Privacy Policy", href: "/learn-more" },
+      { name: "Terms of Service", href: "/learn-more" },
+      { name: "Cookie Policy", href: "/learn-more" },
+    ],
+  },
+];
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
-  const footerSections = [
-    {
-      title: "Product",
-      links: [
-        { name: "Generator", href: "/admin/generate" },
-        { name: "Features", href: "/#features" },
-        { name: "Pricing", href: "/pricing" },
-        { name: "Changelog", href: "#" },
-      ],
-    },
-    {
-      title: "Company",
-      links: [
-        { name: "About Us", href: "#" },
-        { name: "Contact", href: "/contact" },
-        { name: "Privacy Policy", href: "/privacy" },
-        { name: "Terms of Service", href: "/terms" },
-      ],
-    },
-    {
-      title: "Social",
-      links: [
-        { name: "Twitter / X", href: "https://x.com" },
-        { name: "LinkedIn", href: "https://linkedin.com" },
-        { name: "Peerlist", href: "#" },
-        { name: "GitHub", href: "https://github.com" },
-      ],
-    },
-  ];
-
   return (
-    <footer className="border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-black/50 transition-colors duration-300">
-      <div className="container mx-auto px-6 pt-16 pb-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-16">
-          
-          {/* Brand Column */}
-          <div className="col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-6 group">
-             
-              <span className="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">
-                Post<span className="text-blue-600">Bloom</span>
-              </span>
-            </Link>
-            <p className="text-neutral-500 dark:text-neutral-400 max-w-xs leading-relaxed text-sm mb-6">
-              The world&apos;s most advanced AI content repurposing engine. 
-              Turn one idea into a week of optimized social presence.
+    <footer className="border-t border-slate-200 bg-[#f5f7fb] text-slate-950 dark:border-white/6 dark:bg-[#07090f] dark:text-white">
+      <div className="mx-auto max-w-6xl px-6 py-14 sm:px-8">
+        <div className="grid gap-10 md:grid-cols-[1.3fr_repeat(3,1fr)]">
+          <div className="max-w-sm">
+            <SparklesText
+              sparklesCount={6}
+              colors={{ first: "#6f8dff", second: "#a9bfff" }}
+              className="inline-flex text-sm font-black tracking-[-0.04em] text-slate-950 dark:text-white"
+            >
+              Post<span className="text-[#6f8dff] dark:text-[#a9bfff]">Bloom</span>
+            </SparklesText>
+            <p className="mt-5 text-sm leading-7 text-slate-600 dark:text-white/52">
+              Turn one rough thought into polished social content built for modern distribution.
             </p>
-            
-            {/* Status Indicator */}
-         
+            <div className="mt-6 flex items-center gap-4 text-slate-500 dark:text-white/50">
+              <Link href="https://x.com" className="transition-colors hover:text-slate-950 dark:hover:text-white">
+                <Twitter className="h-4 w-4" />
+              </Link>
+              <Link href="https://linkedin.com" className="transition-colors hover:text-slate-950 dark:hover:text-white">
+                <Linkedin className="h-4 w-4" />
+              </Link>
+              <Link href="https://instagram.com" className="transition-colors hover:text-slate-950 dark:hover:text-white">
+                <Instagram className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
 
-          {/* Navigation Columns */}
           {footerSections.map((section) => (
-            <div key={section.title} className="flex flex-col gap-4">
-              <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider">
+            <div key={section.title}>
+              <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400 dark:text-white/38">
                 {section.title}
-              </h4>
-              <ul className="flex flex-col gap-3">
+              </h3>
+              <div className="mt-5 flex flex-col gap-3">
                 {section.links.map((link) => (
-                  <li key={link.name}>
-                    <Link 
-                      href={link.href} 
-                      className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-white transition-colors"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    className="text-sm text-slate-600 transition-colors hover:text-slate-950 dark:text-white/62 dark:hover:text-white"
+                  >
+                    {link.name}
+                  </Link>
                 ))}
-              </ul>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-neutral-200 dark:border-neutral-800 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex flex-col items-center md:items-start gap-1">
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              © {currentYear} PostBloom Labs Inc. Built with passion for creators.
-            </p>
-           
-          </div>
-
-          {/* Social Icons (Quick Access) */}
-          <div className="flex items-center gap-5">
-            <a href="#" className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              <Twitter className="h-5 w-5" />
-            </a>
-            <a href="#" className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              <Linkedin className="h-5 w-5" />
-            </a>
-            <a href="#" className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              <Github className="h-5 w-5" />
-            </a>
-          </div>
+        <div className="mt-12 flex flex-col gap-3 border-t border-slate-200 pt-6 text-xs text-slate-400 dark:border-white/6 dark:text-white/36 sm:flex-row sm:items-center sm:justify-between">
+          <p>&copy; {currentYear} PostBloom. All rights reserved.</p>
+          <p>Built for fast, consistent publishing.</p>
         </div>
       </div>
     </footer>
