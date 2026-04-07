@@ -8,6 +8,10 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { Platform, Prisma } from '@/lib/generated/prisma/client';
 import { toUserFriendlyError } from '@/lib/error-utils';
+import {
+  consumeDailyPostGenerationLimit,
+  FREE_DAILY_LIMIT_EXCEEDED_MESSAGE,
+} from '@/lib/rate-limit';
 
 /**
  * A streaming Server Action for content generation.
@@ -15,14 +19,29 @@ import { toUserFriendlyError } from '@/lib/error-utils';
  * via a ReadableStream, optimized for high-speed content delivery.
  */
 export async function generateStreamAction(data: ContentRequest) {
-  const { mode, topic, text, tone, audience, apiKey } = data;
-
-  if (!apiKey) {
-    throw new Error('Gemini API key is required');
-  }
+  const { mode, topic, text, tone, audience } = data;
 
   if (mode === 'youtube') {
     throw new Error('YouTube generation uses a dedicated server action.');
+  }
+
+  const { userId: clerkId } = await auth();
+  if (!clerkId) {
+    throw new Error('Please sign in to generate content.');
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { clerkId },
+    select: { id: true },
+  });
+
+  if (!user) {
+    throw new Error('Your account is not ready yet. Please reload the homepage and try again.');
+  }
+
+  const rateLimit = await consumeDailyPostGenerationLimit(user.id);
+  if (!rateLimit.allowed) {
+    throw new Error(FREE_DAILY_LIMIT_EXCEEDED_MESSAGE);
   }
 
   const { readable, writable } = new TransformStream();
@@ -32,7 +51,7 @@ export async function generateStreamAction(data: ContentRequest) {
   // Execute streaming in a secondary context to prevent blocking
   (async () => {
     try {
-      const generator = streamGenerateContent(mode, apiKey, topic, text, tone, audience);
+      const generator = streamGenerateContent(mode, topic, text, tone, audience);
       for await (const chunk of generator) {
         if (chunk) {
           await writer.write(encoder.encode(chunk));

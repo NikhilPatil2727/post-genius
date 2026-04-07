@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 
 import { CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button as StatefulButton } from "@/components/ui/stateful-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -176,11 +176,11 @@ export default function GeneratorForm({
 
         {/* Bottom Generate button - flex-shrink: 0, padding 14px 18px, border-top */}
         <div className="flex-shrink-0 px-6 py-4 border-t border-border/40 bg-zinc-50/50 dark:bg-zinc-950/20 z-10 w-full transition-all">
-          <Button
+          <StatefulButton
             type="submit"
             className={cn(
-              "w-full h-9 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all active:scale-[0.97] group relative overflow-hidden",
-              "bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900 hover:opacity-90 cursor-pointer shadow-sm",
+              "w-full min-w-0 h-9 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all active:scale-[0.97] group relative overflow-hidden",
+              "bg-zinc-900 px-4 py-2 text-zinc-100 hover:opacity-90 hover:ring-0 dark:bg-zinc-100 dark:text-zinc-900 dark:ring-offset-zinc-950",
               loading ? "opacity-70 cursor-wait" : ""
             )}
             disabled={loading}
@@ -199,7 +199,7 @@ export default function GeneratorForm({
                 <span>Generate Content</span>
               )}
             </div>
-          </Button>
+          </StatefulButton>
         </div>
       </form>
       <style dangerouslySetInnerHTML={{
