@@ -3,18 +3,19 @@
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import GeneratorForm from '@/modules/generator/components/GeneratorForm';
 import { ContentDisplay } from '@/modules/generator/components/ContentDisplay';
-import { Key, AlertCircle, X } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import type { ContentResponse, ContentRequest } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateStreamAction, savePostAction, getPostByIdAction } from '@/modules/generator/actions';
 import { generateYouTubePostAction } from '@/modules/generator/actions/youtube';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toUserFriendlyError } from '@/lib/error-utils';
+import { toast } from 'sonner';
 
 const CONTENT_PLATFORMS = ['linkedin', 'twitter', 'instagram', 'peerlist'] as const;
 type ContentPlatformKey = (typeof CONTENT_PLATFORMS)[number];
+const FREE_LIMIT_MESSAGE = 'Your free limit has been exceeded. Please try again later.';
 
 const isYouTubeUrl = (value?: string | null) =>
   Boolean(value && /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)/i.test(value));
@@ -29,9 +30,6 @@ function GeneratePageContent() {
   });
   const [hasGenerated, setHasGenerated] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [apiKey, setApiKey] = useState<string>('');
-  const [showApiKeyError, setShowApiKeyError] = useState(false);
   const [initialData, setInitialData] = useState<Partial<ContentRequest>>({});
   
   const router = useRouter();
@@ -107,27 +105,9 @@ function GeneratePageContent() {
     }
   }, [postId, loadPost, clearPage]);
 
-  // Load API key from localStorage
-  useEffect(() => {
-    const savedKey = localStorage.getItem('gemini_api_key');
-    if (savedKey) setApiKey(savedKey);
-  }, []);
-
-  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newKey = e.target.value;
-    setApiKey(newKey);
-    localStorage.setItem('gemini_api_key', newKey);
-  };
-
   const handleGenerate = async (data: ContentRequest) => {
-    if (!apiKey || apiKey.trim() === '') {
-      setShowApiKeyError(true);
-      return;
-    }
-
     setLoading(true);
     setError(null);
-    setShowApiKeyError(false);
     setHasGenerated(true);
 
     // Reset content for new generation
@@ -151,7 +131,6 @@ function GeneratePageContent() {
           youtubeUrl: data.youtubeUrl,
           tone: data.tone,
           audience: data.audience,
-          apiKey,
         });
 
         if (!result.success) {
@@ -162,7 +141,7 @@ function GeneratePageContent() {
         setContent(result.content);
       } else {
         // Call the Server Action directly
-        const stream = await generateStreamAction({ ...data, apiKey });
+        const stream = await generateStreamAction(data);
 
         const reader = stream.getReader();
         const decoder = new TextDecoder();
@@ -248,7 +227,17 @@ function GeneratePageContent() {
 
     } catch (err) {
       console.error('Generation process error:', err);
-      setError(toUserFriendlyError(err, 'We could not generate your content right now. Please try again.'));
+      const message = toUserFriendlyError(
+        err,
+        'We could not generate your content right now. Please try again.'
+      );
+
+      if (message === FREE_LIMIT_MESSAGE) {
+        toast.error(message);
+        setError(null);
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -282,18 +271,6 @@ function GeneratePageContent() {
           </div>
 
           <div className="flex items-center gap-3 w-full lg:w-auto">
-            <div className="relative w-full lg:w-72 group">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none transition-colors group-focus-within:text-primary">
-                <Key className="h-4 w-4 text-zinc-400" />
-              </div>
-              <Input
-                type="password"
-                placeholder="Gemini API Key..."
-                value={apiKey}
-                onChange={handleApiKeyChange}
-                className="pl-9 h-10 bg-white dark:bg-zinc-950/50 border-zinc-200 dark:border-zinc-800 rounded-xl focus-visible:ring-primary shadow-sm text-sm transition-all focus-visible:shadow-md"
-              />
-            </div>
             {hasGenerated && !loading && (
               <Button 
                 variant="ghost" 
@@ -307,34 +284,6 @@ function GeneratePageContent() {
           </div>
         </div>
       </motion.div>
-
-      <AnimatePresence>
-        {showApiKeyError && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/50 p-6 rounded-2xl flex items-start gap-4 shadow-sm mb-6">
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg text-amber-600">
-                <AlertCircle className="h-6 w-6" />
-              </div>
-              <div className="flex-1">
-                <h4 className="text-base font-bold text-amber-900 dark:text-amber-100 mb-1">
-                  Gemini API Key Required
-                </h4>
-                <p className="text-sm text-amber-700 dark:text-amber-300 leading-relaxed">
-                  To stream high-quality content, we need your free API key. Get it in 2 seconds at <a href="https://aistudio.google.com/" target="_blank" rel="noreferrer" className="underline font-bold decoration-amber-500/50 hover:decoration-amber-500">Google AI Studio</a>.
-                </p>
-              </div>
-              <Button variant="ghost" size="icon" onClick={() => setShowApiKeyError(false)} className="text-amber-500 shrink-0">
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         <motion.div

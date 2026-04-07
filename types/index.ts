@@ -5,7 +5,6 @@ export type ContentRequest = {
   youtubeUrl?: string;
   tone?: string;
   audience?: string;
-  apiKey?: string;
 };
 
 export type ContentResponse = {

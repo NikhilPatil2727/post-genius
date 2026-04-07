@@ -1,9 +1,15 @@
 'use server';
 
 import { YoutubeTranscript } from 'youtube-transcript';
+import { auth } from '@clerk/nextjs/server';
 
 import { generateContentFromTranscript } from '@/lib/gemini';
 import { toUserFriendlyError } from '@/lib/error-utils';
+import { prisma } from '@/lib/prisma';
+import {
+  consumeDailyPostGenerationLimit,
+  FREE_DAILY_LIMIT_EXCEEDED_MESSAGE,
+} from '@/lib/rate-limit';
 import type { YouTubeToPostActionResult } from '@/types';
 
 const MAX_TRANSCRIPT_CHARS = 12000;
@@ -16,16 +22,33 @@ export async function generateYouTubePostAction(data: {
   youtubeUrl?: string;
   tone?: string;
   audience?: string;
-  apiKey?: string;
 }): Promise<YouTubeToPostActionResult> {
-  const { youtubeUrl, tone, audience, apiKey } = data;
-
-  if (!apiKey) {
-    return { success: false, error: 'Gemini API key is required.' };
-  }
+  const { youtubeUrl, tone, audience } = data;
 
   if (!youtubeUrl || youtubeUrl.trim() === '') {
     return { success: false, error: 'Please add a YouTube URL.' };
+  }
+
+  const { userId: clerkId } = await auth();
+  if (!clerkId) {
+    return { success: false, error: 'Please sign in to generate content.' };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { clerkId },
+    select: { id: true },
+  });
+
+  if (!user) {
+    return {
+      success: false,
+      error: 'Your account is not ready yet. Please reload the homepage and try again.',
+    };
+  }
+
+  const rateLimit = await consumeDailyPostGenerationLimit(user.id);
+  if (!rateLimit.allowed) {
+    return { success: false, error: FREE_DAILY_LIMIT_EXCEEDED_MESSAGE };
   }
 
   try {
@@ -48,7 +71,6 @@ export async function generateYouTubePostAction(data: {
 
     const condensedTranscript = transcriptText.slice(0, MAX_TRANSCRIPT_CHARS);
     const content = await generateContentFromTranscript(
-      apiKey,
       youtubeUrl.trim(),
       condensedTranscript,
       tone,

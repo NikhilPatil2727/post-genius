@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import type { ContentResponse } from "@/types";
+import { getServerGeminiApiKey } from "@/lib/server-env";
 
 /**
  * MARKERS for streaming protocol.
@@ -83,12 +84,12 @@ Do NOT include any preamble. Start immediately with the first marker.
  */
 export async function* streamGenerateContent(
   mode: 'topic' | 'rewrite',
-  apiKey: string,
   topic?: string,
   text?: string,
   tone?: string,
   audience?: string
 ) {
+  const apiKey = getServerGeminiApiKey();
   const ai = new GoogleGenAI({ apiKey });
 
   const mainPrompt = BUILD_MAIN_PROMPT(mode, topic, text, tone, audience);
@@ -141,12 +142,12 @@ function normalizeStructuredContentResponse(value: unknown): ContentResponse {
 }
 
 export async function generateContentFromTranscript(
-  apiKey: string,
   youtubeUrl: string,
   transcriptText: string,
   tone?: string,
   audience?: string
 ): Promise<ContentResponse> {
+  const apiKey = getServerGeminiApiKey();
   const ai = new GoogleGenAI({ apiKey });
 
   const response = await ai.models.generateContent({
