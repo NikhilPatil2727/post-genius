@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { randomUUID } from "node:crypto";
 
-const FREE_DAILY_POST_GENERATION_LIMIT = 5;
+const FREE_DAILY_POST_GENERATION_LIMIT = 2;
 const DAILY_WINDOW_MS = 24 * 60 * 60 * 1000;
 const SLIDING_WINDOW_RATE_LIMIT_KEY = "post-generation-free-daily";
 

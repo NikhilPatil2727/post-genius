@@ -151,7 +151,7 @@ const pricing = [
     price: "$0",
     description: "For trying the workflow",
     features: [
-      "5 AI-generated post requests / day",
+      "2 AI-generated post requests / day",
       "All 4 platforms",
       "Standard AI-generated drafts",
     ],
