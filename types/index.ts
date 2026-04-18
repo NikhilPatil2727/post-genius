@@ -1,3 +1,11 @@
+export type ContentTemplate =
+  | 'general'
+  | 'lessons_learned'
+  | 'mistake_post'
+  | 'build_in_public'
+  | 'startup_story'
+  | 'thread_breakdown';
+
 export type ContentRequest = {
   mode: 'topic' | 'rewrite' | 'youtube';
   topic?: string;
@@ -5,6 +13,7 @@ export type ContentRequest = {
   youtubeUrl?: string;
   tone?: string;
   audience?: string;
+  template?: ContentTemplate;
 };
 
 export type ContentResponse = {
