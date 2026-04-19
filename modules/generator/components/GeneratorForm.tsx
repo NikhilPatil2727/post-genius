@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PenTool, RefreshCw, Video } from "lucide-react";
-import type { ContentRequest } from "@/types";
+import type { ContentRequest, ContentTemplate } from "@/types";
 import { cn } from "@/lib/utils";
 
 interface GeneratorFormProps {
@@ -28,6 +28,14 @@ interface GeneratorFormProps {
 
 const TONES = ["professional", "casual", "friendly", "authoritative", "enthusiastic", "conversational", "educational", "inspirational"];
 const AUDIENCES = ["general", "business", "tech", "creatives", "entrepreneurs", "marketers", "developers", "students"];
+const CONTENT_TEMPLATES: { value: ContentTemplate; label: string }[] = [
+  { value: "general", label: "General Post" },
+  { value: "lessons_learned", label: "Lessons Learned" },
+  { value: "mistake_post", label: "Mistake Post" },
+  { value: "build_in_public", label: "Build in Public" },
+  { value: "startup_story", label: "Startup Story" },
+  { value: "thread_breakdown", label: "Thread Breakdown" },
+];
 
 export default function GeneratorForm({
   onSubmit,
@@ -40,10 +48,11 @@ export default function GeneratorForm({
   const [youtubeUrl, setYoutubeUrl] = useState(initialData?.youtubeUrl ?? "");
   const [tone, setTone] = useState(initialData?.tone ?? "professional");
   const [audience, setAudience] = useState(initialData?.audience ?? "general");
+  const [template, setTemplate] = useState<ContentTemplate>(initialData?.template ?? "general");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const data: ContentRequest = { mode, tone, audience };
+    const data: ContentRequest = { mode, tone, audience, template };
     if (mode === "topic") data.topic = topic;
     else if (mode === "rewrite") data.text = text;
     else data.youtubeUrl = youtubeUrl;
@@ -136,6 +145,24 @@ export default function GeneratorForm({
           </Tabs>
 
           <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="template" className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                Content Template
+              </Label>
+              <Select value={template} onValueChange={(value) => setTemplate(value as ContentTemplate)} disabled={loading}>
+                <SelectTrigger className="h-10 text-sm bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 rounded-lg transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900">
+                  <SelectValue placeholder="Select template" />
+                </SelectTrigger>
+                <SelectContent className="rounded-lg p-1 text-sm">
+                  {CONTENT_TEMPLATES.map((item) => (
+                    <SelectItem key={item.value} value={item.value} className="rounded-md py-1.5 font-medium cursor-pointer">
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="tone" className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                 Editorial Voice

@@ -10,7 +10,7 @@ import {
   consumeDailyPostGenerationLimit,
   FREE_DAILY_LIMIT_EXCEEDED_MESSAGE,
 } from '@/lib/rate-limit';
-import type { YouTubeToPostActionResult } from '@/types';
+import type { ContentTemplate, YouTubeToPostActionResult } from '@/types';
 
 const MAX_TRANSCRIPT_CHARS = 12000;
 
@@ -22,8 +22,9 @@ export async function generateYouTubePostAction(data: {
   youtubeUrl?: string;
   tone?: string;
   audience?: string;
+  template?: ContentTemplate;
 }): Promise<YouTubeToPostActionResult> {
-  const { youtubeUrl, tone, audience } = data;
+  const { youtubeUrl, tone, audience, template } = data;
 
   if (!youtubeUrl || youtubeUrl.trim() === '') {
     return { success: false, error: 'Please add a YouTube URL.' };
@@ -74,7 +75,8 @@ export async function generateYouTubePostAction(data: {
       youtubeUrl.trim(),
       condensedTranscript,
       tone,
-      audience
+      audience,
+      template
     );
 
     return {

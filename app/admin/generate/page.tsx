@@ -131,6 +131,7 @@ function GeneratePageContent() {
           youtubeUrl: data.youtubeUrl,
           tone: data.tone,
           audience: data.audience,
+          template: data.template,
         });
 
         if (!result.success) {
