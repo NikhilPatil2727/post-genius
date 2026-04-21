@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import Image from "next/image";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 
 export default function HeroScrollDemo() {
@@ -28,14 +27,16 @@ export default function HeroScrollDemo() {
         frameClassName="rounded-[1.9rem] border-[10px] border-[#f3f4f6] bg-[#f8fafc] p-[14px] shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-[#818181] dark:bg-[#232323] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] md:border-[14px] md:p-[18px]"
       >
         <div className="relative h-full w-full overflow-hidden rounded-[1.45rem] border border-[#d7dbe2] bg-[#111827] dark:border-[#2c2c2c] dark:bg-[#18181b]">
-          <Image
-            src="/dashboard.png"
-            alt="Post Genius dashboard preview"
-            fill
-            priority
-            sizes="(max-width: 768px) 92vw, 1100px"
-            className="object-cover object-center"
-            draggable={false}
+          <video
+            src="/NewHomePageUpdate.mp4"
+            aria-label="Post Genius dashboard preview"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            className="h-full w-full object-cover object-center"
+            controls={false}
           />
         </div>
       </ContainerScroll>

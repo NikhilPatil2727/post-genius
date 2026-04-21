@@ -19,7 +19,7 @@ import {
  * via a ReadableStream, optimized for high-speed content delivery.
  */
 export async function generateStreamAction(data: ContentRequest) {
-  const { mode, topic, text, tone, audience } = data;
+  const { mode, topic, text, tone, audience, template } = data;
 
   if (mode === 'youtube') {
     throw new Error('YouTube generation uses a dedicated server action.');
@@ -51,7 +51,7 @@ export async function generateStreamAction(data: ContentRequest) {
   // Execute streaming in a secondary context to prevent blocking
   (async () => {
     try {
-      const generator = streamGenerateContent(mode, topic, text, tone, audience);
+      const generator = streamGenerateContent(mode, topic, text, tone, audience, template);
       for await (const chunk of generator) {
         if (chunk) {
           await writer.write(encoder.encode(chunk));
