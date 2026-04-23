@@ -479,9 +479,6 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
             color: #9CA3AF;
             pointer-events: none;
           }
-          .dark .editor-container [contenteditable]:empty:before {
-            color: rgba(255,255,255,0.38);
-          }
           .stream-dot {
             width: 6px;
             height: 6px;
@@ -672,7 +669,7 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
                         onKeyUp={saveSelection}
                         onMouseUp={saveSelection}
                         data-placeholder={`Edit your ${activeConfig.name} draft...`}
-                        className="min-h-[220px] rounded-[12px] border border-[#d1d5db] bg-white px-[14px] py-3 text-sm font-normal leading-relaxed text-[#111827] caret-[#2563EB] outline-none transition-all duration-200 focus:border-[#60a5fa] focus:ring-2 focus:ring-[#bfdbfe] dark:border-[rgba(255,255,255,0.12)] dark:bg-[#0F0F12] dark:text-[#EDEDED] dark:caret-[#93C5FD] dark:focus:border-[#3B82F6] dark:focus:ring-[rgba(59,130,246,0.22)] md:min-h-full"
+                        className="min-h-[220px] rounded-[12px] border border-[#d1d5db] bg-white px-[14px] py-3 text-sm font-normal leading-relaxed text-[#111827] outline-none transition-all duration-200 focus:border-[#60a5fa] focus:ring-2 focus:ring-[#bfdbfe] dark:border-[rgba(255,255,255,0.12)] dark:text-[#EDEDED] md:min-h-full"
                       />
                     </>
                   ) : content[activeTab] ? (

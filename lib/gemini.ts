@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import type { ContentResponse, ContentTemplate } from "@/types";
+import type { ContentResponse } from "@/types";
 import { getServerGeminiApiKey } from "@/lib/server-env";
 
 /**
@@ -30,49 +30,16 @@ const SYSTEM_PROMPT = `You are an elite Social Media Ghostwriter and Content Str
 Your goal is to transform raw ideas or topics into viral-ready, high-engagement content across 4 specific platforms.
 You write with a "Human-First" approach: avoid corporate jargon, robotic listicles, or cliché AI openings.`;
 
-const TEMPLATE_INSTRUCTIONS: Record<ContentTemplate, string> = {
-  general: "Use the best native structure for each platform based on the idea, audience, and tone.",
-  lessons_learned: `Create a lessons learned post.
-- Open with the experience, outcome, or realization.
-- Share 3-5 specific lessons with practical takeaways.
-- Make the lessons feel earned, not generic.
-- End with a reflective question or useful takeaway.`,
-  mistake_post: `Create a mistake post.
-- Open with the mistake clearly and honestly.
-- Explain what caused it and what it cost.
-- Share the fix, lesson, or better approach.
-- Keep the tone useful, grounded, and non-dramatic.`,
-  build_in_public: `Create a build in public update.
-- Share what was built, shipped, tested, or changed.
-- Include a specific result, blocker, or learning.
-- Mention what is next.
-- Make it transparent, momentum-driven, and maker-friendly.`,
-  startup_story: `Create a startup story post.
-- Tell a short narrative with a problem, struggle, turning point, and insight.
-- Keep the founder/operator perspective clear.
-- Make it relatable and specific.
-- End with a lesson or conversation starter.`,
-  thread_breakdown: `Create a thread-style breakdown.
-- Break the idea into clear numbered points or steps.
-- Make every point concise and useful.
-- For X, write a strong thread hook or compressed mini-thread.
-- Prioritize clarity, structure, and shareability.`,
-};
-
 /**
  * Optimized dynamic prompt builder.
  */
-const BUILD_MAIN_PROMPT = (mode: string, topic?: string, text?: string, tone?: string, audience?: string, template: ContentTemplate = "general") => `
+const BUILD_MAIN_PROMPT = (mode: string, topic?: string, text?: string, tone?: string, audience?: string) => `
 CORE OBJECTIVE:
 Generate highly tailored content based on the following context:
 - MODE: ${mode === 'topic' ? 'Idea Generation' : 'Content Refinement/Rewrite'}
 - TARGET KEYWORDS/TOPIC: ${topic || 'Analyze the provided text'}
 - VOICE TONE: ${tone || 'Professional yet accessible'}
 - TARGET AUDIENCE: ${audience || 'General professionals and enthusiasts'}
-- CONTENT TEMPLATE: ${template.replace(/_/g, ' ')}
-
-TEMPLATE DIRECTION:
-${TEMPLATE_INSTRUCTIONS[template] || TEMPLATE_INSTRUCTIONS.general}
 
 ${mode === 'rewrite' ? `SOURCE MATERIAL TO TRANSFORM:
 "${text}"
@@ -120,13 +87,12 @@ export async function* streamGenerateContent(
   topic?: string,
   text?: string,
   tone?: string,
-  audience?: string,
-  template: ContentTemplate = "general"
+  audience?: string
 ) {
   const apiKey = getServerGeminiApiKey();
   const ai = new GoogleGenAI({ apiKey });
 
-  const mainPrompt = BUILD_MAIN_PROMPT(mode, topic, text, tone, audience, template);
+  const mainPrompt = BUILD_MAIN_PROMPT(mode, topic, text, tone, audience);
 
   try {
     const response = await ai.models.generateContentStream({
@@ -179,8 +145,7 @@ export async function generateContentFromTranscript(
   youtubeUrl: string,
   transcriptText: string,
   tone?: string,
-  audience?: string,
-  template: ContentTemplate = "general"
+  audience?: string
 ): Promise<ContentResponse> {
   const apiKey = getServerGeminiApiKey();
   const ai = new GoogleGenAI({ apiKey });
@@ -200,10 +165,6 @@ Context:
 - YOUTUBE URL: ${youtubeUrl}
 - VOICE TONE: ${tone || "professional"}
 - TARGET AUDIENCE: ${audience || "general"}
-- CONTENT TEMPLATE: ${template.replace(/_/g, " ")}
-
-Template direction:
-${TEMPLATE_INSTRUCTIONS[template] || TEMPLATE_INSTRUCTIONS.general}
 
 Rules:
 - Keep the core message accurate to the transcript.
