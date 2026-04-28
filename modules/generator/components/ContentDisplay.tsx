@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useRef, useState, useSyncExternalStore } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -28,7 +28,6 @@ import { cn } from '@/lib/utils';
 
 interface ContentDisplayProps {
   content: ContentResponse;
-  isStreaming?: boolean;
 }
 
 const PLATFORM_CONFIG: Record<
@@ -123,51 +122,10 @@ const htmlToMarkdown = (html: string): string =>
     .replace(/<[^>]*>/g, '')
     .trim();
 
-function useTypingEffect(rawContent: string, isStreaming: boolean) {
-  const [displayedContent, setDisplayedContent] = useState(rawContent);
-  const targetRef = useRef(rawContent);
-  const frameRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    targetRef.current = rawContent;
-
-    if (!isStreaming) {
-      const id = requestAnimationFrame(() => setDisplayedContent(rawContent));
-      return () => cancelAnimationFrame(id);
-    }
-
-    if (frameRef.current) {
-      cancelAnimationFrame(frameRef.current);
-    }
-
-    const tick = () => {
-      setDisplayedContent((prev) => {
-        if (prev.length >= targetRef.current.length) {
-          return prev;
-        }
-        const nextLength = Math.min(prev.length + 2, targetRef.current.length);
-        return targetRef.current.slice(0, nextLength);
-      });
-      frameRef.current = requestAnimationFrame(tick);
-    };
-
-    frameRef.current = requestAnimationFrame(tick);
-
-    return () => {
-      if (frameRef.current) {
-        cancelAnimationFrame(frameRef.current);
-        frameRef.current = null;
-      }
-    };
-  }, [rawContent, isStreaming]);
-
-  return displayedContent;
-}
-
 const EDITABLE_PLATFORMS: Platform[] = ['linkedin', 'twitter', 'instagram', 'peerlist'];
 const EMOJIS = ['😀', '🔥', '✨', '🚀', '💡', '🎉', '👏', '🙌', '💯', '✅', '😍', '🤝'];
 
-export function ContentDisplay({ content, isStreaming = false }: ContentDisplayProps) {
+export function ContentDisplay({ content }: ContentDisplayProps) {
   const { user } = useUser();
   const isHydrated = useSyncExternalStore(
     () => () => {},
@@ -183,26 +141,10 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
   const selectionRef = useRef<Range | null>(null);
 
   const platformIds: Platform[] = ['linkedin', 'twitter', 'instagram', 'peerlist'];
-  const streamingPlatform = isStreaming
-    ? [...platformIds].reverse().find((id) => (content[id]?.length ?? 0) > 0) ?? null
-    : null;
-
-  const completedPlatforms = platformIds.filter((id) => {
-    const hasContent = (content[id]?.length ?? 0) > 0;
-    if (!isStreaming) return hasContent;
-    if (!streamingPlatform) return false;
-    return hasContent && id !== streamingPlatform && platformIds.indexOf(id) < platformIds.indexOf(streamingPlatform);
-  });
-
-  const typedContent = {
-    linkedin: useTypingEffect(content.linkedin || '', isStreaming && activeTab === 'linkedin'),
-    twitter: useTypingEffect(content.twitter || '', isStreaming && activeTab === 'twitter'),
-    instagram: useTypingEffect(content.instagram || '', isStreaming && activeTab === 'instagram'),
-    peerlist: useTypingEffect(content.peerlist || '', isStreaming && activeTab === 'peerlist'),
-  };
+  const completedPlatforms = platformIds.filter((id) => (content[id]?.length ?? 0) > 0);
 
   const activeConfig = PLATFORM_CONFIG[activeTab];
-  const activeContent = editedContent[activeTab] ?? typedContent[activeTab] ?? '';
+  const activeContent = editedContent[activeTab] ?? content[activeTab] ?? '';
   const isEditing = editingPlatform === activeTab;
   const isEditable = EDITABLE_PLATFORMS.includes(activeTab);
 
@@ -479,17 +421,6 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
             color: #9CA3AF;
             pointer-events: none;
           }
-          .stream-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 999px;
-            background: #2563EB;
-            animation: stream-pulse 0.8s ease-in-out infinite;
-          }
-          @keyframes stream-pulse {
-            0%, 100% { opacity: 0.35; }
-            50% { opacity: 1; }
-          }
         `,
         }}
       />
@@ -498,13 +429,12 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
         <div className="flex items-center justify-between px-5 py-4">
           <div className="flex items-center gap-2">
             <h3 className="text-[13px] font-medium text-[#0F0F0F] dark:text-[#EDEDED]">Generated drafts</h3>
-            {isStreaming ? <span className="stream-dot" /> : null}
           </div>
 
           <button
             type="button"
             onClick={copyAll}
-            disabled={isStreaming || !content.linkedin}
+            disabled={!content.linkedin}
             className="rounded-[8px] border border-[rgba(0,0,0,0.12)] px-3 py-1.5 text-[13px] font-medium text-[#0F0F0F] disabled:opacity-50 dark:border-[rgba(255,255,255,0.12)] dark:text-[#EDEDED]"
           >
             {copied === 'all' ? 'Copied all' : 'Export all'}
@@ -692,7 +622,7 @@ export function ContentDisplay({ content, isStreaming = false }: ContentDisplayP
                     </div>
                   ) : (
                     <div className="py-10 text-center text-[12px] font-normal text-[#9CA3AF]">
-                      {isStreaming && streamingPlatform !== activeTab ? 'Generating…' : 'Share your thoughts...'}
+                      Share your thoughts...
                     </div>
                   )}
 

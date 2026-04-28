@@ -1,6 +1,6 @@
 'use server';
 
-import { streamGenerateContent } from '@/lib/gemini';
+import { generateContent } from '@/lib/gemini';
 import { ContentRequest } from '@/types';
 
 import { auth } from '@clerk/nextjs/server';
@@ -8,17 +8,12 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { Platform, Prisma } from '@/lib/generated/prisma/client';
 import { toUserFriendlyError } from '@/lib/error-utils';
-import {
-  consumeDailyPostGenerationLimit,
-  FREE_DAILY_LIMIT_EXCEEDED_MESSAGE,
-} from '@/lib/rate-limit';
 
 /**
- * A streaming Server Action for content generation.
- * This function initiates the Gemini stream and passes it back to the client
- * via a ReadableStream, optimized for high-speed content delivery.
+ * A server action for content generation.
+ * This waits for the full Gemini response before returning it.
  */
-export async function generateStreamAction(data: ContentRequest) {
+export async function generateContentAction(data: ContentRequest) {
   const { mode, topic, text, tone, audience } = data;
 
   if (mode === 'youtube') {
@@ -39,40 +34,18 @@ export async function generateStreamAction(data: ContentRequest) {
     throw new Error('Your account is not ready yet. Please reload the homepage and try again.');
   }
 
-  const rateLimit = await consumeDailyPostGenerationLimit(user.id);
-  if (!rateLimit.allowed) {
-    throw new Error(FREE_DAILY_LIMIT_EXCEEDED_MESSAGE);
-  }
-
-  const { readable, writable } = new TransformStream();
-  const writer = writable.getWriter();
-  const encoder = new TextEncoder();
-
-  // Execute streaming in a secondary context to prevent blocking
-  (async () => {
-    try {
-      const generator = streamGenerateContent(mode, topic, text, tone, audience);
-      for await (const chunk of generator) {
-        if (chunk) {
-          await writer.write(encoder.encode(chunk));
-        }
-      }
-    } catch (error) {
-      console.error('Server Action Streaming Error:', error);
-      const errorMessage = toUserFriendlyError(
+  try {
+    return await generateContent(mode, topic, text, tone, audience);
+  } catch (error) {
+    console.error('Server Action Generate Error:', error);
+    throw new Error(
+      toUserFriendlyError(
         error,
         'We could not generate your content right now. Please try again.'
-      );
-      await writer.write(encoder.encode(`[[ERROR]] ${errorMessage}`));
-    } finally {
-      await writer.close();
-    }
-  })();
-
-  return readable;
+      )
+    );
+  }
 }
-
-
 
 /**
  * Saves a new post and its platform variants to the database.
@@ -89,7 +62,6 @@ export async function savePostAction(data: {
     return { success: false, error: 'Please sign in to save your post.' };
   }
   try {
-    // Create the post and its variants in a single transaction
     const post = await prisma.post.create({
       data: {
         user: { connect: { clerkId } },
@@ -110,7 +82,7 @@ export async function savePostAction(data: {
     });
     revalidatePath('/admin/generate');
     revalidatePath('/admin');
-    
+
     return { success: true, post };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
@@ -124,10 +96,7 @@ export async function savePostAction(data: {
     return { success: false, error: 'Failed to save generated content' };
   }
 }
-/**
- * Fetches all posts for the currently logged-in user.
- * Useful for the Dashboard view.
- */
+
 export async function getUserPostsAction() {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
@@ -135,8 +104,8 @@ export async function getUserPostsAction() {
   }
   try {
     const posts = await prisma.post.findMany({
-      where: { 
-        user: { clerkId } 
+      where: {
+        user: { clerkId },
       },
       select: {
         id: true,
@@ -148,14 +117,14 @@ export async function getUserPostsAction() {
             platform: true,
           },
           orderBy: {
-            platform: 'asc'
-          }
+            platform: 'asc',
+          },
         },
       },
       orderBy: {
-        createdAt: 'desc', // Show newest first
+        createdAt: 'desc',
       },
-      take: 25, // Optimization: only fetch most recent posts for history
+      take: 25,
     });
     return { success: true, posts };
   } catch (error) {
@@ -163,18 +132,15 @@ export async function getUserPostsAction() {
     return { success: false, error: 'Failed to load posts' };
   }
 }
-/**
- * Deletes a post and all its variants.
- */
+
 export async function deletePostAction(postId: string) {
   const { userId: clerkId } = await auth();
   if (!clerkId) return { success: false, error: 'Please sign in to delete this post.' };
   try {
-    // Verify ownership and delete in one go
     const deleteResult = await prisma.post.deleteMany({
-      where: { 
-        id: postId, 
-        user: { clerkId } 
+      where: {
+        id: postId,
+        user: { clerkId },
       },
     });
 
@@ -191,17 +157,14 @@ export async function deletePostAction(postId: string) {
   }
 }
 
-/**
- * Fetches a single post by its ID for the currently logged-in user.
- */
 export async function getPostByIdAction(postId: string) {
   const { userId: clerkId } = await auth();
   if (!clerkId) return { success: false, error: 'Please sign in to open this post.' };
   try {
     const post = await prisma.post.findFirst({
-      where: { 
-        id: postId, 
-        user: { clerkId } 
+      where: {
+        id: postId,
+        user: { clerkId },
       },
       include: {
         variants: true,

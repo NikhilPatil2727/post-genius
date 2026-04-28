@@ -6,10 +6,6 @@ import { auth } from '@clerk/nextjs/server';
 import { generateContentFromTranscript } from '@/lib/gemini';
 import { toUserFriendlyError } from '@/lib/error-utils';
 import { prisma } from '@/lib/prisma';
-import {
-  consumeDailyPostGenerationLimit,
-  FREE_DAILY_LIMIT_EXCEEDED_MESSAGE,
-} from '@/lib/rate-limit';
 import type { YouTubeToPostActionResult } from '@/types';
 
 const MAX_TRANSCRIPT_CHARS = 12000;
@@ -44,11 +40,6 @@ export async function generateYouTubePostAction(data: {
       success: false,
       error: 'Your account is not ready yet. Please reload the homepage and try again.',
     };
-  }
-
-  const rateLimit = await consumeDailyPostGenerationLimit(user.id);
-  if (!rateLimit.allowed) {
-    return { success: false, error: FREE_DAILY_LIMIT_EXCEEDED_MESSAGE };
   }
 
   try {
