@@ -15,9 +15,20 @@ const CONTENT_RESPONSE_SCHEMA = {
   required: ["linkedin", "twitter", "instagram", "peerlist"],
 };
 
-const SYSTEM_PROMPT = `You are an elite Social Media Ghostwriter and Content Strategist.
-Your goal is to transform raw ideas or topics into viral-ready, high-engagement content across 4 specific platforms.
-You write with a "Human-First" approach: avoid corporate jargon, robotic listicles, or cliched AI openings.`;
+const SYSTEM_PROMPT = [
+  "Write human-sounding social posts for LinkedIn, X, Instagram, and Peerlist.",
+  "Be clear, specific, and platform-native.",
+  "Avoid jargon, generic AI phrasing, and stale hooks.",
+  "Return JSON only.",
+].join(" ");
+
+const PLATFORM_RULES = `
+Rules by platform:
+- linkedin: <=700 chars, strong hook, short paragraphs, useful takeaway, end with exactly 3 relevant hashtags.
+- twitter: <=280 chars, concise hook, one core insight, optional CTA.
+- instagram: <=600 chars, strong first line with no emoji, readable body, end with exactly 5 relevant hashtags.
+- peerlist: <=700 chars, builder/project-update tone, practical and transparent, end with exactly 5 relevant tags or hashtags.
+`.trim();
 
 const buildMainPrompt = (
   mode: string,
@@ -26,47 +37,22 @@ const buildMainPrompt = (
   tone?: string,
   audience?: string
 ) => `
-CORE OBJECTIVE:
-Generate highly tailored content based on the following context:
-- MODE: ${mode === "topic" ? "Idea Generation" : "Content Refinement/Rewrite"}
-- TARGET KEYWORDS/TOPIC: ${topic || "Analyze the provided text"}
-- VOICE TONE: ${tone || "Professional yet accessible"}
-- TARGET AUDIENCE: ${audience || "General professionals and enthusiasts"}
+Task: generate platform-native posts.
+Context:
+- mode: ${mode}
+- topic: ${topic || "use source text"}
+- tone: ${tone || "professional yet accessible"}
+- audience: ${audience || "general professionals and enthusiasts"}
 
 ${mode === "rewrite"
-    ? `SOURCE MATERIAL TO TRANSFORM:
-"${text}"
-Analyze the core message above and expand or refine it for the platforms below.`
-    : `GENERATE FROM TOPIC:
-Create a thought-leadership narrative around "${topic}".`}
+    ? `Source text:
+${text}`
+    : `Create content about:
+${topic}`}
 
-PLATFORM SPECIFIC INSTRUCTIONS:
-
-1) LinkedIn:
-   - Length: Up to 700 characters.
-   - Structure: Strong hook, short readable paragraphs, useful takeaways, end with a conversation-starting question.
-   - Tone: Authoritative but conversational.
-   - CTA: Exactly 3 relevant hashtags at the very bottom.
-
-2) X / Twitter:
-   - Length: Strictly max 280 characters.
-   - Structure: 1-2 sentence hook, 1 core insight, 1 CTA or follow-up.
-   - Tone: Sharp, witty, and high-energy.
-
-3) Instagram:
-   - Length: Max 600 characters.
-   - Structure: Captivating first line with no emoji in line 1.
-   - Tone: Relatable, visual, and friendly.
-   - CTA: Exactly 5 hashtags.
-
-4) Peerlist:
-   - Length: Max 700 characters.
-   - Structure: Focus on what I built, what I learned, or a project update.
-   - Tone: Collaborative and transparent.
-   - CTA: Exactly 5 tags or hashtags.
-
-OUTPUT FORMAT:
-Return valid JSON only with the keys linkedin, twitter, instagram, and peerlist.
+${PLATFORM_RULES}
+Keep it human, useful, and non-repetitive.
+Return valid JSON with keys: linkedin, twitter, instagram, peerlist.
 `;
 
 function normalizeStructuredContentResponse(value: unknown): ContentResponse {
@@ -129,26 +115,16 @@ export async function generateContentFromTranscript(
         parts: [
           {
             text: `
-Transform the following YouTube transcript into polished social posts for LinkedIn, X, Instagram, and Peerlist.
-
+Task: turn this YouTube transcript into platform-native posts.
 Context:
-- SOURCE TYPE: YouTube video transcript
-- YOUTUBE URL: ${youtubeUrl}
-- VOICE TONE: ${tone || "professional"}
-- TARGET AUDIENCE: ${audience || "general"}
+- url: ${youtubeUrl}
+- tone: ${tone || "professional"}
+- audience: ${audience || "general"}
 
-Rules:
-- Keep the core message accurate to the transcript.
-- Remove filler, repetition, sponsor mentions, and off-topic sections.
-- Make each platform version feel native to that platform.
-- Do not mention that the source was AI-generated.
-- Return valid JSON only.
-
-Platform rules:
-- LinkedIn: clear hook, short paragraphs, actionable takeaway, end with exactly 3 relevant hashtags.
-- Twitter: max 280 characters, sharp and concise.
-- Instagram: compelling opener, readable body, end with exactly 5 relevant hashtags.
-- Peerlist: maker-focused update style, practical and transparent, end with exactly 5 relevant tags or hashtags.
+Keep the meaning accurate. Remove filler, repetition, sponsor reads, and off-topic parts.
+Do not mention the transcript, video, or AI unless the transcript itself requires it.
+${PLATFORM_RULES}
+Return valid JSON with keys: linkedin, twitter, instagram, peerlist.
 
 Transcript:
 ${transcriptText}
