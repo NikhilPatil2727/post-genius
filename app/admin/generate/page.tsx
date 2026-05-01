@@ -7,11 +7,10 @@ import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ContentResponse, ContentRequest } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { generateContentAction, savePostAction, getPostByIdAction } from '@/modules/generator/actions';
-import { generateYouTubePostAction } from '@/modules/generator/actions/youtube';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toUserFriendlyError } from '@/lib/error-utils';
 import { toast } from 'sonner';
+import { requestJson } from '@/lib/api-client';
 
 const CONTENT_PLATFORMS = ['linkedin', 'twitter', 'instagram', 'peerlist'] as const;
 type ContentPlatformKey = (typeof CONTENT_PLATFORMS)[number];
@@ -19,6 +18,48 @@ const FREE_LIMIT_MESSAGE = 'Your free limit has been exceeded. Please try again 
 
 const isYouTubeUrl = (value?: string | null) =>
   Boolean(value && /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)/i.test(value));
+
+type PostDetailsResponse =
+  | {
+      success: true;
+      post: {
+        topic: string | null;
+        sourceText: string | null;
+        tone: string | null;
+        audience: string | null;
+        variants: Array<{ platform: string; content: string }>;
+      };
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+type GeneratedContentResponse =
+  | {
+      success: true;
+      content: ContentResponse;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+type SavePostResponse =
+  | {
+      success: true;
+      post: {
+        id: string;
+        topic: string | null;
+        sourceText: string | null;
+        createdAt: string;
+        variants: Array<{ platform: string }>;
+      };
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
 function GeneratePageContent() {
   const [loading, setLoading] = useState(false);
@@ -40,40 +81,41 @@ function GeneratePageContent() {
   const loadPost = useCallback(async (id: string) => {
     setLoading(true);
     try {
-      const result = await getPostByIdAction(id);
-      if (result.success && result.post) {
-        const { topic, sourceText, tone, audience, variants } = result.post;
-        const isYoutubeSource = !topic && isYouTubeUrl(sourceText);
-
-        setInitialData({
-          mode: topic ? 'topic' : isYoutubeSource ? 'youtube' : 'rewrite',
-          topic: topic || '',
-          text: isYoutubeSource ? '' : sourceText || '',
-          youtubeUrl: isYoutubeSource ? sourceText || '' : '',
-          tone: tone || 'professional',
-          audience: audience || 'general',
-        });
-
-        const newContent: ContentResponse = {
-          linkedin: '',
-          twitter: '',
-          instagram: '',
-          peerlist: '',
-        };
-
-        variants.forEach((v: { platform: string; content: string }) => {
-          const platformKey = v.platform.toLowerCase() as ContentPlatformKey;
-          if (CONTENT_PLATFORMS.includes(platformKey)) {
-            newContent[platformKey] = v.content;
-          }
-        });
-
-        setContent(newContent);
-        setHasGenerated(true);
-        setError(null);
-      } else {
+      const result = await requestJson<PostDetailsResponse>(`/api/posts/${id}`);
+      if (!result.success) {
         setError(result.error || 'We could not load this post.');
+        return;
       }
+
+      const { topic, sourceText, tone, audience, variants } = result.post;
+      const isYoutubeSource = !topic && isYouTubeUrl(sourceText);
+
+      setInitialData({
+        mode: topic ? 'topic' : isYouTubeUrl(sourceText) ? 'youtube' : 'rewrite',
+        topic: topic || '',
+        text: isYoutubeSource ? '' : sourceText || '',
+        youtubeUrl: isYoutubeSource ? sourceText || '' : '',
+        tone: tone || 'professional',
+        audience: audience || 'general',
+      });
+
+      const newContent: ContentResponse = {
+        linkedin: '',
+        twitter: '',
+        instagram: '',
+        peerlist: '',
+      };
+
+      variants.forEach((v: { platform: string; content: string }) => {
+        const platformKey = v.platform.toLowerCase() as ContentPlatformKey;
+        if (CONTENT_PLATFORMS.includes(platformKey)) {
+          newContent[platformKey] = v.content;
+        }
+      });
+
+      setContent(newContent);
+      setHasGenerated(true);
+      setError(null);
     } catch (err) {
       console.error('Failed to load post:', err);
       setError(toUserFriendlyError(err, 'We could not load this post.'));
@@ -123,22 +165,33 @@ function GeneratePageContent() {
       };
 
       if (data.mode === 'youtube') {
-        const result = await generateYouTubePostAction({
-          youtubeUrl: data.youtubeUrl,
-          tone: data.tone,
-          audience: data.audience,
+        const result = await requestJson<GeneratedContentResponse>('/api/youtube', {
+          method: 'POST',
+          body: {
+            youtubeUrl: data.youtubeUrl,
+            tone: data.tone,
+            audience: data.audience,
+          },
         });
 
-        if (!result.success) {
+        if (result.success) {
+          Object.assign(finalContent, result.content);
+          setContent(result.content);
+        } else {
           throw new Error(result.error || 'We could not process this YouTube video.');
         }
-
-        Object.assign(finalContent, result.content);
-        setContent(result.content);
       } else {
-        const result = await generateContentAction(data);
-        Object.assign(finalContent, result);
-        setContent(result);
+        const result = await requestJson<GeneratedContentResponse>('/api/posts/generate', {
+          method: 'POST',
+          body: data,
+        });
+
+        if (result.success) {
+          Object.assign(finalContent, result.content);
+          setContent(result.content);
+        } else {
+          throw new Error(result.error || 'We could not generate your content right now.');
+        }
       }
 
       const variants = [
@@ -149,12 +202,15 @@ function GeneratePageContent() {
       ].filter((v) => v.content.length > 0);
 
       if (variants.length > 0) {
-        const result = await savePostAction({
-          topic: data.mode === 'topic' ? data.topic : undefined,
-          sourceText: data.mode === 'youtube' ? data.youtubeUrl : data.text,
-          tone: data.tone,
-          audience: data.audience,
-          variants,
+        const result = await requestJson<SavePostResponse>('/api/posts', {
+          method: 'POST',
+          body: {
+            topic: data.mode === 'topic' ? data.topic : undefined,
+            sourceText: data.mode === 'youtube' ? data.youtubeUrl : data.text,
+            tone: data.tone,
+            audience: data.audience,
+            variants,
+          },
         });
 
         if (result.success && result.post) {

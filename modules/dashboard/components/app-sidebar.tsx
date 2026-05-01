@@ -21,12 +21,12 @@ import {
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
-import { getUserPostsAction, deletePostAction } from "@/modules/generator/actions";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { toUserFriendlyError } from "@/lib/error-utils";
 import { cn } from "@/lib/utils";
 import { SparklesText } from "@/components/ui/sparkles-text";
+import { requestJson } from "@/lib/api-client";
 
 type SidebarPost = {
   id: string;
@@ -35,6 +35,25 @@ type SidebarPost = {
   createdAt: string | Date;
   variants?: Array<{ platform: string }>;
 };
+
+type SidebarPostsResponse =
+  | {
+      success: true;
+      posts: SidebarPost[];
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+type DeletePostResponse =
+  | {
+      success: true;
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
 const mainNavItems = [
   {
@@ -53,7 +72,7 @@ export function AppSidebar() {
   const fetchPosts = useCallback(async () => {
     try {
       setLoading(true);
-      const result = await getUserPostsAction();
+      const result = await requestJson<SidebarPostsResponse>("/api/posts");
       if (result.success && result.posts) {
         setPosts(result.posts);
       } else if (!result.success) {
@@ -94,7 +113,9 @@ export function AppSidebar() {
     if (!confirm("Are you sure you want to delete this post?")) return;
 
     try {
-      const result = await deletePostAction(postId);
+      const result = await requestJson<DeletePostResponse>(`/api/posts/${postId}`, {
+        method: "DELETE",
+      });
       if (result.success) {
         toast.success("Post deleted successfully");
         setPosts(posts.filter(p => p.id !== postId));
