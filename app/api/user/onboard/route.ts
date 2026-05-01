@@ -1,17 +1,15 @@
-import { apiError, apiSuccess } from '@/lib/api-response';
-import { syncCurrentUser } from '@/modules/auth/server';
+import { handleRouteError, requireCurrentUser } from '@/lib/api-route';
+import { apiSuccess } from '@/lib/api-response';
 
 export async function POST() {
   try {
-    const user = await syncCurrentUser();
-
-    if (!user) {
-      return apiError('No authenticated user.', 401);
+    const auth = await requireCurrentUser('No authenticated user.');
+    if ('errorResponse' in auth) {
+      return auth.errorResponse;
     }
 
-    return apiSuccess({ user });
+    return apiSuccess({ user: auth.currentUser });
   } catch (error) {
-    console.error('User onboarding error:', error);
-    return apiError('User onboarding failed.', 500);
+    return handleRouteError(error, 'User onboarding error:', 'User onboarding failed.');
   }
 }

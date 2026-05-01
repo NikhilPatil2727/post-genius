@@ -70,22 +70,17 @@ function normalizeStructuredContentResponse(value: unknown): ContentResponse {
   };
 }
 
-export async function generateContent(
-  mode: "topic" | "rewrite",
-  topic?: string,
-  text?: string,
-  tone?: string,
-  audience?: string
-): Promise<ContentResponse> {
-  const apiKey = getServerGeminiApiKey();
-  const ai = new GoogleGenAI({ apiKey });
+function createGeminiClient() {
+  return new GoogleGenAI({ apiKey: getServerGeminiApiKey() });
+}
 
-  const response = await ai.models.generateContent({
+async function generateStructuredContent(prompt: string): Promise<ContentResponse> {
+  const response = await createGeminiClient().models.generateContent({
     model: MODEL_NAME,
     contents: [
       {
         role: "user",
-        parts: [{ text: buildMainPrompt(mode, topic, text, tone, audience).trim() }],
+        parts: [{ text: prompt.trim() }],
       },
     ],
     config: {
@@ -98,23 +93,23 @@ export async function generateContent(
   return normalizeStructuredContentResponse(JSON.parse(response.text ?? "{}"));
 }
 
+export async function generateContent(
+  mode: "topic" | "rewrite",
+  topic?: string,
+  text?: string,
+  tone?: string,
+  audience?: string
+): Promise<ContentResponse> {
+  return generateStructuredContent(buildMainPrompt(mode, topic, text, tone, audience));
+}
+
 export async function generateContentFromTranscript(
   youtubeUrl: string,
   transcriptText: string,
   tone?: string,
   audience?: string
 ): Promise<ContentResponse> {
-  const apiKey = getServerGeminiApiKey();
-  const ai = new GoogleGenAI({ apiKey });
-
-  const response = await ai.models.generateContent({
-    model: MODEL_NAME,
-    contents: [
-      {
-        role: "user",
-        parts: [
-          {
-            text: `
+  return generateStructuredContent(`
 Task: turn this YouTube transcript into platform-native posts.
 Context:
 - url: ${youtubeUrl}
@@ -128,17 +123,5 @@ Return valid JSON with keys: linkedin, twitter, instagram, peerlist.
 
 Transcript:
 ${transcriptText}
-            `.trim(),
-          },
-        ],
-      },
-    ],
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: CONTENT_RESPONSE_SCHEMA,
-      systemInstruction: SYSTEM_PROMPT,
-    },
-  });
-
-  return normalizeStructuredContentResponse(JSON.parse(response.text ?? "{}"));
+  `);
 }
