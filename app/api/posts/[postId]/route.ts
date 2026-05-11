@@ -82,13 +82,13 @@ export async function PATCH(request: Request, context: RouteContext) {
       return body.errorResponse;
     }
 
-    const updatedCount = await updatePostVariantForUser(
+    const updateResult = await updatePostVariantForUser(
       auth.currentUser.clerkId,
       postId.value,
       body.data.variant
     );
 
-    if (updatedCount === 0) {
+    if (updateResult.count === 0) {
       return apiError('Post not found or access denied.', 404);
     }
 

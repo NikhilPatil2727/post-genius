@@ -165,17 +165,18 @@ export async function updatePostVariantForUser(
     content: string;
   }
 ) {
-  return prisma.$executeRaw`
-    UPDATE "PostVariant" AS variant
-    SET
-      "content" = ${data.content},
-      "updatedAt" = NOW()
-    FROM "Post" AS post
-    INNER JOIN "User" AS owner ON owner."id" = post."userId"
-    WHERE
-      variant."postId" = post."id"
-      AND post."id" = ${postId}
-      AND owner."clerkId" = ${clerkId}
-      AND variant."platform"::text = ${data.platform}
-  `;
+  return prisma.postVariant.updateMany({
+    where: {
+      postId,
+      platform: data.platform,
+      post: {
+        user: {
+          clerkId,
+        },
+      },
+    },
+    data: {
+      content: data.content,
+    },
+  });
 }
