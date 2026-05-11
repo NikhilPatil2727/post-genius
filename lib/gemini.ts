@@ -4,6 +4,13 @@ import { getServerGeminiApiKey } from "@/lib/server-env";
 
 const MODEL_NAME = "gemini-2.5-flash";
 
+const PLATFORM_CHARACTER_LIMITS = {
+  linkedin: 600,
+  twitter: 280,
+  instagram: 500,
+  peerlist: 600,
+} as const satisfies Record<Platform, number>;
+
 const CONTENT_RESPONSE_SCHEMA = {
   type: "object",
   properties: {
@@ -91,10 +98,10 @@ const IMPROVEMENT_SYSTEM_PROMPT = [
 
 const PLATFORM_RULES = `
 Rules by platform:
-- linkedin: <=700 chars, strong hook, short paragraphs, useful takeaway, end with exactly 3 relevant hashtags.
-- twitter: <=280 chars, concise hook, one core insight, optional CTA.
-- instagram: <=600 chars, strong first line with no emoji, readable body, end with exactly 5 relevant hashtags.
-- peerlist: <=700 chars, builder/project-update tone, practical and transparent, end with exactly 5 relevant tags or hashtags.
+- linkedin: <=${PLATFORM_CHARACTER_LIMITS.linkedin} chars, strong hook, short paragraphs, useful takeaway, end with exactly 3 relevant hashtags.
+- twitter: <=${PLATFORM_CHARACTER_LIMITS.twitter} chars, concise hook, one core insight, optional CTA.
+- instagram: <=${PLATFORM_CHARACTER_LIMITS.instagram} chars, strong first line with no emoji, readable body, end with exactly 5 relevant hashtags.
+- peerlist: <=${PLATFORM_CHARACTER_LIMITS.peerlist} chars, builder/project-update tone, practical and transparent, end with exactly 5 relevant tags or hashtags.
 `.trim();
 
 const buildMainPrompt = (
@@ -176,6 +183,69 @@ function normalizeOptimizationAnalysis(value: unknown): PostOptimizationAnalysis
   };
 }
 
+function getCharacterLength(content: string): number {
+  return content.length;
+}
+
+function trimToCharacterLimit(content: string, limit: number): string {
+  const normalized = content
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  if (getCharacterLength(normalized) <= limit) {
+    return normalized;
+  }
+
+  const candidate = normalized.slice(0, limit + 1);
+  const sentenceEnd = Math.max(
+    candidate.lastIndexOf(". "),
+    candidate.lastIndexOf("! "),
+    candidate.lastIndexOf("? "),
+    candidate.lastIndexOf("\n\n")
+  );
+  const wordEnd = candidate.lastIndexOf(" ");
+  const cutAt = sentenceEnd >= Math.floor(limit * 0.55)
+    ? sentenceEnd + 1
+    : wordEnd >= Math.floor(limit * 0.55)
+      ? wordEnd
+      : limit;
+
+  const suffix = "...";
+  const availableLength = Math.max(0, limit - suffix.length);
+  const readable = candidate
+    .slice(0, Math.min(cutAt, availableLength))
+    .replace(/[\s,;:.-]+$/g, "")
+    .trim();
+
+  const trimmed = readable ? `${readable}${suffix}` : normalized.slice(0, limit);
+  return trimmed.slice(0, limit).trimEnd();
+}
+
+function enforceContentLimits(content: ContentResponse): ContentResponse {
+  const limited = {
+    linkedin: trimToCharacterLimit(content.linkedin, PLATFORM_CHARACTER_LIMITS.linkedin),
+    twitter: trimToCharacterLimit(content.twitter, PLATFORM_CHARACTER_LIMITS.twitter),
+    instagram: trimToCharacterLimit(content.instagram, PLATFORM_CHARACTER_LIMITS.instagram),
+    peerlist: trimToCharacterLimit(content.peerlist, PLATFORM_CHARACTER_LIMITS.peerlist),
+  };
+
+  for (const platform of Object.keys(PLATFORM_CHARACTER_LIMITS) as Platform[]) {
+    const limit = PLATFORM_CHARACTER_LIMITS[platform];
+    if (getCharacterLength(limited[platform]) > limit) {
+      throw new Error(`Generated ${platform} content exceeded ${limit} characters after validation.`);
+    }
+  }
+
+  return limited;
+}
+
+function getExceededPlatforms(content: ContentResponse): Platform[] {
+  return (Object.keys(PLATFORM_CHARACTER_LIMITS) as Platform[]).filter(
+    (platform) => getCharacterLength(content[platform]) > PLATFORM_CHARACTER_LIMITS[platform]
+  );
+}
+
 function createGeminiClient() {
   return new GoogleGenAI({ apiKey: getServerGeminiApiKey() });
 }
@@ -196,7 +266,33 @@ async function generateStructuredContent(prompt: string): Promise<ContentRespons
     },
   });
 
-  return normalizeStructuredContentResponse(JSON.parse(response.text ?? "{}"));
+  const content = normalizeStructuredContentResponse(JSON.parse(response.text ?? "{}"));
+  const exceededPlatforms = getExceededPlatforms(content);
+
+  if (exceededPlatforms.length === 0) {
+    return enforceContentLimits(content);
+  }
+
+  const repaired = await generateJson(
+    `
+Task: shorten only the posts that exceed their character limits.
+Preserve meaning, readability, formatting, platform style, and hashtag requirements where possible.
+Never return any field over its character limit.
+
+Limits:
+${(Object.keys(PLATFORM_CHARACTER_LIMITS) as Platform[])
+  .map((platform) => `- ${platform}: ${PLATFORM_CHARACTER_LIMITS[platform]} characters`)
+  .join("\n")}
+
+Current JSON:
+${JSON.stringify(content)}
+    `,
+    CONTENT_RESPONSE_SCHEMA,
+    SYSTEM_PROMPT,
+    normalizeStructuredContentResponse
+  );
+
+  return enforceContentLimits(repaired);
 }
 
 async function generateJson<T>(
@@ -283,10 +379,11 @@ export async function improvePostContent(
   const weakest = analysis.topWeaknesses.slice(0, 4).join("; ") || "general performance";
   const suggestions = analysis.suggestions.slice(0, 5).join("; ") || "improve clarity and engagement";
 
-  return generateJson(
+  const improved = await generateJson(
     `
 Task: improve this ${platform} post using the supplied analysis.
 Maintain meaning and platform style. Improve weak areas, readability, emotion, retention, and CTA.
+Keep the improved post at or below ${PLATFORM_CHARACTER_LIMITS[platform]} characters.
 Do not explain. Return only the improved post in content.
 
 Current score: ${analysis.overallScore}/100
@@ -307,4 +404,6 @@ ${content}
       return typeof improved === "string" ? improved.trim() : "";
     }
   );
+
+  return trimToCharacterLimit(improved, PLATFORM_CHARACTER_LIMITS[platform]);
 }
