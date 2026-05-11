@@ -5,6 +5,7 @@ import GeneratorForm from '@/modules/generator/components/GeneratorForm';
 import { ContentDisplay } from '@/modules/generator/components/ContentDisplay';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import type { ContentResponse, ContentRequest } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -60,6 +61,45 @@ type SavePostResponse =
       success: false;
       error: string;
     };
+
+function GeneratingContentState() {
+  return (
+    <div className="relative min-h-[500px] overflow-hidden rounded-[2rem] border border-zinc-200/70 bg-white/80 p-8 shadow-sm backdrop-blur-xl dark:border-zinc-800/70 dark:bg-zinc-950/30">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.10),transparent_34%)] blur-2xl" />
+      <motion.div
+        className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent dark:via-white/10"
+        animate={{ x: ['0%', '300%'] }}
+        transition={{ repeat: Infinity, duration: 2.4, ease: 'linear' }}
+      />
+
+      <div className="relative flex h-full min-h-[420px] flex-col items-center justify-center gap-6 text-center">
+        <Spinner className="size-9 text-zinc-900 dark:text-zinc-100" />
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Crafting your drafts</h3>
+          <p className="max-w-sm text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+            AI is shaping platform-ready content for your selected voice and audience.
+          </p>
+        </div>
+
+        <div className="grid w-full max-w-2xl gap-3 pt-4 md:grid-cols-3">
+          {['LinkedIn', 'X', 'Instagram'].map((platform) => (
+            <div
+              key={platform}
+              className="overflow-hidden rounded-2xl border border-zinc-200/70 bg-zinc-50/70 p-4 text-left dark:border-zinc-800/70 dark:bg-zinc-900/40"
+            >
+              <div className="mb-4 h-3 w-20 rounded-full bg-zinc-200/80 dark:bg-zinc-800" />
+              <div className="space-y-2">
+                <div className="h-2.5 rounded-full bg-zinc-200/70 dark:bg-zinc-800/80" />
+                <div className="h-2.5 rounded-full bg-zinc-200/60 dark:bg-zinc-800/70" />
+                <div className="h-2.5 w-2/3 rounded-full bg-zinc-200/50 dark:bg-zinc-800/60" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function GeneratePageContent() {
   const [loading, setLoading] = useState(false);
@@ -344,7 +384,9 @@ function GeneratePageContent() {
           transition={{ delay: 0.2 }}
           className="lg:col-span-8 min-h-[600px]"
         >
-          {hasGenerated ? (
+          {loading ? (
+            <GeneratingContentState />
+          ) : hasGenerated ? (
             <ContentDisplay
               content={content}
               postId={postId}

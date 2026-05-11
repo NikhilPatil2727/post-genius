@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Spinner } from "@/components/ui/spinner";
 import { PenTool, RefreshCw, Video } from "lucide-react";
 import type { ContentRequest } from "@/types";
 import { cn } from "@/lib/utils";
@@ -194,7 +195,10 @@ export default function GeneratorForm({
             )}
             <div className="relative flex items-center justify-center gap-2 z-10">
               {loading ? (
-                <span>Crafting Content...</span>
+                <>
+                  <Spinner className="size-3.5" />
+                  <span>Crafting Content...</span>
+                </>
               ) : (
                 <span>Generate Content</span>
               )}
