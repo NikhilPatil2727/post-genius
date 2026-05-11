@@ -33,7 +33,8 @@ import { toast } from 'sonner';
 
 interface ContentDisplayProps {
   content: ContentResponse;
-  onImprovedContent?: (platform: Platform, improvedContent: string) => Promise<void>;
+  postId?: string | null;
+  onVariantUpdated?: (platform: Platform, content: string) => void;
 }
 
 type OptimizePostResponse =
@@ -50,6 +51,15 @@ type ImprovePostResponse =
   | {
       success: true;
       content: string;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+type UpdatePostResponse =
+  | {
+      success: true;
     }
   | {
       success: false;
@@ -150,6 +160,12 @@ const htmlToMarkdown = (html: string): string =>
 
 const EDITABLE_PLATFORMS: Platform[] = ['linkedin', 'twitter', 'instagram', 'peerlist'];
 const EMOJIS = ['😀', '🔥', '✨', '🚀', '💡', '🎉', '👏', '🙌', '💯', '✅', '😍', '🤝'];
+const API_PLATFORM: Record<Platform, 'LINKEDIN' | 'TWITTER' | 'INSTAGRAM' | 'PEERLIST'> = {
+  linkedin: 'LINKEDIN',
+  twitter: 'TWITTER',
+  instagram: 'INSTAGRAM',
+  peerlist: 'PEERLIST',
+};
 const SCORE_LABELS: Array<[keyof PostOptimizationAnalysis['scores'], string]> = [
   ['hookStrength', 'Hook'],
   ['readability', 'Readability'],
@@ -165,7 +181,11 @@ const SCORE_LABELS: Array<[keyof PostOptimizationAnalysis['scores'], string]> = 
   ['scrollStoppingQuality', 'Scroll-stop'],
 ];
 
-export function ContentDisplay({ content, onImprovedContent }: ContentDisplayProps) {
+export function ContentDisplay({
+  content,
+  postId,
+  onVariantUpdated,
+}: ContentDisplayProps) {
   const { user } = useUser();
   const isHydrated = useSyncExternalStore(
     () => () => {},
@@ -214,6 +234,29 @@ export function ContentDisplay({ content, onImprovedContent }: ContentDisplayPro
     await navigator.clipboard.writeText(stripMarkdown(allContent));
     setCopied('all');
     setTimeout(() => setCopied(null), 2000);
+  };
+
+  const updateExistingPostVariant = async (
+    platform: Platform,
+    postContent: string
+  ) => {
+    if (!postId) {
+      throw new Error('This post must finish saving before it can be optimized.');
+    }
+
+    const result = await requestJson<UpdatePostResponse>(`/api/posts/${postId}`, {
+      method: 'PATCH',
+      body: {
+        variant: {
+          platform: API_PLATFORM[platform],
+          content: postContent,
+        },
+      },
+    });
+
+    if (!result.success) {
+      throw new Error(result.error || 'We could not update this post.');
+    }
   };
 
   const optimizePost = async () => {
@@ -272,12 +315,11 @@ export function ContentDisplay({ content, onImprovedContent }: ContentDisplayPro
         throw new Error(result.error || 'We could not improve this post.');
       }
 
+      await updateExistingPostVariant(platform, result.content);
+
       setEditedContent((prev) => ({ ...prev, [platform]: result.content }));
       setOptimizedPreviewByPlatform((prev) => ({ ...prev, [platform]: result.content }));
-
-      if (onImprovedContent) {
-        await onImprovedContent(platform, result.content);
-      }
+      onVariantUpdated?.(platform, result.content);
 
       toast.success('Improved post saved');
     } catch (error) {

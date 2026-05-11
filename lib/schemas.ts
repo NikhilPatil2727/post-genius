@@ -73,3 +73,10 @@ export const optimizePostSchema = z.object({
 export const improvePostSchema = optimizePostSchema.extend({
   analysis: postOptimizationAnalysisSchema,
 });
+
+export const updatePostVariantSchema = z.object({
+  variant: z.object({
+    platform: z.enum(['LINKEDIN', 'TWITTER', 'INSTAGRAM', 'PEERLIST']),
+    content: z.string().trim().min(1, 'Post content cannot be empty.'),
+  }),
+});

@@ -255,14 +255,11 @@ function GeneratePageContent() {
     router.push('/admin/generate');
   };
 
-  const handleImprovedContent = async (platform: ContentPlatformKey, improvedContent: string) => {
-    const updatedContent = {
-      ...content,
-      [platform]: improvedContent,
-    };
-
-    setContent(updatedContent);
-    await saveGeneratedContent(initialData, updatedContent);
+  const handleVariantUpdated = (platform: ContentPlatformKey, updatedVariantContent: string) => {
+    setContent((currentContent) => ({
+      ...currentContent,
+      [platform]: updatedVariantContent,
+    }));
   };
 
   return (
@@ -348,7 +345,11 @@ function GeneratePageContent() {
           className="lg:col-span-8 min-h-[600px]"
         >
           {hasGenerated ? (
-            <ContentDisplay content={content} onImprovedContent={handleImprovedContent} />
+            <ContentDisplay
+              content={content}
+              postId={postId}
+              onVariantUpdated={handleVariantUpdated}
+            />
           ) : (
             <div className="min-h-[500px] rounded-[2rem] border border-zinc-200/70 bg-white/80 p-8 shadow-sm dark:border-zinc-800/70 dark:bg-zinc-950/30">
               {loading ? (

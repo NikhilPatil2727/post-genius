@@ -156,3 +156,26 @@ export async function deletePostForUser(clerkId: string, postId: string) {
     },
   });
 }
+
+export async function updatePostVariantForUser(
+  clerkId: string,
+  postId: string,
+  data: {
+    platform: Platform;
+    content: string;
+  }
+) {
+  return prisma.$executeRaw`
+    UPDATE "PostVariant" AS variant
+    SET
+      "content" = ${data.content},
+      "updatedAt" = NOW()
+    FROM "Post" AS post
+    INNER JOIN "User" AS owner ON owner."id" = post."userId"
+    WHERE
+      variant."postId" = post."id"
+      AND post."id" = ${postId}
+      AND owner."clerkId" = ${clerkId}
+      AND variant."platform"::text = ${data.platform}
+  `;
+}
