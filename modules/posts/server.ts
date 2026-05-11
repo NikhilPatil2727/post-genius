@@ -1,8 +1,8 @@
 import { Platform, Prisma } from '@/lib/generated/prisma/client';
 import { toUserFriendlyError } from '@/lib/error-utils';
-import { generateContent } from '@/lib/gemini';
+import { analyzePostOptimization, generateContent, improvePostContent } from '@/lib/gemini';
 import { prisma } from '@/lib/prisma';
-import type { ContentResponse } from '@/types';
+import type { ContentResponse, Platform as ContentPlatform, PostOptimizationAnalysis } from '@/types';
 
 type GeneratePostInput =
   | {
@@ -31,6 +31,41 @@ export async function generatePostContent(data: GeneratePostInput): Promise<Cont
       toUserFriendlyError(
         error,
         'We could not generate your content right now. Please try again.'
+      )
+    );
+  }
+}
+
+export async function analyzePostContent(data: {
+  content: string;
+  platform: ContentPlatform;
+}): Promise<PostOptimizationAnalysis> {
+  try {
+    return await analyzePostOptimization(data.content, data.platform);
+  } catch (error) {
+    console.error('API Optimize Error:', error);
+    throw new Error(
+      toUserFriendlyError(
+        error,
+        'We could not analyze this post right now. Please try again.'
+      )
+    );
+  }
+}
+
+export async function improveOptimizedPostContent(data: {
+  content: string;
+  platform: ContentPlatform;
+  analysis: PostOptimizationAnalysis;
+}): Promise<string> {
+  try {
+    return await improvePostContent(data.content, data.platform, data.analysis);
+  } catch (error) {
+    console.error('API Improve Error:', error);
+    throw new Error(
+      toUserFriendlyError(
+        error,
+        'We could not improve this post right now. Please try again.'
       )
     );
   }

@@ -16,6 +16,28 @@ export type ContentResponse = {
 
 export type Platform = 'linkedin' | 'twitter' | 'instagram' | 'peerlist';
 
+export type OptimizationCategory =
+  | 'hookStrength'
+  | 'readability'
+  | 'ctaEffectiveness'
+  | 'engagementPotential'
+  | 'platformFit'
+  | 'sentenceStructure'
+  | 'emojiBalance'
+  | 'viralityPotential'
+  | 'emotionalImpact'
+  | 'audienceRetention'
+  | 'contentRichness'
+  | 'scrollStoppingQuality';
+
+export type PostOptimizationAnalysis = {
+  scores: Record<OptimizationCategory, number>;
+  overallScore: number;
+  summary: string;
+  topWeaknesses: string[];
+  suggestions: string[];
+};
+
 export type YouTubeToPostActionResult =
   | {
       success: true;

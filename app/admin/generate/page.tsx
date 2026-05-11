@@ -136,6 +136,42 @@ function GeneratePageContent() {
     setError(null);
   }, []);
 
+  const saveGeneratedContent = useCallback(
+    async (data: Partial<ContentRequest>, finalContent: ContentResponse) => {
+      const variants = [
+        { platform: 'LINKEDIN' as const, content: finalContent.linkedin },
+        { platform: 'TWITTER' as const, content: finalContent.twitter },
+        { platform: 'INSTAGRAM' as const, content: finalContent.instagram },
+        { platform: 'PEERLIST' as const, content: finalContent.peerlist },
+      ].filter((v) => v.content.length > 0);
+
+      if (variants.length === 0) {
+        throw new Error('No content was generated. Please try a clearer topic or rewrite input.');
+      }
+
+      const result = await requestJson<SavePostResponse>('/api/posts', {
+        method: 'POST',
+        body: {
+          topic: data.mode === 'topic' ? data.topic : undefined,
+          sourceText: data.mode === 'youtube' ? data.youtubeUrl : data.text,
+          tone: data.tone,
+          audience: data.audience,
+          variants,
+        },
+      });
+
+      if (result.success && result.post) {
+        window.dispatchEvent(new CustomEvent('post-saved', { detail: result.post }));
+        router.replace(`/admin/generate?id=${result.post.id}`);
+        router.refresh();
+        return;
+      }
+
+      throw new Error(result.success ? 'Your content was saved, but no post was returned.' : result.error);
+    },
+    [router]
+  );
+
   useEffect(() => {
     if (postId) {
       clearPage();
@@ -155,6 +191,7 @@ function GeneratePageContent() {
       instagram: '',
       peerlist: '',
     });
+    setInitialData(data);
 
     try {
       const finalContent: ContentResponse = {
@@ -194,35 +231,7 @@ function GeneratePageContent() {
         }
       }
 
-      const variants = [
-        { platform: 'LINKEDIN' as const, content: finalContent.linkedin },
-        { platform: 'TWITTER' as const, content: finalContent.twitter },
-        { platform: 'INSTAGRAM' as const, content: finalContent.instagram },
-        { platform: 'PEERLIST' as const, content: finalContent.peerlist },
-      ].filter((v) => v.content.length > 0);
-
-      if (variants.length > 0) {
-        const result = await requestJson<SavePostResponse>('/api/posts', {
-          method: 'POST',
-          body: {
-            topic: data.mode === 'topic' ? data.topic : undefined,
-            sourceText: data.mode === 'youtube' ? data.youtubeUrl : data.text,
-            tone: data.tone,
-            audience: data.audience,
-            variants,
-          },
-        });
-
-        if (result.success && result.post) {
-          window.dispatchEvent(new CustomEvent('post-saved', { detail: result.post }));
-          router.replace(`/admin/generate?id=${result.post.id}`);
-          router.refresh();
-        } else if (!result.success) {
-          setError(result.error || 'Your content was generated, but we could not save it.');
-        }
-      } else {
-        setError('No content was generated. Please try a clearer topic or rewrite input.');
-      }
+      await saveGeneratedContent(data, finalContent);
     } catch (err) {
       console.error('Generation process error:', err);
       const message = toUserFriendlyError(
@@ -244,6 +253,16 @@ function GeneratePageContent() {
   const handleReset = () => {
     clearPage();
     router.push('/admin/generate');
+  };
+
+  const handleImprovedContent = async (platform: ContentPlatformKey, improvedContent: string) => {
+    const updatedContent = {
+      ...content,
+      [platform]: improvedContent,
+    };
+
+    setContent(updatedContent);
+    await saveGeneratedContent(initialData, updatedContent);
   };
 
   return (
@@ -329,7 +348,7 @@ function GeneratePageContent() {
           className="lg:col-span-8 min-h-[600px]"
         >
           {hasGenerated ? (
-            <ContentDisplay content={content} />
+            <ContentDisplay content={content} onImprovedContent={handleImprovedContent} />
           ) : (
             <div className="min-h-[500px] rounded-[2rem] border border-zinc-200/70 bg-white/80 p-8 shadow-sm dark:border-zinc-800/70 dark:bg-zinc-950/30">
               {loading ? (

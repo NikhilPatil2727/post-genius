@@ -5,15 +5,18 @@ import { useUser } from '@clerk/nextjs';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bold,
+  BarChart3,
   Eraser,
   Heart,
   Italic,
   List,
   ListOrdered,
+  Loader2,
   MessageCircle,
   Repeat2,
   Send,
   SmilePlus,
+  Sparkles,
   Strikethrough,
   Underline,
 } from 'lucide-react';
@@ -23,12 +26,35 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { FormattedText } from './FormattedText';
-import type { ContentResponse, Platform } from '@/types';
+import { requestJson } from '@/lib/api-client';
+import type { ContentResponse, Platform, PostOptimizationAnalysis } from '@/types';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface ContentDisplayProps {
   content: ContentResponse;
+  onImprovedContent?: (platform: Platform, improvedContent: string) => Promise<void>;
 }
+
+type OptimizePostResponse =
+  | {
+      success: true;
+      analysis: PostOptimizationAnalysis;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+type ImprovePostResponse =
+  | {
+      success: true;
+      content: string;
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
 const PLATFORM_CONFIG: Record<
   Platform,
@@ -124,8 +150,22 @@ const htmlToMarkdown = (html: string): string =>
 
 const EDITABLE_PLATFORMS: Platform[] = ['linkedin', 'twitter', 'instagram', 'peerlist'];
 const EMOJIS = ['😀', '🔥', '✨', '🚀', '💡', '🎉', '👏', '🙌', '💯', '✅', '😍', '🤝'];
+const SCORE_LABELS: Array<[keyof PostOptimizationAnalysis['scores'], string]> = [
+  ['hookStrength', 'Hook'],
+  ['readability', 'Readability'],
+  ['ctaEffectiveness', 'CTA'],
+  ['engagementPotential', 'Engagement'],
+  ['platformFit', 'Platform fit'],
+  ['sentenceStructure', 'Sentences'],
+  ['emojiBalance', 'Emoji balance'],
+  ['viralityPotential', 'Virality'],
+  ['emotionalImpact', 'Emotion'],
+  ['audienceRetention', 'Retention'],
+  ['contentRichness', 'Richness'],
+  ['scrollStoppingQuality', 'Scroll-stop'],
+];
 
-export function ContentDisplay({ content }: ContentDisplayProps) {
+export function ContentDisplay({ content, onImprovedContent }: ContentDisplayProps) {
   const { user } = useUser();
   const isHydrated = useSyncExternalStore(
     () => () => {},
@@ -137,6 +177,10 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
   const [editingPlatform, setEditingPlatform] = useState<Platform | null>(null);
   const [editedContent, setEditedContent] = useState<Partial<Record<Platform, string>>>({});
   const [expandedPosts, setExpandedPosts] = useState<Partial<Record<Platform, boolean>>>({});
+  const [optimizationByPlatform, setOptimizationByPlatform] = useState<Partial<Record<Platform, PostOptimizationAnalysis>>>({});
+  const [optimizedPreviewByPlatform, setOptimizedPreviewByPlatform] = useState<Partial<Record<Platform, string>>>({});
+  const [optimizingPlatform, setOptimizingPlatform] = useState<Platform | null>(null);
+  const [improvingPlatform, setImprovingPlatform] = useState<Platform | null>(null);
   const editableRef = useRef<HTMLDivElement | null>(null);
   const selectionRef = useRef<Range | null>(null);
 
@@ -145,6 +189,10 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
 
   const activeConfig = PLATFORM_CONFIG[activeTab];
   const activeContent = editedContent[activeTab] ?? content[activeTab] ?? '';
+  const activeOptimization = optimizationByPlatform[activeTab];
+  const activeOptimizedPreview = optimizedPreviewByPlatform[activeTab];
+  const isOptimizing = optimizingPlatform === activeTab;
+  const isImproving = improvingPlatform === activeTab;
   const isEditing = editingPlatform === activeTab;
   const isEditable = EDITABLE_PLATFORMS.includes(activeTab);
 
@@ -168,6 +216,77 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
     setTimeout(() => setCopied(null), 2000);
   };
 
+  const optimizePost = async () => {
+    if (!activeContent || isOptimizing) return;
+
+    const platform = activeTab;
+    const postContent = activeContent;
+
+    setOptimizingPlatform(platform);
+    try {
+      const result = await requestJson<OptimizePostResponse>('/api/posts/optimize', {
+        method: 'POST',
+        body: {
+          content: postContent,
+          platform,
+        },
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || 'We could not optimize this post.');
+      }
+
+      setOptimizationByPlatform((prev) => ({ ...prev, [platform]: result.analysis }));
+      toast.success('Post optimization ready');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'We could not optimize this post.');
+    } finally {
+      setOptimizingPlatform(null);
+    }
+  };
+
+  const improvePost = async () => {
+    if (!activeContent || isImproving) return;
+
+    if (!activeOptimization) {
+      toast.info('Optimize this post first so the improvement can target weak spots.');
+      return;
+    }
+
+    const platform = activeTab;
+    const postContent = activeContent;
+    const analysis = activeOptimization;
+
+    setImprovingPlatform(platform);
+    try {
+      const result = await requestJson<ImprovePostResponse>('/api/posts/improve', {
+        method: 'POST',
+        body: {
+          content: postContent,
+          platform,
+          analysis,
+        },
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || 'We could not improve this post.');
+      }
+
+      setEditedContent((prev) => ({ ...prev, [platform]: result.content }));
+      setOptimizedPreviewByPlatform((prev) => ({ ...prev, [platform]: result.content }));
+
+      if (onImprovedContent) {
+        await onImprovedContent(platform, result.content);
+      }
+
+      toast.success('Improved post saved');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'We could not improve this post.');
+    } finally {
+      setImprovingPlatform(null);
+    }
+  };
+
   const startEditing = () => {
     const originalContent = editedContent[activeTab] ?? String(content[activeTab] || '');
     setEditingPlatform(activeTab);
@@ -186,6 +305,8 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
     if (editableRef.current) {
       const markdown = htmlToMarkdown(editableRef.current.innerHTML);
       setEditedContent((prev) => ({ ...prev, [activeTab]: markdown }));
+      setOptimizationByPlatform((prev) => ({ ...prev, [activeTab]: undefined }));
+      setOptimizedPreviewByPlatform((prev) => ({ ...prev, [activeTab]: undefined }));
     }
     setEditingPlatform(null);
   };
@@ -201,6 +322,8 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
     if (editableRef.current) {
       const markdown = htmlToMarkdown(editableRef.current.innerHTML);
       setEditedContent((prev) => ({ ...prev, [activeTab]: markdown }));
+      setOptimizationByPlatform((prev) => ({ ...prev, [activeTab]: undefined }));
+      setOptimizedPreviewByPlatform((prev) => ({ ...prev, [activeTab]: undefined }));
       saveSelection();
     }
   };
@@ -492,6 +615,11 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
                     <span className={cn('rounded-full border px-2 py-1 text-[11px] font-semibold', activeConfig.brandClass)} aria-hidden>
                       {activeConfig.icon}
                     </span>
+                    {activeOptimization ? (
+                      <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                        {activeOptimization.overallScore}/100
+                      </span>
+                    ) : null}
                     {isEditable && !isEditing && content[activeTab] ? (
                       <button
                         type="button"
@@ -630,6 +758,83 @@ export function ContentDisplay({ content }: ContentDisplayProps) {
 
                   {showPostActions ? (
                     <>
+                    <div className="mt-4 border-t border-[#e5e7eb] pt-3 dark:border-[rgba(255,255,255,0.08)]">
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={optimizePost}
+                          disabled={isOptimizing || isImproving}
+                          className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-[8px] border border-[rgba(0,0,0,0.12)] px-3 py-2 text-[12px] font-semibold text-[#0F0F0F] transition-colors hover:bg-zinc-100 disabled:cursor-wait disabled:opacity-60 dark:border-[rgba(255,255,255,0.12)] dark:text-[#EDEDED] dark:hover:bg-zinc-800"
+                        >
+                          {isOptimizing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <BarChart3 className="h-3.5 w-3.5" />}
+                          <span>{isOptimizing ? 'Optimizing' : 'Optimize Post'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={improvePost}
+                          disabled={!activeOptimization || isOptimizing || isImproving}
+                          className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-[8px] bg-zinc-900 px-3 py-2 text-[12px] font-semibold text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-45 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        >
+                          {isImproving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                          <span>{isImproving ? 'Improving' : 'Improve Post'}</span>
+                        </button>
+                      </div>
+
+                      {activeOptimization ? (
+                        <div className="mt-3 rounded-[8px] border border-[rgba(0,0,0,0.08)] bg-zinc-50/80 p-3 dark:border-[rgba(255,255,255,0.08)] dark:bg-zinc-900/50">
+                          <div className="mb-3 flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Optimization score</p>
+                              <p className="mt-1 text-[13px] leading-5 text-zinc-700 dark:text-zinc-300">{activeOptimization.summary}</p>
+                            </div>
+                            <span className="shrink-0 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[12px] font-bold text-emerald-700 dark:text-emerald-300">
+                              {activeOptimization.overallScore}/100
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            {SCORE_LABELS.map(([key, label]) => (
+                              <div key={key} className="flex items-center justify-between gap-2 rounded-[6px] bg-white px-2 py-1.5 text-[11px] dark:bg-zinc-950/60">
+                                <span className="truncate text-zinc-500 dark:text-zinc-400">{label}</span>
+                                <span className="font-semibold text-zinc-900 dark:text-zinc-100">{activeOptimization.scores[key]}/10</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {activeOptimization.topWeaknesses.length > 0 ? (
+                            <div className="mt-3">
+                              <p className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-300">Top weaknesses</p>
+                              <ul className="mt-1 space-y-1 text-[12px] leading-5 text-zinc-500 dark:text-zinc-400">
+                                {activeOptimization.topWeaknesses.slice(0, 3).map((item) => (
+                                  <li key={item}>- {item}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null}
+
+                          {activeOptimization.suggestions.length > 0 ? (
+                            <div className="mt-3">
+                              <p className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-300">Suggestions</p>
+                              <ul className="mt-1 space-y-1 text-[12px] leading-5 text-zinc-500 dark:text-zinc-400">
+                                {activeOptimization.suggestions.slice(0, 3).map((item) => (
+                                  <li key={item}>- {item}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
+
+                      {activeOptimizedPreview ? (
+                        <div className="mt-3 rounded-[8px] border border-emerald-500/15 bg-emerald-500/5 p-3">
+                          <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">Optimized content preview</p>
+                          <FormattedText
+                            text={activeOptimizedPreview}
+                            className="text-[13px] font-normal leading-6 text-zinc-800 dark:text-zinc-200"
+                          />
+                        </div>
+                      ) : null}
+                    </div>
                     <div className="mt-4 flex items-center justify-between border-t border-[#e5e7eb] pt-3 text-[12px] text-zinc-500 dark:border-[rgba(255,255,255,0.08)] dark:text-zinc-400">
                       <span>{fakeLikes} likes</span>
                       <span>{fakeComments} comments · 1 repost</span>
