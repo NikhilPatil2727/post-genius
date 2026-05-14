@@ -16,9 +16,9 @@ export async function POST(request: Request) {
       return body.errorResponse;
     }
 
-    const rateLimit = await reserveDailyAiAction(auth.currentUser.id);
+    const rateLimit = await reserveDailyAiAction(auth.currentUser.id, 'optimize-post');
     if (!rateLimit.allowed) {
-      return dailyAiLimitExceededResponse();
+      return dailyAiLimitExceededResponse('optimize-post');
     }
 
     const analysis = await analyzePostContent(body.data);

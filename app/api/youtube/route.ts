@@ -16,9 +16,9 @@ export async function POST(request: Request) {
       return body.errorResponse;
     }
 
-    const rateLimit = await reserveDailyAiAction(auth.currentUser.id);
+    const rateLimit = await reserveDailyAiAction(auth.currentUser.id, 'generate-content');
     if (!rateLimit.allowed) {
-      return dailyAiLimitExceededResponse();
+      return dailyAiLimitExceededResponse('generate-content');
     }
 
     const result = await generateYouTubePost(body.data);
