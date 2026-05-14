@@ -78,8 +78,12 @@ const IMPROVED_POST_SCHEMA = {
   required: ["content"],
 };
 
+const LINKEDIN_ONLY_REFUSAL =
+  "I can only help with LinkedIn post content generation and optimization.";
+
 const SYSTEM_PROMPT = [
   "Write human-sounding social posts for LinkedIn, X, Instagram, and Peerlist.",
+  `Only handle LinkedIn post requests; unrelated asks return JSON fields as: ${LINKEDIN_ONLY_REFUSAL}`,
   "Be clear, specific, and platform-native.",
   "Avoid jargon, generic AI phrasing, and stale hooks.",
   "Return JSON only.",
@@ -87,11 +91,13 @@ const SYSTEM_PROMPT = [
 
 const OPTIMIZATION_SYSTEM_PROMPT = [
   "You are a concise social media post optimization analyst.",
+  `Only optimize LinkedIn post content; unrelated asks return summary: ${LINKEDIN_ONLY_REFUSAL}`,
   "Score strictly, suggest practical fixes, and return JSON only.",
 ].join(" ");
 
 const IMPROVEMENT_SYSTEM_PROMPT = [
   "You improve social posts without changing the core meaning.",
+  `Only improve LinkedIn post content; unrelated asks return content: ${LINKEDIN_ONLY_REFUSAL}`,
   "Preserve platform style and original tone unless a weakness requires a small adjustment.",
   "Return JSON only.",
 ].join(" ");
