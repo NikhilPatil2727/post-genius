@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 import {
   ArrowRight,
   Check,
@@ -7,13 +8,13 @@ import {
   WandSparkles,
   Zap,
 } from "lucide-react";
-import { onboardUser } from "@/modules/auth/actions";
 import { AnimatedTooltipPreview } from "@/components/animated-tooltip-demo";
 import HeroScrollDemo from "@/components/container-scroll-animation-demo";
 import { BrokenSection } from "@/modules/home/components/BrokenSection";
 import { PricingSection } from "@/modules/home/components/PricingSection";
 import { HomeHeroTypewriter } from "@/components/home-hero-typewriter";
 import { HomeHeroBadge } from "@/components/home-hero-badge";
+import { UserOnboardingSync } from "@/modules/home/components/UserOnboardingSync";
 import { TextHoverEffect } from "@/components/ui/text-hover-effect";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { RainbowButton } from "@/components/ui/rainbow-button";
@@ -215,12 +216,12 @@ const faqs = [
 ];
 
 export default async function HomePage() {
-  const onboardResult = await onboardUser();
-  const user = onboardResult.success ? onboardResult.user : null;
-  const primaryHref = user ? "/admin/generate" : "/sign-up";
+  const { userId } = await auth();
+  const primaryHref = userId ? "/admin/generate" : "/sign-up";
 
   return (
     <div className="relative overflow-hidden bg-[#f6f8fc] text-slate-950 dark:bg-[#07090f] dark:text-white">
+      {userId ? <UserOnboardingSync /> : null}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-[-12rem] top-[-6rem] h-[28rem] w-[28rem] rounded-full bg-[radial-gradient(circle,_rgba(119,160,255,0.18),_transparent_68%)] dark:bg-[radial-gradient(circle,_rgba(119,160,255,0.22),_transparent_68%)]" />
         <div className="absolute right-[-8rem] top-[10rem] h-[32rem] w-[32rem] rounded-full bg-[radial-gradient(circle,_rgba(182,146,255,0.15),_transparent_68%)] dark:bg-[radial-gradient(circle,_rgba(182,146,255,0.22),_transparent_68%)]" />
@@ -261,7 +262,7 @@ export default async function HomePage() {
                 href={primaryHref}
                 className="inline-flex min-w-[100px] items-center justify-center rounded-[inherit] px-4 py-2 text-sm font-semibold transition-transform duration-200 hover:-translate-y-0.5"
               >
-                {user ? "Open Generator" : "Start for Free"}
+                {userId ? "Start for Free" : "Start for Free"}
               </Link>
             </HoverBorderGradient>
             <RainbowButton asChild size="lg" className="min-w-[180px] rounded-xl">

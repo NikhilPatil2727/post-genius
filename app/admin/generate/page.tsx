@@ -5,20 +5,102 @@ import GeneratorForm from '@/modules/generator/components/GeneratorForm';
 import { ContentDisplay } from '@/modules/generator/components/ContentDisplay';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import type { ContentResponse, ContentRequest } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { generateStreamAction, savePostAction, getPostByIdAction } from '@/modules/generator/actions';
-import { generateYouTubePostAction } from '@/modules/generator/actions/youtube';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toUserFriendlyError } from '@/lib/error-utils';
 import { toast } from 'sonner';
+import { requestJson } from '@/lib/api-client';
 
 const CONTENT_PLATFORMS = ['linkedin', 'twitter', 'instagram', 'peerlist'] as const;
 type ContentPlatformKey = (typeof CONTENT_PLATFORMS)[number];
 const FREE_LIMIT_MESSAGE = 'Your free limit has been exceeded. Please try again later.';
+const DAILY_AI_LIMIT_MESSAGE = 'Daily AI usage limit exceeded. Please try again after 24 hours.';
 
 const isYouTubeUrl = (value?: string | null) =>
   Boolean(value && /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)/i.test(value));
+
+type PostDetailsResponse =
+  | {
+      success: true;
+      post: {
+        topic: string | null;
+        sourceText: string | null;
+        tone: string | null;
+        audience: string | null;
+        variants: Array<{ platform: string; content: string }>;
+      };
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+type GeneratedContentResponse =
+  | {
+      success: true;
+      content: ContentResponse;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+type SavePostResponse =
+  | {
+      success: true;
+      post: {
+        id: string;
+        topic: string | null;
+        sourceText: string | null;
+        createdAt: string;
+        variants: Array<{ platform: string }>;
+      };
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+function GeneratingContentState() {
+  return (
+    <div className="relative min-h-[500px] overflow-hidden rounded-[2rem] border border-zinc-200/70 bg-white/80 p-8 shadow-sm backdrop-blur-xl dark:border-zinc-800/70 dark:bg-zinc-950/30">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.10),transparent_34%)] blur-2xl" />
+      <motion.div
+        className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent dark:via-white/10"
+        animate={{ x: ['0%', '300%'] }}
+        transition={{ repeat: Infinity, duration: 2.4, ease: 'linear' }}
+      />
+
+      <div className="relative flex h-full min-h-[420px] flex-col items-center justify-center gap-6 text-center">
+        <Spinner className="size-9 text-zinc-900 dark:text-zinc-100" />
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Crafting your drafts</h3>
+          <p className="max-w-sm text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+            AI is shaping platform-ready content for your selected voice and audience.
+          </p>
+        </div>
+
+        <div className="grid w-full max-w-2xl gap-3 pt-4 md:grid-cols-3">
+          {['LinkedIn', 'X', 'Instagram'].map((platform) => (
+            <div
+              key={platform}
+              className="overflow-hidden rounded-2xl border border-zinc-200/70 bg-zinc-50/70 p-4 text-left dark:border-zinc-800/70 dark:bg-zinc-900/40"
+            >
+              <div className="mb-4 h-3 w-20 rounded-full bg-zinc-200/80 dark:bg-zinc-800" />
+              <div className="space-y-2">
+                <div className="h-2.5 rounded-full bg-zinc-200/70 dark:bg-zinc-800/80" />
+                <div className="h-2.5 rounded-full bg-zinc-200/60 dark:bg-zinc-800/70" />
+                <div className="h-2.5 w-2/3 rounded-full bg-zinc-200/50 dark:bg-zinc-800/60" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function GeneratePageContent() {
   const [loading, setLoading] = useState(false);
@@ -31,53 +113,52 @@ function GeneratePageContent() {
   const [hasGenerated, setHasGenerated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [initialData, setInitialData] = useState<Partial<ContentRequest>>({});
-  
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const postId = searchParams.get('id');
   const generatorFormKey = JSON.stringify(initialData);
 
-  // Load post if ID is present in URL
   const loadPost = useCallback(async (id: string) => {
     setLoading(true);
     try {
-      const result = await getPostByIdAction(id);
-      if (result.success && result.post) {
-        const { topic, sourceText, tone, audience, variants } = result.post;
-        const isYoutubeSource = !topic && isYouTubeUrl(sourceText);
-        
-        // Update form data
-        setInitialData({
-          mode: topic ? 'topic' : isYoutubeSource ? 'youtube' : 'rewrite',
-          topic: topic || '',
-          text: isYoutubeSource ? '' : sourceText || '',
-          youtubeUrl: isYoutubeSource ? sourceText || '' : '',
-          tone: tone || 'professional',
-          audience: audience || 'general'
-        });
-
-        const newContent: ContentResponse = {
-          linkedin: '',
-          twitter: '',
-          instagram: '',
-          peerlist: '',
-        };
-        
-        variants.forEach((v: { platform: string; content: string }) => {
-          const platformKey = v.platform.toLowerCase() as ContentPlatformKey;
-          if (CONTENT_PLATFORMS.includes(platformKey)) {
-            newContent[platformKey] = v.content;
-          }
-        });
-        
-        setContent(newContent);
-        setHasGenerated(true);
-        setError(null);
-      } else {
+      const result = await requestJson<PostDetailsResponse>(`/api/posts/${id}`);
+      if (!result.success) {
         setError(result.error || 'We could not load this post.');
+        return;
       }
+
+      const { topic, sourceText, tone, audience, variants } = result.post;
+      const isYoutubeSource = !topic && isYouTubeUrl(sourceText);
+
+      setInitialData({
+        mode: topic ? 'topic' : isYouTubeUrl(sourceText) ? 'youtube' : 'rewrite',
+        topic: topic || '',
+        text: isYoutubeSource ? '' : sourceText || '',
+        youtubeUrl: isYoutubeSource ? sourceText || '' : '',
+        tone: tone || 'professional',
+        audience: audience || 'general',
+      });
+
+      const newContent: ContentResponse = {
+        linkedin: '',
+        twitter: '',
+        instagram: '',
+        peerlist: '',
+      };
+
+      variants.forEach((v: { platform: string; content: string }) => {
+        const platformKey = v.platform.toLowerCase() as ContentPlatformKey;
+        if (CONTENT_PLATFORMS.includes(platformKey)) {
+          newContent[platformKey] = v.content;
+        }
+      });
+
+      setContent(newContent);
+      setHasGenerated(true);
+      setError(null);
     } catch (err) {
-      console.error("Failed to load post:", err);
+      console.error('Failed to load post:', err);
       setError(toUserFriendlyError(err, 'We could not load this post.'));
     } finally {
       setLoading(false);
@@ -96,6 +177,42 @@ function GeneratePageContent() {
     setError(null);
   }, []);
 
+  const saveGeneratedContent = useCallback(
+    async (data: Partial<ContentRequest>, finalContent: ContentResponse) => {
+      const variants = [
+        { platform: 'LINKEDIN' as const, content: finalContent.linkedin },
+        { platform: 'TWITTER' as const, content: finalContent.twitter },
+        { platform: 'INSTAGRAM' as const, content: finalContent.instagram },
+        { platform: 'PEERLIST' as const, content: finalContent.peerlist },
+      ].filter((v) => v.content.length > 0);
+
+      if (variants.length === 0) {
+        throw new Error('No content was generated. Please try a clearer topic or rewrite input.');
+      }
+
+      const result = await requestJson<SavePostResponse>('/api/posts', {
+        method: 'POST',
+        body: {
+          topic: data.mode === 'topic' ? data.topic : undefined,
+          sourceText: data.mode === 'youtube' ? data.youtubeUrl : data.text,
+          tone: data.tone,
+          audience: data.audience,
+          variants,
+        },
+      });
+
+      if (result.success && result.post) {
+        window.dispatchEvent(new CustomEvent('post-saved', { detail: result.post }));
+        router.replace(`/admin/generate?id=${result.post.id}`);
+        router.refresh();
+        return;
+      }
+
+      throw new Error(result.success ? 'Your content was saved, but no post was returned.' : result.error);
+    },
+    [router]
+  );
+
   useEffect(() => {
     if (postId) {
       clearPage();
@@ -109,14 +226,13 @@ function GeneratePageContent() {
     setLoading(true);
     setError(null);
     setHasGenerated(true);
-
-    // Reset content for new generation
     setContent({
       linkedin: '',
       twitter: '',
       instagram: '',
       peerlist: '',
     });
+    setInitialData(data);
 
     try {
       const finalContent: ContentResponse = {
@@ -127,104 +243,36 @@ function GeneratePageContent() {
       };
 
       if (data.mode === 'youtube') {
-        const result = await generateYouTubePostAction({
-          youtubeUrl: data.youtubeUrl,
-          tone: data.tone,
-          audience: data.audience,
+        const result = await requestJson<GeneratedContentResponse>('/api/youtube', {
+          method: 'POST',
+          body: {
+            youtubeUrl: data.youtubeUrl,
+            tone: data.tone,
+            audience: data.audience,
+          },
         });
 
-        if (!result.success) {
+        if (result.success) {
+          Object.assign(finalContent, result.content);
+          setContent(result.content);
+        } else {
           throw new Error(result.error || 'We could not process this YouTube video.');
         }
-
-        Object.assign(finalContent, result.content);
-        setContent(result.content);
       } else {
-        // Call the Server Action directly
-        const stream = await generateStreamAction(data);
-
-        const reader = stream.getReader();
-        const decoder = new TextDecoder();
-
-        let accumulatedText = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          accumulatedText += chunk;
-
-          // Check for error marker from server action
-          if (accumulatedText.includes('[[ERROR]]')) {
-            throw new Error(
-              toUserFriendlyError(
-                accumulatedText.split('[[ERROR]]')[1].trim(),
-                'We could not generate your content right now. Please try again.'
-              )
-            );
-          }
-
-          // Extract content between markers using Regex
-          const contentMap: Partial<ContentResponse> = {};
-
-          const linkedinMatch = accumulatedText.match(/\[\[LINKEDIN\]\]([\s\S]*?)(?=\[\[|$)/);
-          const twitterMatch = accumulatedText.match(/\[\[TWITTER\]\]([\s\S]*?)(?=\[\[|$)/);
-          const instagramMatch = accumulatedText.match(/\[\[INSTAGRAM\]\]([\s\S]*?)(?=\[\[|$)/);
-          const peerlistMatch = accumulatedText.match(/\[\[PEERLIST\]\]([\s\S]*?)(?=\[\[|$)/);
-
-          if (linkedinMatch) {
-            contentMap.linkedin = linkedinMatch[1].trim();
-            finalContent.linkedin = contentMap.linkedin;
-          }
-          if (twitterMatch) {
-            contentMap.twitter = twitterMatch[1].trim();
-            finalContent.twitter = contentMap.twitter;
-          }
-          if (instagramMatch) {
-            contentMap.instagram = instagramMatch[1].trim();
-            finalContent.instagram = contentMap.instagram;
-          }
-          if (peerlistMatch) {
-            contentMap.peerlist = peerlistMatch[1].trim();
-            finalContent.peerlist = contentMap.peerlist;
-          }
-
-          if (Object.keys(contentMap).length > 0) {
-            setContent(prev => ({ ...prev, ...contentMap }));
-          }
-        }
-      }
-
-      // Automatically save after generation
-      const variants = [
-        { platform: 'LINKEDIN' as const, content: finalContent.linkedin },
-        { platform: 'TWITTER' as const, content: finalContent.twitter },
-        { platform: 'INSTAGRAM' as const, content: finalContent.instagram },
-        { platform: 'PEERLIST' as const, content: finalContent.peerlist },
-      ].filter(v => v.content.length > 0);
-
-      if (variants.length > 0) {
-        const result = await savePostAction({
-          topic: data.mode === 'topic' ? data.topic : undefined,
-          sourceText: data.mode === 'youtube' ? data.youtubeUrl : data.text,
-          tone: data.tone,
-          audience: data.audience,
-          variants
+        const result = await requestJson<GeneratedContentResponse>('/api/posts/generate', {
+          method: 'POST',
+          body: data,
         });
-        
-        if (result.success && result.post) {
-          // Dispatch event with the new post data for the sidebar to refresh optimistically
-          window.dispatchEvent(new CustomEvent('post-saved', { detail: result.post }));
-          router.replace(`/admin/generate?id=${result.post.id}`);
-          router.refresh();
-        } else if (!result.success) {
-          setError(result.error || 'Your content was generated, but we could not save it.');
+
+        if (result.success) {
+          Object.assign(finalContent, result.content);
+          setContent(result.content);
+        } else {
+          throw new Error(result.error || 'We could not generate your content right now.');
         }
-      } else {
-        setError('No content was generated. Please try a clearer topic or rewrite input.');
       }
 
+      await saveGeneratedContent(data, finalContent);
     } catch (err) {
       console.error('Generation process error:', err);
       const message = toUserFriendlyError(
@@ -232,8 +280,12 @@ function GeneratePageContent() {
         'We could not generate your content right now. Please try again.'
       );
 
-      if (message === FREE_LIMIT_MESSAGE) {
-        toast.error(message);
+      if (message === FREE_LIMIT_MESSAGE || message === DAILY_AI_LIMIT_MESSAGE) {
+        toast.error(
+          message === DAILY_AI_LIMIT_MESSAGE
+            ? DAILY_AI_LIMIT_MESSAGE
+            : message
+        );
         setError(null);
       } else {
         setError(message);
@@ -248,10 +300,15 @@ function GeneratePageContent() {
     router.push('/admin/generate');
   };
 
+  const handleVariantUpdated = (platform: ContentPlatformKey, updatedVariantContent: string) => {
+    setContent((currentContent) => ({
+      ...currentContent,
+      [platform]: updatedVariantContent,
+    }));
+  };
+
   return (
     <div className="min-h-full py-4 lg:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
-
-      {/* Premium Header Container */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -260,7 +317,6 @@ function GeneratePageContent() {
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-zinc-200 dark:border-zinc-800/50">
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-3 mb-1">
-            
               <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-zinc-900 to-zinc-500 dark:from-white dark:to-zinc-500 font-serif">
                 Content Studio
               </h1>
@@ -272,10 +328,10 @@ function GeneratePageContent() {
 
           <div className="flex items-center gap-3 w-full lg:w-auto">
             {hasGenerated && !loading && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleReset} 
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleReset}
                 className="h-10 rounded-xl font-bold px-6 bg-zinc-100/50 dark:bg-zinc-800/50 hover:bg-zinc-200 dark:hover:bg-zinc-700/50 transition-all border border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 shadow-sm"
               >
                 New Draft
@@ -292,7 +348,12 @@ function GeneratePageContent() {
           transition={{ delay: 0.1 }}
           className="lg:col-span-4 lg:sticky lg:top-8"
         >
-          <GeneratorForm key={generatorFormKey} onSubmit={handleGenerate} loading={loading} initialData={initialData} />
+          <GeneratorForm
+            key={generatorFormKey}
+            onSubmit={handleGenerate}
+            loading={loading}
+            initialData={initialData}
+          />
 
           <AnimatePresence>
             {error && (
@@ -328,8 +389,14 @@ function GeneratePageContent() {
           transition={{ delay: 0.2 }}
           className="lg:col-span-8 min-h-[600px]"
         >
-          {hasGenerated ? (
-            <ContentDisplay content={content} isStreaming={loading} />
+          {loading ? (
+            <GeneratingContentState />
+          ) : hasGenerated ? (
+            <ContentDisplay
+              content={content}
+              postId={postId}
+              onVariantUpdated={handleVariantUpdated}
+            />
           ) : (
             <div className="min-h-[500px] rounded-[2rem] border border-zinc-200/70 bg-white/80 p-8 shadow-sm dark:border-zinc-800/70 dark:bg-zinc-950/30">
               {loading ? (
@@ -359,16 +426,16 @@ function GeneratePageContent() {
                   <div className="grid gap-4 pt-8 md:grid-cols-3">
                     {[
                       {
-                        title: "Create",
-                        description: "Generate first drafts for LinkedIn, X, Instagram, and Peerlist from one input.",
+                        title: 'Create',
+                        description: 'Generate first drafts for LinkedIn, X, Instagram, and Peerlist from one input.',
                       },
                       {
-                        title: "Review",
-                        description: "Read each version in a focused layout designed for quick checking and revision.",
+                        title: 'Review',
+                        description: 'Read each version in a focused layout designed for quick checking and revision.',
                       },
                       {
-                        title: "Refine",
-                        description: "Use the inline editor to adjust tone, structure, and formatting before you publish.",
+                        title: 'Refine',
+                        description: 'Use the inline editor to adjust tone, structure, and formatting before you publish.',
                       },
                     ].map((item) => (
                       <div
@@ -386,18 +453,19 @@ function GeneratePageContent() {
           )}
         </motion.div>
       </div>
-
     </div>
   );
 }
 
 export default function GeneratePage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
       <GeneratePageContent />
     </Suspense>
   );

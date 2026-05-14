@@ -8,15 +8,35 @@ export type ContentRequest = {
 };
 
 export type ContentResponse = {
-  // masterContent: string;
   linkedin: string;
   twitter: string;
-  twitterThread?: string[];
   instagram: string;
   peerlist: string;
 };
 
 export type Platform = 'linkedin' | 'twitter' | 'instagram' | 'peerlist';
+
+export type OptimizationCategory =
+  | 'hookStrength'
+  | 'readability'
+  | 'ctaEffectiveness'
+  | 'engagementPotential'
+  | 'platformFit'
+  | 'sentenceStructure'
+  | 'emojiBalance'
+  | 'viralityPotential'
+  | 'emotionalImpact'
+  | 'audienceRetention'
+  | 'contentRichness'
+  | 'scrollStoppingQuality';
+
+export type PostOptimizationAnalysis = {
+  scores: Record<OptimizationCategory, number>;
+  overallScore: number;
+  summary: string;
+  topWeaknesses: string[];
+  suggestions: string[];
+};
 
 export type YouTubeToPostActionResult =
   | {
