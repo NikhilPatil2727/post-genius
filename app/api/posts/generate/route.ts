@@ -1,5 +1,6 @@
 import { handleRouteError, parseRequestBody, requireCurrentUser } from '@/lib/api-route';
 import { apiSuccess } from '@/lib/api-response';
+import { dailyAiLimitExceededResponse, reserveDailyAiAction } from '@/lib/ai-rate-limit';
 import { contentGenerationSchema } from '@/lib/schemas';
 import { generatePostContent } from '@/modules/posts/server';
 
@@ -13,6 +14,11 @@ export async function POST(request: Request) {
     const body = await parseRequestBody(request, contentGenerationSchema);
     if ('errorResponse' in body) {
       return body.errorResponse;
+    }
+
+    const rateLimit = await reserveDailyAiAction(auth.currentUser.id);
+    if (!rateLimit.allowed) {
+      return dailyAiLimitExceededResponse();
     }
 
     const content = await generatePostContent(body.data);

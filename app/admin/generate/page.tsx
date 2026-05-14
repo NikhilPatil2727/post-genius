@@ -16,6 +16,7 @@ import { requestJson } from '@/lib/api-client';
 const CONTENT_PLATFORMS = ['linkedin', 'twitter', 'instagram', 'peerlist'] as const;
 type ContentPlatformKey = (typeof CONTENT_PLATFORMS)[number];
 const FREE_LIMIT_MESSAGE = 'Your free limit has been exceeded. Please try again later.';
+const DAILY_AI_LIMIT_MESSAGE = 'Daily AI usage limit exceeded. Please try again after 24 hours.';
 
 const isYouTubeUrl = (value?: string | null) =>
   Boolean(value && /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)/i.test(value));
@@ -279,8 +280,12 @@ function GeneratePageContent() {
         'We could not generate your content right now. Please try again.'
       );
 
-      if (message === FREE_LIMIT_MESSAGE) {
-        toast.error(message);
+      if (message === FREE_LIMIT_MESSAGE || message === DAILY_AI_LIMIT_MESSAGE) {
+        toast.error(
+          message === DAILY_AI_LIMIT_MESSAGE
+            ? DAILY_AI_LIMIT_MESSAGE
+            : message
+        );
         setError(null);
       } else {
         setError(message);
